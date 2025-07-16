@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "eslint \"src/**/*.ts\"",
     "build": "rollup -c",
-    "push-local": "cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/127.0.0.1___21025/local",
+    "push-local": "rollup -c && cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/127_0_0_1___21025/local",
     "push-main": "rollup -c --environment DEST:main",
     "push-pserver": "rollup -c --environment DEST:pserver",
     "push-season": "rollup -c --environment DEST:season",
