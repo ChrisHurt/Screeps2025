@@ -1,17 +1,44 @@
-export const Game: {
-  creeps: { [name: string]: any };
-  rooms: any;
-  spawns: any;
-  time: any;
+/// <reference path="../../global.d.ts" />
+
+// NOTE:
+// The global types reference is crucial for TypeScript to recognize our custom
+// global Memory interface. Without it, TypeScript will default to @types/screeps' Memory
+// interface, which does not include our custom properties like mapRoomGraph, mapConnections, etc.
+
+export const mockGame: {
+  creeps: { [name: string]: any }
+  rooms: { [name: string]: any }
+  spawns: any
+  time: any
+  map: {
+    describeExits: (roomName: string) => { [exitKey: string]: string | undefined }
+  }
 } = {
   creeps: {},
-  rooms: [],
+  rooms: {},
   spawns: {},
-  time: 12345
-};
+  time: 12345,
+  map: {
+    describeExits: (roomName: string) => ({})
+  }
+}
 
-export const Memory: {
-  creeps: { [name: string]: any };
-} = {
-  creeps: {}
-};
+export const mockMemory: Memory = {
+  creeps: {},
+  flags: {},
+  rooms: {},
+  initialCalculationsDone: false,
+  mapRoomGraph: {},
+  mapConnections: new Set<string>(),
+  memoryInitialised: false,
+  powerCreeps: {},
+  queues: {
+    evaluations: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } },
+    structures: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } },
+    creeps: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } }
+  },
+  spawns: {}
+}
+
+export type ExitKey = "1" | "3" | "5" | "7"
+export type ExitsInformation = Partial<Record<ExitKey, string>>

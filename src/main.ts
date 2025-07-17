@@ -1,43 +1,54 @@
-import { ErrorMapper } from "utils/ErrorMapper";
+import { createMapConnections } from "createMapConnections"
+import { createMapGraph } from "createMapGraph"
+import { renderMapGraph } from "renderMapGraph"
+import { ErrorMapper } from "utils/ErrorMapper"
 
-declare global {
-  /*
-    Example types, expand on these or remove them and add your own.
-    Note: Values, properties defined here do no fully *exist* by this type definiton alone.
-          You must also give them an implemention if you would like to use them. (ex. actually setting a `role` property in a Creeps memory)
+export const loop = ErrorMapper.wrapLoop(() => {
+  console.log(`Current game tick is ${Game.time}`)
 
-    Types added in this `global` block are in an ambient, global context. This is needed because `main.ts` is a module file (uses import or export).
-    Interfaces matching on name from @types/screeps will be merged. This is how you can extend the 'built-in' interfaces from @types/screeps.
-  */
-  // Memory extension samples
-  interface Memory {
-    uuid: number;
-    log: any;
-  }
+  const memoryIsInitialised = Memory.memoryInitialised
 
-  interface CreepMemory {
-    role: string;
-    room: string;
-    working: boolean;
-  }
-
-  // Syntax for adding proprties to `global` (ex "global.log")
-  namespace NodeJS {
-    interface Global {
-      log: any;
+  if (!memoryIsInitialised) {
+    Memory.initialCalculationsDone = false
+    Memory.mapConnections = new Set<string>()
+    Memory.mapRoomGraph = {}
+    Memory.memoryInitialised = true
+    Memory.queues = {
+      evaluations: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } },
+      structures: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } },
+      creeps: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } }
     }
   }
-}
 
-// When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
-// This utility uses source maps to get the line numbers and file names of the original, TS source code
-export const loop = ErrorMapper.wrapLoop(() => {
-  console.log(`Current game tick is ${Game.time}`);
+  if (!Memory.initialCalculationsDone) {
+    createMapGraph()
+
+    const firstVisibleRoom = Object.keys(Game.rooms)[0]
+    createMapConnections(firstVisibleRoom)
+
+    Memory.initialCalculationsDone = true
+  } else {
+    renderMapGraph()
+  }
+
+  // Initial map calculations
+  // - Add rooms for evaluation to the evaluation queue as low priority tasks
+
+  // Evaluate Threats
+  // Identify threats in perimeter rooms and in newly scouted rooms with a period of 10 ticks since last check
+  // Evaluate current structure needs
+  // Evaluate current creep needs
+  // Add items to Task Queue
+  // Process structure behaviours
+  // Process existing creeps behaviour
+
+  // Analyse new rooms and evaluate their potential for direction-dependent remote gathering or expansion
+  // Analyse existing rooms when all connections have complete internal evaluations
 
   // Automatically delete memory of missing creeps
   for (const name in Memory.creeps) {
     if (!(name in Game.creeps)) {
-      delete Memory.creeps[name];
+      delete Memory.creeps[name]
     }
   }
-});
+})

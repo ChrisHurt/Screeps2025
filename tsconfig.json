@@ -13,6 +13,11 @@
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false
   },
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "global.d.ts"
+  ],
   "exclude": [
     "node_modules"
   ]
