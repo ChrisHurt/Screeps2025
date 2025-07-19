@@ -1,16 +1,15 @@
 import { createMapConnections } from "createMapConnections"
-import { createMapGraph } from "createMapGraph"
-import { renderMapGraph } from "renderMapGraph"
+import { renderMapConnections } from "renderMapConnections"
 import { ErrorMapper } from "utils/ErrorMapper"
 
 export const loop = ErrorMapper.wrapLoop(() => {
-  console.log(`Current game tick is ${Game.time}`)
+  console.log(`\nCurrent game tick is ${Game.time}`)
 
   const memoryIsInitialised = Memory.memoryInitialised
 
   if (!memoryIsInitialised) {
     Memory.initialCalculationsDone = false
-    Memory.mapConnections = new Set<string>()
+    Memory.mapConnections = []
     Memory.mapRoomGraph = {}
     Memory.memoryInitialised = true
     Memory.queues = {
@@ -21,14 +20,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
   }
 
   if (!Memory.initialCalculationsDone) {
-    createMapGraph()
-
-    const firstVisibleRoom = Object.keys(Game.rooms)[0]
-    createMapConnections(firstVisibleRoom)
+    createMapConnections()
 
     Memory.initialCalculationsDone = true
   } else {
-    renderMapGraph()
+    renderMapConnections()
   }
 
   // Initial map calculations

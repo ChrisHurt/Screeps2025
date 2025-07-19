@@ -32,4 +32,7 @@ export interface CreepMemory {}
 export interface FlagMemory {}
 export interface PowerCreepMemory {}
 export interface RoomMemory {}
+export interface CustomRoom extends Room {
+  memory: RoomMemory
+}
 export interface SpawnMemory {}

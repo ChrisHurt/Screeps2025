@@ -29,7 +29,7 @@ export const mockMemory: Memory = {
   rooms: {},
   initialCalculationsDone: false,
   mapRoomGraph: {},
-  mapConnections: new Set<string>(),
+  mapConnections: [],
   memoryInitialised: false,
   powerCreeps: {},
   queues: {

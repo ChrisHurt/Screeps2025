@@ -1,40 +1,43 @@
+// TODO: Manually check if I can use Game.map.describeExits(notAccessedRoomName) instead of the map graph
+
+import { close } from "fs"
+
 
 // Behaviour: Creates a connections list (roomNameOne-roomNameTwo) for each connection between rooms
-export const createMapConnections = (startingRoomName: string): Set<string> => {
-    const mapGraph = Memory.mapRoomGraph
-    const mapConnections = Memory.mapConnections
+export const createMapConnections = (): void => {
+    const startingRoomName = Object.keys(Game.rooms).length && Object.keys(Game.rooms)[0]
 
-    if (!mapGraph || !mapGraph[startingRoomName] || !mapConnections) {
-        console.warn(`No map graph found for starting room: ${startingRoomName}`)
-        return new Set<string>()
+    if (!startingRoomName) {
+        console.log(`CreateMapConnectionsError: No room found, cannot create map connections.`)
+        return
     }
 
-    const connections: Set<string> = new Set<string>()
+    const mapConnections = Memory.mapConnections
+    const mapRoomGraph = Memory.mapRoomGraph
 
     let currentRoomName: string | undefined = startingRoomName
-    let neighbouringRoomNames = mapGraph[startingRoomName] || []
 
     const openQueue: Set<string> = new Set([currentRoomName])
     const closedQueue: Set<string> = new Set()
 
     while (currentRoomName) {
-        neighbouringRoomNames = mapGraph[currentRoomName] || []
+        mapRoomGraph[currentRoomName] = Object.values(Game.map.describeExits(currentRoomName)).filter((roomName): roomName is string => !!roomName)
 
-        for (const neighbourRoomName of neighbouringRoomNames) {
-            if (!closedQueue.has(neighbourRoomName)) {
-                openQueue.add(neighbourRoomName)
+
+        for (const neighbourRoomName of mapRoomGraph[currentRoomName]) {
+            if (closedQueue.has(neighbourRoomName)) {
+                continue
             }
+
+            openQueue.add(neighbourRoomName)
 
             const sortedNames = [currentRoomName, neighbourRoomName].sort()
             const connection = `${sortedNames[0]}-${sortedNames[1]}`
-            connections.add(connection)
-            mapConnections.add(connection)
+            mapConnections.push(connection)
         }
 
         openQueue.delete(currentRoomName)
         closedQueue.add(currentRoomName)
         currentRoomName = openQueue.values().next().value
     }
-
-    return connections
 }

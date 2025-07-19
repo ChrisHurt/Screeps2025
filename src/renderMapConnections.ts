@@ -1,7 +1,9 @@
 const CENTRE_TILE = 25
 
-export const renderMapGraph = () => {
+export const renderMapConnections = () => {
     const connections = Memory.mapConnections || []
+
+    console.log(`Rendering connections`, JSON.stringify(connections))
 
     for (const connection of connections) {
         const [roomNameOne, roomNameTwo] = connection.split("-")
@@ -9,7 +11,7 @@ export const renderMapGraph = () => {
         Game.map.visual.line(
             new RoomPosition(CENTRE_TILE, CENTRE_TILE, roomNameOne),
             new RoomPosition(CENTRE_TILE, CENTRE_TILE, roomNameTwo),
-            { color: "white", width: 0.1 }
+            { color: '#fff', width: 1, lineStyle: 'solid', opacity: 1 }
         )
     }
 }

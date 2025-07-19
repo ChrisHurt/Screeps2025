@@ -5,7 +5,8 @@ import {
   PowerCreepMemory,
   RoomMemory,
   SpawnMemory,
-  RoomId
+  RoomId,
+  CustomRoom
 } from "types"
 
 
@@ -20,7 +21,7 @@ declare global {
     market: Market
     powerCreeps: { [name: string]: PowerCreep }
     resources: { [key: string]: any }
-    rooms: { [name: string]: Room }
+    rooms: { [name: RoomId]: CustomRoom }
     spawns: { [name: string]: StructureSpawn }
     structures: { [name: string]: Structure }
     constructionSites: { [name: string]: ConstructionSite }
@@ -32,9 +33,9 @@ declare global {
     initialCalculationsDone?: boolean
     flags: { [name: string]: Partial<FlagMemory> }
     mapRoomGraph: { // Denotes connections between rooms
-      [roomId: RoomId]: [] | [RoomId] | [RoomId, RoomId] | [RoomId, RoomId, RoomId] | [RoomId, RoomId, RoomId, RoomId]
+      [roomId: RoomId]: RoomId[]
     }
-    mapConnections: Set<string> // List of connections between rooms in the format "roomNameOne-roomNameTwo"
+    mapConnections: string[] // List of connections between rooms in the format "roomNameOne-roomNameTwo"
     memoryInitialised?: boolean
     powerCreeps: { [name: string]: Partial<PowerCreepMemory> }
     queues: {
