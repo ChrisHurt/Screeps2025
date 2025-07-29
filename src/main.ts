@@ -1,5 +1,9 @@
 import { createMapConnections } from "createMapConnections"
+import { evaluateRoom as roomValuation } from "evaluateRoom"
+import { generateRoomTasksOnSpawn } from "generateRoomTasksOnSpawn"
 import { renderMapConnections } from "renderMapConnections"
+import { initialiseMemory } from "initialiseMemory"
+import { spawnCreeps } from "spawnCreeps"
 import { ErrorMapper } from "utils/ErrorMapper"
 
 export const loop = ErrorMapper.wrapLoop(() => {
@@ -8,24 +12,22 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const memoryIsInitialised = Memory.memoryInitialised
 
   if (!memoryIsInitialised) {
-    Memory.initialCalculationsDone = false
-    Memory.mapConnections = []
-    Memory.mapRoomGraph = {}
-    Memory.memoryInitialised = true
-    Memory.queues = {
-      evaluations: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } },
-      structures: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } },
-      creeps: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } }
-    }
+    initialiseMemory()
   }
 
   if (!Memory.initialCalculationsDone) {
     createMapConnections()
 
+    const startingRoomName = Object.keys(Game.rooms)[0]
+    roomValuation(startingRoomName)
+    generateRoomTasksOnSpawn(startingRoomName)
+
     Memory.initialCalculationsDone = true
   } else {
     renderMapConnections()
   }
+
+  spawnCreeps()
 
   // Initial map calculations
   // - Add rooms for evaluation to the evaluation queue as low priority tasks

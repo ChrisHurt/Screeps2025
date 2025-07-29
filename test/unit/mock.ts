@@ -33,9 +33,9 @@ export const mockMemory: Memory = {
   memoryInitialised: false,
   powerCreeps: {},
   queues: {
-    evaluations: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } },
-    structures: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } },
-    creeps: { head: null, tail: null, rankedQueue: { high: {}, medium: {}, low: {} } }
+    evaluations: { head: null, tail: null, rankedQueue: [{},{},{}] },
+    structures: { head: null, tail: null, rankedQueue: [{},{},{}] },
+    creeps: { head: null, tail: null, rankedQueue: [{},{},{}] }
   },
   spawns: {}
 }

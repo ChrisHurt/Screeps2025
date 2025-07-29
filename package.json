@@ -1,6 +1,6 @@
 {
-  "name": "screeps-typescript-starter",
-  "version": "3.0.0",
+  "name": "screeps-churtlebot",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "//": "If you add or change the names of destinations in screeps.json, make sure you update these scripts to reflect the changes",
@@ -8,13 +8,11 @@
     "lint": "eslint \"src/**/*.ts\"",
     "build": "rollup -c",
     "push-local": "rollup -c && cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/127_0_0_1___21025/local",
-    "push-main": "rollup -c --environment DEST:main",
+    "push-server": "rollup -c  && cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/0_tcp_au_ngrok_io___11873/default",
     "push-pserver": "rollup -c --environment DEST:pserver",
-    "push-season": "rollup -c --environment DEST:season",
-    "push-sim": "rollup -c --environment DEST:sim",
-    "test": "npm run test-unit",
-    "test-unit": "mocha test/unit/**/*.ts",
-    "test-integration": "echo 'See docs/in-depth/testing.md for instructions on enabling integration tests'",
+    "test": "mocha --require ts-node/register test/**/*.ts",
+    "test-unit": "mocha --require ts-node/register test/unit/**/*.ts",
+    "test-integration": "mocha --require ts-node/register test/integration/**/*.ts",
     "watch-main": "rollup -cw --environment DEST:main",
     "watch-pserver": "rollup -cw --environment DEST:pserver",
     "watch-season": "rollup -cw --environment DEST:season",
@@ -30,9 +28,6 @@
     "url": "https://github.com/screepers/screeps-typescript-starter/issues"
   },
   "homepage": "https://github.com/screepers/screeps-typescript-starter#readme",
-  "engines": {
-    "node": "10.x || 12.x"
-  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^20.0.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
@@ -52,8 +47,8 @@
     "eslint-import-resolver-typescript": "^2.4.0",
     "eslint-plugin-import": "^2.24.0",
     "eslint-plugin-prettier": "^3.4.0",
-    "lodash": "^3.10.1",
     "mocha": "^5.2.0",
+    "lodash": "^3.10.1",
     "prettier": "^2.3.2",
     "rollup": "^2.56.2",
     "rollup-plugin-clear": "^2.0.7",
@@ -66,6 +61,17 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
+    "dotenv": "^17.2.1",
     "source-map": "~0.6.1"
+  },
+  "mocha": {
+    "require": [
+      "ts-node/register",
+      "tsconfig-paths/register"
+    ],
+    "extension": [
+      "ts"
+    ],
+    "spec": "test/unit/**/*.ts"
   }
 }

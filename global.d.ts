@@ -3,12 +3,12 @@ import {
   FlagMemory,
   LinkedListQueue,
   PowerCreepMemory,
-  RoomMemory,
   SpawnMemory,
   RoomId,
-  CustomRoom
+  CustomRoomMemory,
+  HarvestTask,
+  UpgradeTask
 } from "types"
-
 
 declare global {
   interface Game {
@@ -21,7 +21,7 @@ declare global {
     market: Market
     powerCreeps: { [name: string]: PowerCreep }
     resources: { [key: string]: any }
-    rooms: { [name: RoomId]: CustomRoom }
+    rooms: { [name: string]: Room }
     spawns: { [name: string]: StructureSpawn }
     structures: { [name: string]: Structure }
     constructionSites: { [name: string]: ConstructionSite }
@@ -32,10 +32,10 @@ declare global {
     creeps: { [name: string]: Partial<CreepMemory> }
     initialCalculationsDone?: boolean
     flags: { [name: string]: Partial<FlagMemory> }
-    mapRoomGraph: { // Denotes connections between rooms
+    mapConnections: string[]  // List of connections between rooms in the format "roomNameOne-roomNameTwo"
+    mapRoomGraph: {           // Denotes connections between rooms
       [roomId: RoomId]: RoomId[]
     }
-    mapConnections: string[] // List of connections between rooms in the format "roomNameOne-roomNameTwo"
     memoryInitialised?: boolean
     powerCreeps: { [name: string]: Partial<PowerCreepMemory> }
     queues: {
@@ -43,8 +43,31 @@ declare global {
       structures: LinkedListQueue
       creeps: LinkedListQueue
     }
-    rooms: { [name: string]: Partial<RoomMemory> }
+    rooms: { [name: RoomId]: RoomMemory }
     spawns: { [name: string]: Partial<SpawnMemory> }
+  }
+  interface RoomMemory extends CustomRoomMemory {
+    mineral?: {
+      type: MineralConstant
+      density: number
+      position: { x: number; y: number }
+      mineralGenerationPerTick: number
+    }
+    optimumSpawnPosition?: {
+      x: number
+      y: number
+    }
+    sources?: {
+      [sourceId: string]: {
+        energyGenerationPerTick: number
+        position: { x: number; y: number }
+      }
+    }
+    tasks?: {
+      upgrade?: UpgradeTask
+      harvest: HarvestTask[]
+    }
+    totalEnergyGenerationPerTick: number
   }
 }
 

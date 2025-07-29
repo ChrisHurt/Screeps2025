@@ -1,18 +1,20 @@
-import {assert} from "chai"
-import {loop} from "../../src/main"
-import {mockGame, mockMemory} from "./mock"
+import { assert } from "chai"
+import { loop } from "../../src/main"
+import { mockGame, mockMemory } from "./mock"
+import { clone } from 'lodash'
 
 describe("main", () => {
   before(() => {
-    // runs before all test in this block
+    // runs before all tests in this block
   })
 
   beforeEach(() => {
     // runs before each test in this block
     // @ts-ignore : allow adding Game to global
-    global.Game = _.clone(mockGame)
+    global.Game = clone(mockGame)
     // @ts-ignore : allow adding Memory to global
-    global.Memory = _.clone(mockMemory)
+    global.Memory = clone(mockMemory)
+    loop()
   })
 
   it("should export a loop function", () => {

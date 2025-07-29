@@ -1,3 +1,7 @@
+export interface Position {
+  x: number
+  y: number
+}
 export interface LinkedListTask {
   next: LinkedListTask | null
   prev: LinkedListTask | null
@@ -5,18 +9,49 @@ export interface LinkedListTask {
 export interface EvaluationTask extends LinkedListTask {}
 export interface StructureTask extends LinkedListTask {}
 export interface CreepTask extends LinkedListTask {}
+export interface HarvestTask extends CreepTask {
+  availablePositions: Position[]
+  sourceId: string
+  sourcePosition: Position
+  roomName: RoomId
+  requiredWorkParts: number
+  reservingCreeps: ReservingCreeps
+}
 
-// high: EvaluationTask[]
-// medium: EvaluationTask[]
-// low: EvaluationTask[]
+export interface ReservingCreeps {
+  [creepId: string]: ReservingCreep
+}
+
+export interface ReservingCreep {
+  workParts: number
+}
+
+export interface UpgradeTask extends CreepTask {
+  availablePositions: Position[]
+  controllerId: string
+  controllerPosition: Position
+  roomName: RoomId
+  reservingCreeps: {
+    [creepId: string]: {
+      workParts: number
+    }
+  }
+}
+
 export type TaskId = string
 export type RoomId = string
-type Priority = 'high' | 'medium' | 'low'
+export enum QueuePriority {
+  LOW = 0,
+  MEDIUM = 1,
+  HIGH = 2
+}
+
+export type TaskQueue = Record<TaskId, LinkedListTask>
 
 export interface LinkedListQueue {
   head: LinkedListTask | null
   tail: LinkedListTask | null
-  rankedQueue: Record<Priority, Record<TaskId, LinkedListTask>>
+  rankedQueue: Record<QueuePriority, TaskQueue>
 }
 
 export interface InTickCache {
@@ -31,8 +66,39 @@ export interface InTickCache {
 export interface CreepMemory {}
 export interface FlagMemory {}
 export interface PowerCreepMemory {}
-export interface RoomMemory {}
-export interface CustomRoom extends Room {
-  memory: RoomMemory
+export interface CustomRoomMemory {
+  mineral?: {
+    type: MineralConstant
+    density: number
+    position: { x: number; y: number }
+    mineralGenerationPerTick: number
+  }
+  optimumSpawnPosition?: {
+    x: number
+    y: number
+  }
+  sources?: {
+    [sourceId: string]: {
+      energyGenerationPerTick: number
+      position: { x: number; y: number }
+    }
+  }
+  tasks?: {
+    upgrade?: UpgradeTask
+    harvest: HarvestTask[]
+  }
+  totalEnergyGenerationPerTick: number
 }
 export interface SpawnMemory {}
+
+type FixedLengthArray<T, N extends number, A extends T[] = []> =
+  A['length'] extends N
+    ? A
+    : FixedLengthArray<T, N, [...A, T]>
+
+export type TERRAIN_MASK_PLAIN = 0
+export type TERRAIN_MASK_WALL = 1
+export type TERRAIN_MASK_SWAMP = 2
+
+export type TerrainTypeArray = FixedLengthArray<TERRAIN_MASK_PLAIN | TERRAIN_MASK_WALL | TERRAIN_MASK_SWAMP, 625>
+export type TerrainDistanceArray = FixedLengthArray<number, 625>
