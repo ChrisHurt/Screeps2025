@@ -1,6 +1,7 @@
 import { convertTerrainIndexToPosition } from "conversions"
-import { TerrainTypeArray } from "types"
+import { ROOM_GRID_COUNT, TerrainTypeArray } from "types"
 
+// @ts-ignore "Type instantiation is excessively deep and possibly infinite."
 export const generateTerrainArray = (roomName: string): TerrainTypeArray | [] => {
     const room = Game.rooms[roomName]
 
@@ -16,7 +17,8 @@ export const generateTerrainArray = (roomName: string): TerrainTypeArray | [] =>
         return []
     }
 
-    return Array(625).fill(0).map((_, index) => {
+
+    return Array(ROOM_GRID_COUNT).fill(0).map((_, index) => {
         const {
             x,y
         } = convertTerrainIndexToPosition(index)

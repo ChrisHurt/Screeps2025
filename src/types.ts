@@ -100,5 +100,11 @@ export type TERRAIN_MASK_PLAIN = 0
 export type TERRAIN_MASK_WALL = 1
 export type TERRAIN_MASK_SWAMP = 2
 
-export type TerrainTypeArray = FixedLengthArray<TERRAIN_MASK_PLAIN | TERRAIN_MASK_WALL | TERRAIN_MASK_SWAMP, 625>
-export type TerrainDistanceArray = FixedLengthArray<number, 625>
+export const ROOM_SIZE = 50 // 50x50 grid for Screeps rooms
+export const ROOM_GRID_COUNT = ROOM_SIZE*ROOM_SIZE // 50x50 grid
+
+
+// @ts-ignore "Type instantiation is excessively deep and possibly infinite."
+export type TerrainTypeArray = FixedLengthArray<TERRAIN_MASK_PLAIN | TERRAIN_MASK_WALL | TERRAIN_MASK_SWAMP, typeof ROOM_GRID_COUNT>
+
+export type TerrainDistanceArray = FixedLengthArray<number, typeof ROOM_GRID_COUNT>

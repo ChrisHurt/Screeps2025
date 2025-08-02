@@ -1,64 +1,103 @@
-import { Position, TERRAIN_MASK_PLAIN, TerrainDistanceArray, TerrainTypeArray } from "types"
+import { convertPositionToTerrainIndex, convertTerrainIndexToPosition } from "conversions"
+import { findFreeAdjacentPositions } from "findFreeAdjacentPositions"
+import { Position, ROOM_GRID_COUNT, ROOM_SIZE, TERRAIN_MASK_PLAIN, TerrainDistanceArray, TerrainTypeArray } from "types"
 
 interface SingleSourceShortestPathParams {
-    startingPoints: Position[]
+    excludeStartingPoints?: boolean
+    excludeAdjacent?: boolean
+    startingPoints: RoomPosition[]
     terrainArray: TerrainTypeArray | []
 }
 
 export const singleSourceShortestPaths = ({
+    excludeStartingPoints = false,
+    excludeAdjacent = false,
     startingPoints,
     terrainArray
-}: SingleSourceShortestPathParams): Position => {
-    const terrainDistances: TerrainDistanceArray[] = startingPoints.map(start => terrainArray.length === 625 ? singleSourceShortestPath(terrainArray, start) : new Array(625).fill(Infinity) as TerrainDistanceArray)
+}: SingleSourceShortestPathParams): Position[] => {
+    const terrainDistances: TerrainDistanceArray[] = startingPoints.map(start => floodfillDistances(terrainArray, start))
     const terrainDistanceSum: TerrainDistanceArray = terrainDistances.reduce<TerrainDistanceArray>(function (distancesSum: TerrainDistanceArray, terrainDistance: TerrainDistanceArray): TerrainDistanceArray {
-        return distancesSum.map((value, index) => value + terrainDistance[index]) as TerrainDistanceArray
-    }, new Array(625).fill(0) as TerrainDistanceArray)
+        return distancesSum.map<number>((value, index) => {
+            return value + terrainDistance[index]
+        }) as TerrainDistanceArray
+    }, new Array(ROOM_GRID_COUNT).fill(0) as TerrainDistanceArray)
 
     const minimumSumDistance = Math.min(...terrainDistanceSum)
-    const optimumSpawnLocationIndex = terrainDistanceSum.findIndex(distance => distance === minimumSumDistance)
 
-    return {
-        x: (optimumSpawnLocationIndex % 25) + 1,
-        y: Math.floor(optimumSpawnLocationIndex / 25) + 1,
-    }
+    const excludedIndices: Set<number> = startingPoints.reduce<Set<number>>((set, startPos) => {
+        const startIndex = convertPositionToTerrainIndex(startPos)
+        excludeStartingPoints && set.add(startIndex)
+
+        if(excludeAdjacent) {
+            const adjacentPositions = findFreeAdjacentPositions({
+                roomPosition: new RoomPosition(startPos.x, startPos.y, startPos.roomName),
+                terrainArray
+            })
+
+            adjacentPositions.map(pos => convertPositionToTerrainIndex(pos)).forEach(index => {
+                set.add(index)
+            })
+        }
+
+        return set
+    }, new Set<number>())
+
+    // Return all positions with minimumSumDistance and not excluded
+    const optimumSpawnLocationIndices = terrainDistanceSum
+        .map((distance, index) => ({ distance, index }))
+        .filter(({ distance, index }) => distance === minimumSumDistance && !excludedIndices.has(index))
+        .map(({ index }) => index)
+
+    return optimumSpawnLocationIndices.map(convertTerrainIndexToPosition)
 }
 
-const singleSourceShortestPath = (terrainArray: TerrainTypeArray, start: Position): TerrainDistanceArray => {
-    const distances: TerrainDistanceArray = new Array(625).fill(Infinity) as TerrainDistanceArray
+const floodfillDistances = (terrainArray: TerrainTypeArray, start: Position): TerrainDistanceArray => {
+    const distances: number[] = new Array(ROOM_GRID_COUNT).fill(Infinity) as TerrainDistanceArray
     const queue: Position [] = []
-
-    distances[(start.y - 1) * 25 + (start.x - 1)] = 0
+    const startIndex = convertPositionToTerrainIndex(start)
+    distances[startIndex] = 0
     queue.push(start)
 
     while (queue.length > 0) {
-        const current = queue.shift()!
-        const currentIndex = (current.y - 1) * 25 + (current.x - 1)
+        const currentPosition = queue.shift()!
+        const currentIndex = convertPositionToTerrainIndex(currentPosition)
+
+        const currentDistance = distances[currentIndex]
+        const currentTerrainType = terrainArray[currentIndex]
 
         for (let dx = -1; dx <= 1; dx++) {
             for (let dy = -1; dy <= 1; dy++) {
-                // if (Math.abs(dx) === Math.abs(dy)) continue // Skip diagonals
+                if (dx === 0 && dy === 0) continue // Skip the current position
 
-                const nx = current.x + dx
-                const ny = current.y + dy
+                const nx = currentPosition.x + dx
+                const ny = currentPosition.y + dy
 
-                if (nx < 1 || nx > 25 || ny < 1 || ny > 25) continue // Out of bounds
+                if (nx < 0 || nx >= ROOM_SIZE || ny < 0 || ny >= ROOM_SIZE) continue // Out of bounds
 
-                const neighborIndex = (ny - 1) * 25 + (nx - 1)
+                const neighborIndex = convertPositionToTerrainIndex({ x: nx, y: ny })
+                const neighbourTerrainType = terrainArray[neighborIndex]
 
-                const terrainType = terrainArray[neighborIndex]
-                if (terrainType === TERRAIN_MASK_WALL) continue // Skip walls
+                // NOTE: The neighbour terrain must not be a wall
+                if (neighbourTerrainType === TERRAIN_MASK_WALL) continue // Skip walls
 
-                const newDistance = distances[currentIndex] + TERRAIN_WEIGHTS[terrainType]
+                // NOTE: The current terrain is used to determine the weight of the path
+                const newDistance = currentDistance + TERRAIN_WEIGHTS[currentTerrainType]
 
+                // NOTE: If the neighbour hasn't been visited, add it to the queue
+                if(distances[neighborIndex] === Infinity) {
+                    queue.push({ x: nx, y: ny })
+                }
+
+                // NOTE: If the new distance is less than the current distance, update it
+                // This ensures that we always have the shortest path to each position
                 if (newDistance < distances[neighborIndex]) {
                     distances[neighborIndex] = newDistance
-                    queue.push({ x: nx, y: ny })
                 }
             }
         }
     }
 
-    return distances
+    return distances as TerrainDistanceArray
 }
 
 const SWAMP_WEIGHT = 5

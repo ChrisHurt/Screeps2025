@@ -1,8 +1,3 @@
-// TODO: Manually check if I can use Game.map.describeExits(notAccessedRoomName) instead of the map graph
-
-import { close } from "fs"
-
-
 // Behaviour: Creates a connections list (roomNameOne-roomNameTwo) for each connection between rooms
 export const createMapConnections = (): void => {
     const startingRoomName = Object.keys(Game.rooms).length && Object.keys(Game.rooms)[0]

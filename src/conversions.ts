@@ -1,13 +1,13 @@
-import { Position } from "types"
+import { Position, ROOM_SIZE } from "types"
 
 export const convertPositionToTerrainIndex = ({
     x,
     y,
 }: Position | RoomPosition): number => {
-    return (y-1) * 25 + x - 1
+    return (y) * ROOM_SIZE + x
 }
 
 export const convertTerrainIndexToPosition = (index: number): Position => ({
-  x: (index % 25) + 1,
-  y: Math.floor(index / 25) + 1
+  x: (index % ROOM_SIZE),
+  y: Math.floor(index / ROOM_SIZE)
 })

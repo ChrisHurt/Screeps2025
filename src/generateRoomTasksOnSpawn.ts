@@ -88,5 +88,6 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     startingPoints: sources.map(source => source.pos),
     terrainArray
   })
-  roomMemory.optimumSpawnPosition = optimumSpawnPosition
+
+  roomMemory.optimumSpawnPosition = optimumSpawnPosition[0]
 }

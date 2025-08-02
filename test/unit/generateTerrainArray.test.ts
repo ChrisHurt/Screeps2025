@@ -4,6 +4,7 @@ const _ = require('lodash');
 import { generateTerrainArray } from "../../src/generateTerrainArray";
 import { mockGame, mockMemory } from "./mock";
 import { convertPositionToTerrainIndex } from "../../src/conversions";
+import { ROOM_GRID_COUNT } from 'types';
 
 describe("generateTerrainArray", () => {
   beforeEach(() => {
@@ -37,7 +38,7 @@ describe("generateTerrainArray", () => {
       const terrainArray = generateTerrainArray("W1N1")
 
       // Verify it's an array of the correct length
-      expect(terrainArray.length).to.equal(625);
+      expect(terrainArray.length).to.equal(ROOM_GRID_COUNT);
 
       // Check specific positions to ensure they match our mock terrain
       const wallIndex = convertPositionToTerrainIndex({ x: 10, y: 10 })

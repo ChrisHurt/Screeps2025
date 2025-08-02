@@ -26,6 +26,11 @@ export const spawnCreeps = () => {
         }
 
         const harvestTasks = roomTasks.harvest
+        if (!harvestTasks || !Array.isArray(harvestTasks)) {
+            console.log(`SpawnCreepsDebug: No harvest tasks found for room ${roomName}`)
+            continue
+        }
+
         for (const harvestTask of harvestTasks) {
             const reservedWorkParts = Object.values(harvestTask.reservingCreeps).reduce((total,creep) => total+creep.workParts,0)
             const requiredWorkParts = harvestTask.requiredWorkParts
@@ -85,6 +90,11 @@ export const spawnCreeps = () => {
         }
 
         const upgradeTask = roomTasks.upgrade
+
+        if (!upgradeTask || !upgradeTask.controllerId || !upgradeTask.controllerPosition) {
+            console.log(`SpawnCreepsDebug: No upgrade task found for room ${roomName}`)
+            continue
+        }
 
         if (upgradeTask) {
             const controller = room.controller
