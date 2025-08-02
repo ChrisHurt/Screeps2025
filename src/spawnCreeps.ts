@@ -1,4 +1,4 @@
-import { ReservingCreeps } from "types"
+import { CreepHarvestTask, ReservingCreeps } from "types"
 
 export const spawnCreeps = () => {
     const rooms = Game.rooms
@@ -26,12 +26,12 @@ export const spawnCreeps = () => {
         }
 
         const harvestTasks = roomTasks.harvest
-        if (!harvestTasks || !Array.isArray(harvestTasks)) {
+        if (!harvestTasks) {
             console.log(`SpawnCreepsDebug: No harvest tasks found for room ${roomName}`)
             continue
         }
 
-        for (const harvestTask of harvestTasks) {
+        for (const [index, harvestTask] of Object.entries(harvestTasks)) {
             const reservedWorkParts = Object.values(harvestTask.reservingCreeps).reduce((total,creep) => total+creep.workParts,0)
             const requiredWorkParts = harvestTask.requiredWorkParts
             const availablePositionsCount = harvestTask.availablePositions.length
@@ -40,14 +40,14 @@ export const spawnCreeps = () => {
                 Object.keys(harvestTask.reservingCreeps),
                 Object.keys(Game.creeps)
             )
-
-            harvestTask.reservingCreeps = livingReservingCreeps.reduce<ReservingCreeps>((acc, creepName) => {
+            const newReservingCreeps: ReservingCreeps = livingReservingCreeps.reduce<ReservingCreeps>((acc, creepName) => {
                 if(livingReservingCreeps.includes(creepName)) {
                     acc[creepName] = harvestTask.reservingCreeps[creepName]
                 }
                 return acc
             }, {})
 
+            harvestTask.reservingCreeps = newReservingCreeps
 
             const workersAreNeeded = requiredWorkParts - reservedWorkParts > 0
             const roomIsAvailable = livingReservingCreeps.length < availablePositionsCount
@@ -68,20 +68,21 @@ export const spawnCreeps = () => {
                     spawnsReserved.push(nearestSpawn.id)
 
                     const creepName = `Harvester-${harvestTask.sourceId}-${Game.time}`
+                    const creepBody = [WORK, CARRY, MOVE]
+                    const creepHarvestTask: CreepHarvestTask = {
+                        sourceId: harvestTask.sourceId,
+                        sourcePosition: harvestTask.sourcePosition,
+                        type: "harvest",
+                        taskId: `${harvestTask.roomName}-${harvestTask.sourceId}`,
+                        workParts: 1
+                    }
+
                     nearestSpawn?.spawnCreep(
-                        [WORK, CARRY, MOVE],
+                        creepBody,
                         creepName,
-                        {
-                            memory: {
-                                task: {
-                                    type: "harvest",
-                                    taskId: `${harvestTask.roomName}-${harvestTask.sourceId}`,
-                                    sourceId: harvestTask.sourceId,
-                                    sourcePosition: harvestTask.sourcePosition,
-                                }
-                            }
-                        }
+                        { memory: { task: creepHarvestTask } }
                     )
+
                     harvestTask.reservingCreeps[creepName] = {
                         workParts: 1
                     }

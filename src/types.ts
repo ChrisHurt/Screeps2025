@@ -6,13 +6,30 @@ export interface LinkedListTask {
   next: LinkedListTask | null
   prev: LinkedListTask | null
 }
+export type TaskType = 'harvest' | 'upgrade' | 'build' | 'repair' | 'attack' | 'defend' | 'claim' | 'withdraw' | 'transfer' | 'drop' | 'pickup'
 export interface EvaluationTask extends LinkedListTask {}
 export interface StructureTask extends LinkedListTask {}
-export interface CreepTask extends LinkedListTask {}
-export interface HarvestTask extends CreepTask {
+export interface CreepTask {
+  taskId: string
+  type: TaskType
+}
+
+export interface CreepUpgradeTask extends CreepTask {
+  controllerId: string
+  controllerPosition: RoomPosition
+  type: 'upgrade'
+  workParts: number
+}
+export interface CreepHarvestTask extends CreepTask {
+  sourceId: string
+  sourcePosition: RoomPosition
+  type: 'harvest'
+  workParts: number
+}
+export interface RoomHarvestTask {
   availablePositions: Position[]
   sourceId: string
-  sourcePosition: Position
+  sourcePosition: RoomPosition
   roomName: RoomId
   requiredWorkParts: number
   reservingCreeps: ReservingCreeps
@@ -26,16 +43,12 @@ export interface ReservingCreep {
   workParts: number
 }
 
-export interface UpgradeTask extends CreepTask {
-  availablePositions: Position[]
+export interface RoomUpgradeTask {
+  availablePositions: RoomPosition[]
   controllerId: string
-  controllerPosition: Position
+  controllerPosition: RoomPosition
   roomName: RoomId
-  reservingCreeps: {
-    [creepId: string]: {
-      workParts: number
-    }
-  }
+  reservingCreeps: ReservingCreeps
 }
 
 export type TaskId = string
@@ -84,8 +97,8 @@ export interface CustomRoomMemory {
     }
   }
   tasks?: {
-    upgrade?: UpgradeTask
-    harvest: HarvestTask[]
+    upgrade?: RoomUpgradeTask
+    harvest: RoomHarvestTask[]
   }
   totalEnergyGenerationPerTick: number
 }

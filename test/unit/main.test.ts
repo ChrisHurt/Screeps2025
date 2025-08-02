@@ -16,6 +16,8 @@ describe("main", () => {
     global.Memory = clone(mockMemory)
     // @ts-ignore
     global.Game.map.visual = { line: function() { (Game.map.visual.calls = Game.map.visual.calls || []).push([...arguments]) } }
+    global.Game.rooms = {}
+    global.Game.creeps = {}
     loop()
   })
 
@@ -28,7 +30,9 @@ describe("main", () => {
   })
 
   it("Automatically delete memory of missing creeps", () => {
+    // @ts-ignore : Permit invalid memory for testing
     Memory.creeps.persistValue = "any value"
+    // @ts-ignore : Permit invalid memory for testing
     Memory.creeps.notPersistValue = "any value"
 
     // @ts-ignore : allow adding Game to global

@@ -16,7 +16,9 @@ export const mockGame: {
 } = {
   creeps: {},
   rooms: {},
-  spawns: {},
+  spawns: {
+    'Spawn1': { id: 'spawn1', spawning: false, spawnCreep: () => {} },
+  } as any as StructureSpawn[],
   time: 12345,
   map: {
     describeExits: (roomName: string) => ({})

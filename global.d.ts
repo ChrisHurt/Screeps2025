@@ -6,8 +6,13 @@ import {
   SpawnMemory,
   RoomId,
   CustomRoomMemory,
-  HarvestTask,
-  UpgradeTask
+  RoomHarvestTask,
+  RoomUpgradeTask,
+  Position,
+  TaskType,
+  CreepTask,
+  CreepHarvestTask,
+  CreepUpgradeTask
 } from "types"
 
 declare global {
@@ -64,10 +69,21 @@ declare global {
       }
     }
     tasks?: {
-      upgrade?: UpgradeTask
-      harvest: HarvestTask[]
+      upgrade?: RoomUpgradeTask
+      harvest: RoomHarvestTask[]
     }
     totalEnergyGenerationPerTick: number
+  }
+  interface CreepMemory {
+    task?: CreepHarvestTask | CreepUpgradeTask
+  }
+
+  interface Creep {
+    workParts: number
+    carryParts: number
+    moveParts: number
+    bodyParts: { [type: string]: number }
+    memory: CreepMemory
   }
 }
 

@@ -1,7 +1,7 @@
 import { findFreeAdjacentPositions } from "findFreeAdjacentPositions"
 import { generateTerrainArray } from "generateTerrainArray"
 import { singleSourceShortestPaths } from "singleSourceShortestPath"
-import { HarvestTask, UpgradeTask } from "types"
+import { RoomHarvestTask, RoomUpgradeTask } from "types"
 
 export const generateRoomTasksOnSpawn = (roomName: string) => {
   const room = Game.rooms[roomName]
@@ -23,13 +23,11 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
 
   const terrainArray = generateTerrainArray(roomName)
 
-  const upgradeTask: UpgradeTask = {
+  const upgradeTask: RoomUpgradeTask = {
     availablePositions: findFreeAdjacentPositions({
       roomPosition: controller.pos,
       terrainArray
     }),
-    next: null,
-    prev: null,
     roomName,
     reservingCreeps: {},
     controllerId: controller.id,
@@ -51,14 +49,12 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
       position: source.pos
     }
 
-    const harvestTask: HarvestTask = {
+    const harvestTask: RoomHarvestTask = {
       availablePositions: findFreeAdjacentPositions({
         roomPosition: source.pos,
         terrainArray
       }),
       requiredWorkParts: sourcesMemory[source.id].energyGenerationPerTick / 2, // Each WORK part harvests 2 energy per tick
-      next: null,
-      prev: null,
       roomName: roomName,
       reservingCreeps: {},
       sourceId: source.id,
