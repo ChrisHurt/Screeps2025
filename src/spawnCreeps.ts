@@ -1,4 +1,4 @@
-import { CreepHarvestTask, ReservingCreeps } from "types"
+import { CreepHarvestTask, CreepUpgradeTask, ReservingCreeps } from "types"
 
 export const spawnCreeps = () => {
     const rooms = Game.rooms
@@ -31,7 +31,7 @@ export const spawnCreeps = () => {
             continue
         }
 
-        for (const [index, harvestTask] of Object.entries(harvestTasks)) {
+        for (const harvestTask of harvestTasks) {
             const reservedWorkParts = Object.values(harvestTask.reservingCreeps).reduce((total,creep) => total+creep.workParts,0)
             const requiredWorkParts = harvestTask.requiredWorkParts
             const availablePositionsCount = harvestTask.availablePositions.length
@@ -41,9 +41,7 @@ export const spawnCreeps = () => {
                 Object.keys(Game.creeps)
             )
             const newReservingCreeps: ReservingCreeps = livingReservingCreeps.reduce<ReservingCreeps>((acc, creepName) => {
-                if(livingReservingCreeps.includes(creepName)) {
-                    acc[creepName] = harvestTask.reservingCreeps[creepName]
-                }
+                acc[creepName] = harvestTask.reservingCreeps[creepName]
                 return acc
             }, {})
 
@@ -58,34 +56,32 @@ export const spawnCreeps = () => {
 
             if (shouldSpawnHarvesters) {
                 const sourceRoomPosition = new RoomPosition(harvestTask.sourcePosition.x, harvestTask.sourcePosition.y, roomName)
-                if (sourceRoomPosition) {
-                    const nearestSpawn = sourceRoomPosition.findClosestByRange(FIND_MY_SPAWNS, { filter: (spawn) => spawn.spawning === null && !spawnsReserved.includes(spawn.id) })
+                const nearestSpawn = sourceRoomPosition.findClosestByRange(FIND_MY_SPAWNS, { filter: (spawn) => spawn.spawning === null && !spawnsReserved.includes(spawn.id) })
 
-                    if (!nearestSpawn) {
-                        console.log(`SpawnCreepsDebug: No available spawn found for harvest task '${harvestTask.sourceId}' in room ${roomName}`)
-                        break
-                    }
-                    spawnsReserved.push(nearestSpawn.id)
+                if (!nearestSpawn) {
+                    console.log(`SpawnCreepsDebug: No available spawn found for harvest task '${harvestTask.sourceId}' in room ${roomName}`)
+                    break
+                }
+                spawnsReserved.push(nearestSpawn.id)
 
-                    const creepName = `Harvester-${harvestTask.sourceId}-${Game.time}`
-                    const creepBody = [WORK, CARRY, MOVE]
-                    const creepHarvestTask: CreepHarvestTask = {
-                        sourceId: harvestTask.sourceId,
-                        sourcePosition: harvestTask.sourcePosition,
-                        type: "harvest",
-                        taskId: `${harvestTask.roomName}-${harvestTask.sourceId}`,
-                        workParts: 1
-                    }
+                const creepName = `Harvester-${harvestTask.sourceId}-${Game.time}`
+                const creepBody = [WORK, CARRY, MOVE]
+                const creepHarvestTask: CreepHarvestTask = {
+                    sourceId: harvestTask.sourceId,
+                    sourcePosition: harvestTask.sourcePosition,
+                    type: "harvest",
+                    taskId: `${harvestTask.roomName}-${harvestTask.sourceId}`,
+                    workParts: 1
+                }
 
-                    nearestSpawn?.spawnCreep(
-                        creepBody,
-                        creepName,
-                        { memory: { task: creepHarvestTask } }
-                    )
+                nearestSpawn.spawnCreep(
+                    creepBody,
+                    creepName,
+                    { memory: { task: creepHarvestTask } }
+                )
 
-                    harvestTask.reservingCreeps[creepName] = {
-                        workParts: 1
-                    }
+                harvestTask.reservingCreeps[creepName] = {
+                    workParts: 1
                 }
             }
         }
@@ -97,32 +93,32 @@ export const spawnCreeps = () => {
             continue
         }
 
-        if (upgradeTask) {
-            const controller = room.controller
+        const controller = room.controller
+        if(!controller) continue
 
-            if(!controller) continue
+        const nearestSpawn = controller.pos.findClosestByRange(FIND_MY_SPAWNS, { filter: (spawn) => spawn.spawning === null && !spawnsReserved.includes(spawn.id) })
+        if (!nearestSpawn) {
+            console.log(`SpawnCreepsDebug: No available spawn found for upgrade task in room ${roomName}`)
+            continue
+        }
 
-            const nearestSpawn = controller.pos.findClosestByRange(FIND_MY_SPAWNS, { filter: (spawn) => spawn.spawning === null && !spawnsReserved.includes(spawn.id) })
-            if (!nearestSpawn) {
-                console.log(`SpawnCreepsDebug: No available spawn found for upgrade task in room ${roomName}`)
-                continue
-            }
+        const creepName = `Upgrader-${upgradeTask.controllerId}-${Game.time}`
+        const creepBody = [WORK, CARRY, MOVE]
+        const creepUpgradeTask: CreepUpgradeTask = {
+            controllerId: upgradeTask.controllerId,
+            controllerPosition: upgradeTask.controllerPosition,
+            taskId: `${upgradeTask.roomName}-${upgradeTask.controllerId}`,
+            type: "upgrade",
+            workParts: 1
+        }
+        nearestSpawn.spawnCreep(
+            creepBody,
+            creepName,
+            { memory: { task: creepUpgradeTask } }
+        )
 
-            nearestSpawn.spawnCreep(
-                [WORK, CARRY, MOVE],
-                `Upgrader-${upgradeTask.controllerId}-${Game.time}`,
-                {
-                    memory: {
-                        task: {
-                            type: "upgrade",
-                            taskId: `${upgradeTask.roomName}-${upgradeTask.controllerId}`,
-                            controllerId: upgradeTask.controllerId,
-                            controllerPosition: upgradeTask.controllerPosition,
-                            workParts: 1
-                        }
-                    }
-                }
-            )
+        upgradeTask.reservingCreeps[creepName] = {
+            workParts: 1
         }
     }
 }
