@@ -14,11 +14,20 @@ describe('renderMapConnections', () => {
       return { x, y, roomName }
     }
     // @ts-ignore
-    Game.map.visual = { line: function() { (Game.map.visual.calls = Game.map.visual.calls || []).push([...arguments]) } }
+    global.Game.map.visual = { line: function() { (Game.map.visual.calls = Game.map.visual.calls || []).push([...arguments]) } }
+    // @ts-ignore
+    global.Memory.mapConnections = undefined
   })
 
   it('should not throw if there are no connections', () => {
     Memory.mapConnections = []
+    expect(() => renderMapConnections()).to.not.throw()
+    // @ts-ignore Mock for Game.map.visual
+    expect(Game.map.visual.calls || []).to.have.length(0)
+  })
+
+  it('should not throw if connections are undefined', () => {
+    // Memory.mapConnections = []
     expect(() => renderMapConnections()).to.not.throw()
     // @ts-ignore Mock for Game.map.visual
     expect(Game.map.visual.calls || []).to.have.length(0)

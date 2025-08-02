@@ -1,10 +1,10 @@
-import { describe, beforeEach, it } from 'mocha';
-import { expect } from 'chai';
-const _ = require('lodash');
-import { generateTerrainArray } from "../../src/generateTerrainArray";
-import { mockGame, mockMemory } from "./mock";
-import { convertPositionToTerrainIndex } from "../../src/conversions";
-import { ROOM_GRID_COUNT } from 'types';
+import { describe, beforeEach, it } from 'mocha'
+import { expect } from 'chai'
+const _ = require('lodash')
+import { generateTerrainArray } from "../../src/generateTerrainArray"
+import { mockGame, mockMemory } from "./mock"
+import { convertPositionToTerrainIndex } from "../../src/conversions"
+import { ROOM_GRID_COUNT } from 'types'
 
 describe("generateTerrainArray", () => {
   beforeEach(() => {
@@ -38,16 +38,16 @@ describe("generateTerrainArray", () => {
       const terrainArray = generateTerrainArray("W1N1")
 
       // Verify it's an array of the correct length
-      expect(terrainArray.length).to.equal(ROOM_GRID_COUNT);
+      expect(terrainArray.length).to.equal(ROOM_GRID_COUNT)
 
       // Check specific positions to ensure they match our mock terrain
       const wallIndex = convertPositionToTerrainIndex({ x: 10, y: 10 })
       const swampIndex = convertPositionToTerrainIndex({ x: 15, y: 15 })
       const plainIndex = convertPositionToTerrainIndex({ x: 5, y: 5 })
 
-      expect(terrainArray[wallIndex]).to.equal(1);
-      expect(terrainArray[swampIndex]).to.equal(2);
-      expect(terrainArray[plainIndex]).to.equal(0);
+      expect(terrainArray[wallIndex]).to.equal(1)
+      expect(terrainArray[swampIndex]).to.equal(2)
+      expect(terrainArray[plainIndex]).to.equal(0)
     })
   })
 
@@ -60,7 +60,7 @@ describe("generateTerrainArray", () => {
       const terrainArray = generateTerrainArray("W1N1")
 
       // Verify it's an empty array
-      expect(terrainArray).to.deep.equal([]);
+      expect(terrainArray).to.deep.equal([])
     })
   })
 
@@ -78,7 +78,15 @@ describe("generateTerrainArray", () => {
       const terrainArray = generateTerrainArray("W1N1")
 
       // Verify it's an empty array
-      expect(terrainArray).to.deep.equal([]);
+      expect(terrainArray).to.deep.equal([])
+    })
+
+    it("should return an empty array if room is not found", () => {
+      // Generate terrain array
+      const terrainArray = generateTerrainArray("W1N1")
+
+      // Verify it's an empty array
+      expect(terrainArray).to.deep.equal([])
     })
   })
 })

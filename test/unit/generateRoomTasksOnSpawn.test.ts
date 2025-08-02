@@ -41,6 +41,8 @@ describe('generateRoomTasksOnSpawn', () => {
     // @ts-ignore
     global.MINERAL_REGEN_TIME = 1000
     global.Game.rooms = {}
+    // @ts-ignore
+    global.Memory.rooms = {}
   })
 
   it('should not throw or set memory if room is not in Game.rooms', () => {
@@ -83,5 +85,20 @@ describe('generateRoomTasksOnSpawn', () => {
     expect(mem.mineral?.density).to.equal(1000)
     expect(mem.mineral?.position).to.deep.equal({ x: 15, y: 15, roomName: 'W1N1' })
     expect(mem.mineral?.mineralGenerationPerTick).to.equal(1)
+  })
+
+  it('should leave mineral memory unset if no mineral is present', () => {
+    Game.rooms['W1N1'] = {
+      ...mockRoom,
+      find: (type: number) => {
+        if (type === FIND_SOURCES) {
+          return [mockSource]
+        }
+        return []
+      }
+    }
+    generateRoomTasksOnSpawn('W1N1')
+    const mem = Memory.rooms['W1N1']
+    expect(mem.mineral).to.not.exist
   })
 })

@@ -14,6 +14,8 @@ describe("main", () => {
     global.Game = clone(mockGame)
     // @ts-ignore : allow adding Memory to global
     global.Memory = clone(mockMemory)
+    // @ts-ignore
+    global.Game.map.visual = { line: function() { (Game.map.visual.calls = Game.map.visual.calls || []).push([...arguments]) } }
     loop()
   })
 

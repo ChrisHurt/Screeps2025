@@ -149,4 +149,58 @@ describe('singleSourceShortestPaths', () => {
       { x: 25, y: 25 }
     ])
   })
+
+  it('should triangulate between 3 starting points', () => {
+    const terrainArray = new Array(ROOM_GRID_COUNT).fill(0) as TerrainTypeArray
+    const startingPoints = [
+      new RoomPosition(5, 5, 'W1N1'),
+      new RoomPosition(15, 25, 'W1N1'),
+      new RoomPosition(25, 15, 'W1N1'),
+    ]
+    const result = singleSourceShortestPaths({
+      startingPoints,
+      terrainArray,
+    })
+
+    expect(result).to.deep.equal([
+      { x: 20, y: 20 },
+    ])
+  })
+
+  it('should exclude starting points if specified', () => {
+    const terrainArray = new Array(ROOM_GRID_COUNT).fill(0) as TerrainTypeArray
+    const startingPoints = [
+      new RoomPosition(1, 1, 'W1N1'),
+      new RoomPosition(3, 3, 'W1N1'),
+    ]
+    const result = singleSourceShortestPaths({
+      startingPoints,
+      terrainArray,
+      excludeStartingPoints: true
+    })
+    expect(result).to.not.include({ x: 1, y: 1 })
+    expect(result).to.not.include({ x: 3, y: 3 })
+    expect(result).to.deep.equal([
+      { x: 2, y: 2 },
+    ])
+  })
+
+  it('should exclude adjacent positions if specified', () => {
+    const terrainArray = new Array(ROOM_GRID_COUNT).fill(0) as TerrainTypeArray
+    const startingPoints = [
+      new RoomPosition(1, 1, 'W1N1'),
+      new RoomPosition(3, 3, 'W1N1'),
+    ]
+    const result = singleSourceShortestPaths({
+      startingPoints,
+      terrainArray,
+      excludeAdjacent: true
+    })
+
+    expect(result).to.not.include({ x: 2, y: 2 })
+    expect(result).to.deep.equal([
+      { x: 1, y: 1 },
+      { x: 3, y: 3 },
+    ])
+  })
 })
