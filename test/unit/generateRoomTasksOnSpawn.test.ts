@@ -2,7 +2,6 @@ import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import { generateRoomTasksOnSpawn } from '../../src/generateRoomTasksOnSpawn'
 import * as sinon from 'sinon'
-import { mockGame, mockMemory } from '../helpers/mock'
 import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('generateRoomTasksOnSpawn', () => {
