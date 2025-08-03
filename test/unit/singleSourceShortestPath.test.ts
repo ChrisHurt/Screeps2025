@@ -1,22 +1,13 @@
 import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import { singleSourceShortestPaths } from '../../src/singleSourceShortestPath'
-import { mockGame, mockMemory } from './mock'
 import { ROOM_GRID_COUNT, TerrainTypeArray } from 'types'
 import { convertPositionToTerrainIndex } from 'conversions'
+import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('singleSourceShortestPaths', () => {
   beforeEach(() => {
-    // @ts-ignore
-    global.Game = { ...mockGame }
-    // @ts-ignore
-    global.Memory = { ...mockMemory }
-    // @ts-ignore
-    global.TERRAIN_MASK_PLAIN = 0
-    // @ts-ignore
-    global.TERRAIN_MASK_WALL = 1
-    // @ts-ignore
-    global.TERRAIN_MASK_SWAMP = 2
+    setupGlobals()
   })
 
   it('should return the starting point if only one', () => {

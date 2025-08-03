@@ -1,19 +1,15 @@
 import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import { findFreeAdjacentPositions } from '../../src/findFreeAdjacentPositions'
-import { mockGame, mockMemory } from './mock'
+import { mockGame, mockMemory } from '../helpers/mock'
 import { convertPositionToTerrainIndex } from '../../src/conversions'
 import { ROOM_GRID_COUNT, TerrainTypeArray } from 'types'
+import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('findFreeAdjacentPositions', () => {
 
   beforeEach(() => {
-    // @ts-ignore
-    global.Game = { ...mockGame }
-    // @ts-ignore
-    global.Memory = { ...mockMemory }
-    // @ts-ignore
-    global.TERRAIN_MASK_WALL = 1
+    setupGlobals()
     // @ts-ignore
     global.RoomPosition = function(x, y, roomName) {
       return { x, y, roomName }

@@ -1,23 +1,10 @@
 import { assert } from "chai"
 import { loop } from "../../src/main"
-import { mockGame, mockMemory } from "./mock"
-import { clone } from 'lodash'
+import { setupGlobals } from "../helpers/setupGlobals"
 
 describe("main", () => {
-  before(() => {
-    // runs before all tests in this block
-  })
-
   beforeEach(() => {
-    // runs before each test in this block
-    // @ts-ignore : allow adding Game to global
-    global.Game = clone(mockGame)
-    // @ts-ignore : allow adding Memory to global
-    global.Memory = clone(mockMemory)
-    // @ts-ignore
-    global.Game.map.visual = { line: function() { (Game.map.visual.calls = Game.map.visual.calls || []).push([...arguments]) } }
-    global.Game.rooms = {}
-    global.Game.creeps = {}
+    setupGlobals()
     loop()
   })
 

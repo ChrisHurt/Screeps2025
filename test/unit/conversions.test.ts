@@ -3,15 +3,11 @@ import { expect } from 'chai'
 const _ = require('lodash')
 import { convertPositionToTerrainIndex, convertTerrainIndexToPosition } from "../../src/conversions"
 import { Position, ROOM_GRID_COUNT } from "../../src/types"
-import { mockGame, mockMemory } from "./mock"
+import { setupGlobals } from '../helpers/setupGlobals'
 
 describe("conversions", () => {
   beforeEach(() => {
-    // Set up mock globals before each test
-    // @ts-ignore : allow adding Game to global
-    global.Game = _.clone(mockGame)
-    // @ts-ignore : allow adding Memory to global
-    global.Memory = _.clone(mockMemory)
+    setupGlobals()
   })
 
   describe("convertPositionToTerrainIndex", () => {

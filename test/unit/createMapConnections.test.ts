@@ -1,22 +1,14 @@
 import { assert } from "chai"
 import { createMapConnections } from "../../src/createMapConnections"
-import { mockGame, mockMemory, ExitsInformation } from "./mock"
+import { ExitsInformation } from "../helpers/mock"
+import { setupGlobals } from "../helpers/setupGlobals"
 
 describe("createMapConnections", () => {
   beforeEach(() => {
-    // @ts-ignore Test setup
-    global.Game = Object.assign({}, mockGame)
-    // @ts-ignore Test setup
-    global.Memory = Object.assign({}, mockMemory) as Memory
-
-    // Reset map connections before each test
-    Memory.mapConnections = []
-    Memory.mapRoomGraph = {}
+    setupGlobals()
   })
 
   it("should do nothing when there are no rooms", () => {
-    Game.rooms = {}
-
     createMapConnections()
 
     assert.deepEqual(Memory.mapConnections, [])
@@ -52,7 +44,7 @@ describe("createMapConnections", () => {
 
     // Should have 4 connections (W1N1-W0N1, W1N1-W1N0, W1N1-W1N2, W1N1-W2N1)
     assert.equal(Memory.mapConnections.length, 4)
-    
+
     // Verify all expected connections exist
     const expectedConnections = [
       "W0N1-W1N1",
@@ -60,18 +52,18 @@ describe("createMapConnections", () => {
       "W1N1-W1N2",
       "W1N1-W2N1"
     ]
-    
+
     for (const connection of expectedConnections) {
       assert.include(Memory.mapConnections, connection, `Connection ${connection} should exist`)
     }
-    
+
     // Verify mapRoomGraph was updated correctly
     assert.deepEqual(Memory.mapRoomGraph["W1N1"], ["W1N2", "W2N1", "W1N0", "W0N1"])
   })
 
   it("should create connections for multiple interconnected rooms", () => {
     Game.rooms = { "W1N1": { name: "W1N1" } as Room }
-    
+
     Game.map.describeExits = (roomName: string) => {
       if (roomName === "W1N1") {
         return { "3": "E1N1", "7": "W2N1" } as ExitsInformation

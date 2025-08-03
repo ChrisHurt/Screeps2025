@@ -2,8 +2,8 @@ import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { spawnCreeps } from '../../src/spawnCreeps'
-import { mockGame, mockMemory } from './mock'
 import { RoomHarvestTask, RoomUpgradeTask } from 'types'
+import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('spawnCreeps', () => {
   let spawnCreepSpy: sinon.SinonSpy = sinon.spy()
@@ -14,25 +14,11 @@ describe('spawnCreeps', () => {
   }
 
   beforeEach(() => {
-    spawnCreepSpy.resetHistory()
-    // @ts-ignore
-    global.Game = { ...mockGame }
-    // @ts-ignore
-    global.Memory = { ...mockMemory }
-    // @ts-ignore
-    global.FIND_MY_SPAWNS = 3
-    // @ts-ignore
-    global.WORK = 'work'
-    // @ts-ignore
-    global.CARRY = 'carry'
-    // @ts-ignore
-    global.MOVE = 'move'
+    setupGlobals()
     // @ts-ignore
     global.Game.spawns = { 'Spawn1': mockSpawn }
 
-    global.Game.rooms = {}
-    global.Game.creeps = {}
-
+    spawnCreepSpy.resetHistory()
     // @ts-ignore
     global.RoomPosition = class {
       constructor(public x: number, public y: number, public roomName: string) {}

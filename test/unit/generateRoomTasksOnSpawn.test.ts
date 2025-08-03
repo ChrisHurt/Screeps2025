@@ -2,7 +2,8 @@ import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import { generateRoomTasksOnSpawn } from '../../src/generateRoomTasksOnSpawn'
 import * as sinon from 'sinon'
-import { mockGame, mockMemory } from './mock'
+import { mockGame, mockMemory } from '../helpers/mock'
+import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('generateRoomTasksOnSpawn', () => {
     const mockController = { id: 'ctrl1', pos: { x: 10, y: 10, roomName: 'W1N1' } }
@@ -30,17 +31,7 @@ describe('generateRoomTasksOnSpawn', () => {
         })
     } as unknown as Room
   beforeEach(() => {
-    // @ts-ignore
-    global.Game = { ...mockGame }
-    // @ts-ignore
-    global.Memory = { ...mockMemory }
-    // @ts-ignore
-    global.FIND_SOURCES = 1
-    // @ts-ignore
-    global.FIND_MINERALS = 2
-    // @ts-ignore
-    global.MINERAL_REGEN_TIME = 1000
-    global.Game.rooms = {}
+    setupGlobals()
     // @ts-ignore
     global.Memory.rooms = {}
   })

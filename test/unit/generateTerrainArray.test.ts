@@ -1,18 +1,13 @@
 import { describe, beforeEach, it } from 'mocha'
 import { expect } from 'chai'
-const _ = require('lodash')
 import { generateTerrainArray } from "../../src/generateTerrainArray"
-import { mockGame, mockMemory } from "./mock"
 import { convertPositionToTerrainIndex } from "../../src/conversions"
 import { ROOM_GRID_COUNT } from 'types'
+import { setupGlobals } from '../helpers/setupGlobals'
 
 describe("generateTerrainArray", () => {
   beforeEach(() => {
-    // Set up mock globals before each test
-    // @ts-ignore : allow adding Game to global
-    global.Game = _.clone(mockGame)
-    // @ts-ignore : allow adding Memory to global
-    global.Memory = _.clone(mockMemory)
+    setupGlobals()
   })
 
   describe("when room is available", () => {

@@ -81,7 +81,7 @@
       "src/utils/ErrorMapper.ts",
       "**/*.d.ts",
       "**/*test.ts",
-      "**/*mock.ts"
+      "test/helpers/**/*.ts"
     ]
   }
 }

@@ -1,20 +1,11 @@
 import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import { renderMapConnections } from '../../src/renderMapConnections'
-import { mockGame, mockMemory } from './mock'
+import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('renderMapConnections', () => {
   beforeEach(() => {
-    // @ts-ignore
-    global.Game = { ...mockGame }
-    // @ts-ignore
-    global.Memory = { ...mockMemory }
-    // @ts-ignore
-    global.RoomPosition = function(x, y, roomName) {
-      return { x, y, roomName }
-    }
-    // @ts-ignore
-    global.Game.map.visual = { line: function() { (Game.map.visual.calls = Game.map.visual.calls || []).push([...arguments]) } }
+   setupGlobals()
     // @ts-ignore
     global.Memory.mapConnections = undefined
   })

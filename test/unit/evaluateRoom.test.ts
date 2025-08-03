@@ -1,14 +1,11 @@
 import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import { evaluateRoom } from '../../src/evaluateRoom'
-import { mockGame, mockMemory } from './mock'
+import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('evaluateRoom', () => {
   beforeEach(() => {
-    // @ts-ignore
-    global.Game = { ...mockGame }
-    // @ts-ignore
-    global.Memory = { ...mockMemory }
+    setupGlobals()
   })
 
   it('should not throw if room is not in Game.rooms', () => {
