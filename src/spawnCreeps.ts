@@ -4,14 +4,14 @@ export const spawnCreeps = () => {
     const rooms = Game.rooms
 
     for (const roomName in rooms) {
-        const spawnsReserved: string[] = []
         const room = rooms[roomName]
-        const roomMemory = Memory.rooms[roomName]
 
         if(!room) {
             console.log(`SpawnCreepsError: Room ${roomName} not found in Game.rooms`)
             continue
         }
+
+        const roomMemory = Memory.rooms[roomName]
 
         if (!roomMemory) {
             console.log(`SpawnCreepsError: No memory found for room ${roomName}`)
@@ -25,7 +25,16 @@ export const spawnCreeps = () => {
             continue
         }
 
+        const roomSpawns = room.find(FIND_MY_SPAWNS)
+        let spawnsAvailable = roomSpawns.filter(spawn => spawn.spawning === null)
+
+        if (spawnsAvailable.length === 0) {
+            console.log(`SpawnCreepsDebug: No available spawns found in room ${roomName}`)
+            continue
+        }
+
         const harvestTasks = roomTasks.harvest
+
         if (!harvestTasks) {
             console.log(`SpawnCreepsDebug: No harvest tasks found for room ${roomName}`)
             continue
@@ -56,13 +65,14 @@ export const spawnCreeps = () => {
 
             if (shouldSpawnHarvesters) {
                 const sourceRoomPosition = new RoomPosition(harvestTask.sourcePosition.x, harvestTask.sourcePosition.y, roomName)
-                const nearestSpawn = sourceRoomPosition.findClosestByRange(FIND_MY_SPAWNS, { filter: (spawn) => spawn.spawning === null && !spawnsReserved.includes(spawn.id) })
+                const nearestSpawn = sourceRoomPosition.findClosestByPath(spawnsAvailable)
 
                 if (!nearestSpawn) {
                     console.log(`SpawnCreepsDebug: No available spawn found for harvest task '${harvestTask.sourceId}' in room ${roomName}`)
                     break
                 }
-                spawnsReserved.push(nearestSpawn.id)
+
+                spawnsAvailable = spawnsAvailable.filter(spawn => spawn.id !== nearestSpawn.id)
 
                 const creepName = `Harvester-${harvestTask.sourceId}-${Game.time}`
                 const creepBody = [WORK, CARRY, MOVE]
@@ -96,11 +106,13 @@ export const spawnCreeps = () => {
         const controller = room.controller
         if(!controller) continue
 
-        const nearestSpawn = controller.pos.findClosestByRange(FIND_MY_SPAWNS, { filter: (spawn) => spawn.spawning === null && !spawnsReserved.includes(spawn.id) })
+        const nearestSpawn = controller.pos.findClosestByPath(spawnsAvailable)
         if (!nearestSpawn) {
             console.log(`SpawnCreepsDebug: No available spawn found for upgrade task in room ${roomName}`)
             continue
         }
+
+        spawnsAvailable = spawnsAvailable.filter(spawn => spawn.id !== nearestSpawn.id)
 
         const creepName = `Upgrader-${upgradeTask.controllerId}-${Game.time}`
         const creepBody = [WORK, CARRY, MOVE]

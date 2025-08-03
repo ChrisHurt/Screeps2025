@@ -29,16 +29,17 @@ describe('spawnCreeps', () => {
     global.MOVE = 'move'
     // @ts-ignore
     global.Game.spawns = { 'Spawn1': mockSpawn }
-    // @ts-ignore
-    global.RoomPosition = class {
-      constructor(public x: number, public y: number, public roomName: string) {}
-      findClosestByRange() {
-        return mockSpawn
-      }
-    }
 
     global.Game.rooms = {}
     global.Game.creeps = {}
+
+    // @ts-ignore
+    global.RoomPosition = class {
+      constructor(public x: number, public y: number, public roomName: string) {}
+      findClosestByPath() {
+        return mockSpawn
+      }
+    }
   })
 
   it('should not throw if no rooms', () => {
@@ -46,34 +47,50 @@ describe('spawnCreeps', () => {
     expect(() => spawnCreeps()).to.not.throw()
   })
 
+  it('should not throw if no spawns', () => {
+    Game.rooms = {
+      'W1N1': {
+        name: 'W1N1',
+        find: () => {
+          return []
+        },
+        tasks: {
+          harvest: [],
+        }
+      } as unknown as Room
+    }
+    Memory.rooms['W1N1'] = { tasks: { } } as RoomMemory
+    expect(() => spawnCreeps()).to.not.throw()
+  })
+
   it('should not throw if no room is undefined', () => {
     // @ts-expect-error Deliberately malformed for testing
-    Game.rooms = { 'W1N1': undefined } as Room
+    Game.rooms = { 'W1N1': undefined, find: () => [mockSpawn] } as Room
     expect(() => spawnCreeps()).to.not.throw()
   })
 
   it('should not throw if no memory for room', () => {
-    Game.rooms['W1N1'] = { name: 'W1N1' } as Room
+    Game.rooms['W1N1'] = { name: 'W1N1', find: () => [mockSpawn] } as unknown as Room
     expect(() => spawnCreeps()).to.not.throw()
   })
 
   it('should not throw if no tasks for room', () => {
-    Game.rooms['W1N1'] = { name: 'W1N1' } as Room
+    Game.rooms['W1N1'] = { name: 'W1N1', find: () => [mockSpawn] } as unknown as Room
     Memory.rooms['W1N1'] = {} as RoomMemory
     expect(() => spawnCreeps()).to.not.throw()
   })
 
   it('should not throw if no harvest tasks', () => {
-    Game.rooms['W1N1'] = { name: 'W1N1' } as Room
-    Memory.rooms['W1N1'] = { tasks: { } } as RoomMemory
-    expect(() => spawnCreeps()).to.not.throw()
+      Game.rooms['W1N1'] = { name: 'W1N1', find: () => [mockSpawn] } as unknown as Room
+      Memory.rooms['W1N1'] = { tasks: { } } as RoomMemory
+      expect(() => spawnCreeps()).to.not.throw()
   })
 
-  it('should not modify reservingCreeps if no creeps are alive', () => {
-    Game.rooms['W6N6'] = { name: 'W6N6' } as Room
+  it('should remove dead reservingCreeps from room harvest task memory', () => {
+    Game.rooms['W6N6'] = { name: 'W6N6', find: () => [mockSpawn] } as unknown as Room
     Memory.rooms['W6N6'] = { tasks: { harvest: [
       {
-        availablePositions: [{ x: 6, y: 6 }],
+        availablePositions: [{ x: 7, y: 6 }],
         reservingCreeps: {
           'deadCreep': { workParts: 1 }
         },
@@ -97,8 +114,9 @@ describe('spawnCreeps', () => {
       controller: {
         id: 'ctrl1',
         pos: new RoomPosition(5, 5, 'W1N1'),
-      } as StructureController
-    } as Room
+      } as StructureController,
+      find: () => [mockSpawn]
+    } as unknown as Room
     Game.time = 12345
     Memory.rooms['W1N1'] = {
       tasks: {
@@ -147,7 +165,7 @@ describe('spawnCreeps', () => {
     // @ts-ignore
     global.RoomPosition = class {
       constructor(public x: number, public y: number, public roomName: string) {}
-      findClosestByRange() {
+      findClosestByPath() {
         return null
       }
     }
@@ -156,8 +174,9 @@ describe('spawnCreeps', () => {
       controller: {
         id: 'ctrl1',
         pos: new RoomPosition(5, 5, 'W1N1'),
-      } as StructureController
-    } as Room
+      } as StructureController,
+      find: () => [mockSpawn]
+    } as unknown as Room
     Game.time = 12345
     Memory.rooms['W1N1'] = {
       tasks: {
@@ -192,7 +211,7 @@ describe('spawnCreeps', () => {
     Game.creeps = {
       'OldHarvester': { name: 'OldHarvester', workParts: 2 } as Creep,
     }
-    Game.rooms['W1N1'] = { name: 'W1N1' } as Room
+    Game.rooms['W1N1'] = { name: 'W1N1', find: () => [mockSpawn] } as unknown as Room
     Game.time = 12345
     Memory.rooms['W1N1'] = {
       tasks: {
@@ -233,14 +252,14 @@ describe('spawnCreeps', () => {
     // @ts-ignore
     global.RoomPosition = class {
       constructor(public x: number, public y: number, public roomName: string) {}
-      findClosestByRange() {
+      findClosestByPath() {
         return null
       }
     }
     Game.creeps = {
       'OldHarvester': { name: 'OldHarvester', workParts: 2 } as Creep,
     }
-    Game.rooms['W1N1'] = { name: 'W1N1' } as Room
+    Game.rooms['W1N1'] = { name: 'W1N1', find: () => [mockSpawn] } as unknown as Room
     Game.spawns = {}
     Game.time = 12345
     Memory.rooms['W1N1'] = {
@@ -265,7 +284,7 @@ describe('spawnCreeps', () => {
 
   it('should not add creeps to reservingCreeps if not in Game.creeps', () => {
     Game.creeps = {}
-    Game.rooms['W3N3'] = { name: 'W3N3' } as Room
+    Game.rooms['W3N3'] = { name: 'W3N3', find: () => [mockSpawn] } as unknown as Room
     Memory.rooms['W3N3'] = { tasks: { harvest: [
       {
         availablePositions: [{ x: 2, y: 2 }],
@@ -286,7 +305,7 @@ describe('spawnCreeps', () => {
       'harvesterA': { name: 'harvesterA', workParts: 1 } as Creep,
       'harvesterB': { name: 'harvesterB', workParts: 2 } as Creep,
     }
-    Game.rooms['W4N4'] = { name: 'W4N4' } as Room
+    Game.rooms['W4N4'] = { name: 'W4N4', find: () => [mockSpawn] } as unknown as Room
     Memory.rooms['W4N4'] = { tasks: { harvest: [
       {
         availablePositions: [{ x: 3, y: 3 }, { x: 4, y: 4 }],
@@ -310,7 +329,7 @@ describe('spawnCreeps', () => {
   })
 
   it('should not throw and not spawn if no controller is defined', () => {
-    Game.rooms['W7N7'] = { name: 'W7N7' } as Room // No controller property
+    Game.rooms['W7N7'] = { name: 'W7N7', find: () => [mockSpawn] } as unknown as Room // No controller property
     Memory.rooms['W7N7'] = { tasks: { harvest: [
       {
         availablePositions: [{ x: 3, y: 3 }, { x: 4, y: 4 }],
