@@ -1,5 +1,5 @@
 import {
-  CreepMemory,
+  CreepMemory as CustomCreepMemory,
   FlagMemory,
   LinkedListQueue,
   PowerCreepMemory,
@@ -74,9 +74,7 @@ declare global {
     }
     totalEnergyGenerationPerTick: number
   }
-  interface CreepMemory {
-    task?: CreepHarvestTask | CreepUpgradeTask
-  }
+  interface CreepMemory extends CustomCreepMemory {}
 
   interface Creep {
     workParts: number

@@ -31,6 +31,8 @@ export function setupGlobals({
     global.TERRAIN_MASK_WALL = 1
     // @ts-ignore
     global.TERRAIN_MASK_SWAMP = 2
+    // @ts-ignore
+    global.RESOURCE_ENERGY = 'energy'
 
     global.Game.rooms = {}
     global.Game.creeps = {}

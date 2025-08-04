@@ -39,12 +39,15 @@ const clearIdleTick: ReduceFunction<HarvesterContext, HarvesterEvent> = (ctx, ev
 
 // Define the type for the harvester state machine
 export type HarvesterMachine = Machine<MachineStates<{
-    idle: {}
+    idle: {},
+    harvesting: {},
+    depositing: {}
 }>,HarvesterContext>
-type CreateHarvesterMachine = (contextFn: () => HarvesterContext) => HarvesterMachine
+type CreateHarvesterMachine = (contextFn: () => HarvesterContext, initialState?: HarvesterState) => HarvesterMachine
 
-export const createHarvesterMachine: CreateHarvesterMachine = (contextFn: () => HarvesterContext) =>
+export const createHarvesterMachine: CreateHarvesterMachine = (contextFn: () => HarvesterContext, initialState = HarvesterState.idle) =>
     createMachine(
+      initialState,
         {
             idle: state(
                 transition(HarvesterEventType.startHarvest, HarvesterState.harvesting, reduce(clearIdleTick)),
@@ -57,5 +60,5 @@ export const createHarvesterMachine: CreateHarvesterMachine = (contextFn: () => 
                 transition(HarvesterEventType.deposited, HarvesterState.idle, reduce(setIdleTick))
             )
         },
-        contextFn
+        contextFn,
     )

@@ -1,3 +1,5 @@
+import { HarvesterState } from "stateMachines/harvester-machine"
+
 export interface Position {
   x: number
   y: number
@@ -76,7 +78,12 @@ export interface InTickCache {
   }
 }
 
-export interface CreepMemory {}
+export interface CreepMemory {
+  task?: CreepHarvestTask | CreepUpgradeTask
+  state?: HarvesterState // | UpgraderState
+  idleStarted?: number // Game Timestamp when the creep went idle
+}
+
 export interface FlagMemory {}
 export interface PowerCreepMemory {}
 export interface CustomRoomMemory {

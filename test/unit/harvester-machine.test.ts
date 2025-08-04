@@ -1,4 +1,4 @@
-import { HarvesterContext, HarvesterEventType, HarvesterMachine, createHarvesterMachine } from '../../src/stateMachines/harvester-machine'
+import { HarvesterContext, HarvesterEventType, HarvesterMachine, HarvesterState, createHarvesterMachine } from '../../src/stateMachines/harvester-machine'
 import { interpret, Service } from 'robot3'
 import { expect } from 'chai'
 import { setupGlobals } from '../helpers/setupGlobals'
@@ -9,7 +9,7 @@ describe('harvesterMachine', () => {
     beforeEach(() => {
         setupGlobals()
         context = { energy: 0, capacity: 50 }
-        service = interpret(createHarvesterMachine(() => context),()=>{})
+        service = interpret(createHarvesterMachine(() => context, HarvesterState.idle), () => {})
     })
 
     it('should start in idle state and idleStarted should be undefined', () => {
@@ -160,5 +160,27 @@ describe('harvesterMachine', () => {
         service.send({ type: HarvesterEventType.deposited })
         expect(service.machine.current).to.equal('idle')
         expect(service.context.idleStarted).to.equal(555)
+    })
+
+    it('should allow starting in harvesting state', () => {
+        context = { energy: 0, capacity: 50 }
+        service = interpret(createHarvesterMachine(() => context, HarvesterState.harvesting),()=>{})
+        expect(service.machine.current).to.equal('harvesting')
+        service.send({ type: HarvesterEventType.full })
+        expect(service.machine.current).to.equal('depositing')
+    })
+
+    it('should allow starting in depositing state', () => {
+        context = { energy: 0, capacity: 50 }
+        service = interpret(createHarvesterMachine(() => context, HarvesterState.depositing),()=>{})
+        expect(service.machine.current).to.equal('depositing')
+        service.send({ type: HarvesterEventType.deposited })
+        expect(service.machine.current).to.equal('idle')
+    })
+
+    it('should default to idle if initialState is not provided', () => {
+        context = { energy: 0, capacity: 50 }
+        service = interpret(createHarvesterMachine(() => context),()=>{})
+        expect(service.machine.current).to.equal('idle')
     })
 })
