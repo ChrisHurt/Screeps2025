@@ -44,15 +44,18 @@ export type HarvesterMachine = Machine<MachineStates<{
 type CreateHarvesterMachine = (contextFn: () => HarvesterContext) => HarvesterMachine
 
 export const createHarvesterMachine: CreateHarvesterMachine = (contextFn: () => HarvesterContext) =>
-    createMachine({
-  idle: state(
-    transition(HarvesterEventType.startHarvest, HarvesterState.harvesting, reduce(clearIdleTick)),
-  ),
-  harvesting: state(
-    transition(HarvesterEventType.full, HarvesterState.depositing),
-    transition(HarvesterEventType.stopHarvest, HarvesterState.idle, reduce(setIdleTick))
-  ),
-  depositing: state(
-    transition(HarvesterEventType.deposited, HarvesterState.idle, reduce(setIdleTick))
-  )
-}, contextFn)
+    createMachine(
+        {
+            idle: state(
+                transition(HarvesterEventType.startHarvest, HarvesterState.harvesting, reduce(clearIdleTick)),
+            ),
+            harvesting: state(
+                transition(HarvesterEventType.full, HarvesterState.depositing),
+                transition(HarvesterEventType.stopHarvest, HarvesterState.idle, reduce(setIdleTick))
+            ),
+            depositing: state(
+                transition(HarvesterEventType.deposited, HarvesterState.idle, reduce(setIdleTick))
+            )
+        },
+        contextFn
+    )
