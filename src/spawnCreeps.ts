@@ -1,4 +1,5 @@
-import { CreepHarvestTask, CreepUpgradeTask, ReservingCreeps } from "types"
+import { HarvesterState } from "stateMachines/harvester-machine"
+import { CreepHarvestTask, CreepRole, CreepUpgradeTask, ReservingCreeps } from "types"
 
 export const spawnCreeps = () => {
     const rooms = Game.rooms
@@ -87,7 +88,7 @@ export const spawnCreeps = () => {
                 nearestSpawn.spawnCreep(
                     creepBody,
                     creepName,
-                    { memory: { task: creepHarvestTask } }
+                    { memory: { role: CreepRole.HARVESTER, state: HarvesterState.idle, task: creepHarvestTask } }
                 )
 
                 harvestTask.reservingCreeps[creepName] = {
@@ -126,7 +127,7 @@ export const spawnCreeps = () => {
         nearestSpawn.spawnCreep(
             creepBody,
             creepName,
-            { memory: { task: creepUpgradeTask } }
+            { memory: { role: CreepRole.UPGRADER, state: HarvesterState.idle, task: creepUpgradeTask } }
         )
 
         upgradeTask.reservingCreeps[creepName] = {

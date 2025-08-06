@@ -2,8 +2,9 @@ import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { spawnCreeps } from '../../src/spawnCreeps'
-import { RoomHarvestTask, RoomUpgradeTask } from 'types'
+import { CreepRole, RoomHarvestTask, RoomUpgradeTask } from 'types'
 import { setupGlobals } from '../helpers/setupGlobals'
+import { HarvesterState } from 'stateMachines/harvester-machine'
 
 describe('spawnCreeps', () => {
   let spawnCreepSpy: sinon.SinonSpy = sinon.spy()
@@ -223,13 +224,15 @@ describe('spawnCreeps', () => {
       [WORK, CARRY, MOVE],
       'Harvester-src1-12345',
       { memory: {
+        role: CreepRole.HARVESTER,
         task: {
           sourceId: 'src1',
           sourcePosition: new RoomPosition(5, 5, 'W1N1'),
           type: 'harvest',
           taskId: 'W1N1-src1',
           workParts: 1
-        }
+        },
+        state: HarvesterState.idle
       }}
     )).to.be.true
   })

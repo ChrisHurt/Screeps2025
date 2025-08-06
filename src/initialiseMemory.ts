@@ -1,6 +1,5 @@
 export const initialiseMemory = () => {
     Memory.creeps = {}
-    Memory.initialCalculationsDone = false
     Memory.flags = {}
     Memory.mapConnections = []
     Memory.mapRoomGraph = {}

@@ -29,7 +29,6 @@ export const mockMemory: Memory = {
   creeps: {},
   flags: {},
   rooms: {},
-  initialCalculationsDone: false,
   mapRoomGraph: {},
   mapConnections: [],
   memoryInitialised: false,

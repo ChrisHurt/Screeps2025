@@ -44,8 +44,11 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
   const sourcesMemory = roomMemory.sources
 
   const energyGenerationPerTickCycle = sources.reduce((total, source) => {
+    // NOTE:  On first tick the spawn is chosen, capacity is 1500.
+    //        All ticks following capacity is 3000 after room claim.
+    const sourceEnergyCapacity = source.energyCapacity === 1500 ? 3000 : source.energyCapacity
     sourcesMemory[source.id] = {
-      energyGenerationPerTick: source.energyCapacity / 300,
+      energyGenerationPerTick: sourceEnergyCapacity / 300,
       position: source.pos
     }
 
@@ -62,7 +65,7 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     }
     roomTasks.harvest.push(harvestTask)
 
-    return total + source.energyCapacity
+    return total + sourceEnergyCapacity
   }, 0)
 
   const totalEnergyGenerationPerTick = energyGenerationPerTickCycle / 300 // Source generation per tick over a 300 tick cycle

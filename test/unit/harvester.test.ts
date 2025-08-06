@@ -1,21 +1,32 @@
 import { expect } from 'chai'
 import * as sinon from 'sinon'
-import { interpret, Service } from 'robot3'
 import { setupGlobals } from '../helpers/setupGlobals'
-import { createHarvesterMachine, HarvesterState, HarvesterEventType, HarvesterContext } from '../../src/stateMachines/harvester-machine'
+import { HarvesterState } from '../../src/stateMachines/harvester-machine'
 import { runHarvesterCreep } from '../../src/harvester'
-import { log } from 'console'
 
-describe('runHarvesterCreep and processCurrentHarvesterState', () => {
+describe('runHarvesterCreep', () => {
   // Define RESOURCE_ENERGY for test environment
   // @ts-ignore
   global.RESOURCE_ENERGY = 'energy'
   let creep: any
   let sandbox: sinon.SinonSandbox
+  let isNearToStub: sinon.SinonStub
 
   beforeEach(() => {
     setupGlobals()
     sandbox = sinon.createSandbox()
+    const mockSource = { id: 'src1', pos: { x: 5, y: 5, roomName: 'W1N1' }, energyCapacity: 300 } as Source
+    const mockSpawn = { id: 'spawn1', pos: { x: 10, y: 10, roomName: 'W1N1' } } as StructureSpawn
+    const find = (type: number) => {
+      if (type === FIND_SOURCES) {
+        return [mockSource]
+      }
+      if (type === FIND_MY_SPAWNS) {
+        return [mockSpawn]
+      }
+      return []
+    }
+    isNearToStub = sandbox.stub().returns(true)
     creep = {
       name: 'TestCreep',
       memory: {},
@@ -24,13 +35,18 @@ describe('runHarvesterCreep and processCurrentHarvesterState', () => {
         getCapacity: sandbox.stub().returns(50)
       },
       pos: {
-        isNearTo: sandbox.stub().returns(true),
-        findInRange: sandbox.stub().returns([{ id: 'source1' }]),
+        isNearTo: isNearToStub,
+        findInRange: sandbox.stub().returns([mockSource]),
         x: 10,
         y: 10
       },
       moveTo: sandbox.stub(),
-      harvest: sandbox.stub()
+      harvest: sandbox.stub(),
+      room: {
+        find
+      },
+      say: sandbox.stub(),
+      transfer: sandbox.stub(),
     }
   })
 
@@ -41,7 +57,7 @@ describe('runHarvesterCreep and processCurrentHarvesterState', () => {
   it('should transition from idle to harvesting if harvest task is available', () => {
     creep.memory.task = {
       type: 'harvest',
-      sourceId: 'source1',
+      sourceId: 'src1',
       sourcePosition: { x: 10, y: 10 },
       workParts: 1
     }
@@ -61,21 +77,64 @@ describe('runHarvesterCreep and processCurrentHarvesterState', () => {
     creep.memory.state = HarvesterState.harvesting
     creep.memory.task = {
       type: 'harvest',
-      sourceId: 'source1',
+      sourceId: 'src1',
       sourcePosition: { x: 20, y: 20 },
       workParts: 1
     }
-    creep.pos.isNearTo.returns(false)
+    isNearToStub.returns(false)
     runHarvesterCreep(creep)
-    expect(creep.moveTo.calledWith({ x: 20, y: 20 })).to.be.true
+    expect(creep.moveTo.args[0]).to.deep.equal([20,20, { reusePath: 5, visualizePathStyle: { stroke: '#ffaa00' } }])
+    expect(creep.moveTo.called).to.be.true
+  })
+
+  it('should become idle if target source does not exist', () => {
+    creep.memory.state = HarvesterState.harvesting
+    creep.memory.task = {
+      type: 'harvest',
+      sourceId: 'src1',
+      sourcePosition: { x: 20, y: 20 },
+      workParts: 1
+    }
+    creep.room.find = () => [] // Simulate no sources found
+    runHarvesterCreep(creep)
+    expect(creep.moveTo.called).to.be.false
     expect(creep.harvest.called).to.be.false
+    expect(creep.memory.state).to.equal(HarvesterState.idle)
+  })
+
+  it('should move to spawn if not adjacent during depositing', () => {
+    creep.memory.state = HarvesterState.depositing
+    creep.memory.task = {
+      type: 'harvest',
+      sourceId: 'src1',
+      sourcePosition: { x: 20, y: 20 },
+      workParts: 1
+    }
+    creep.store.getUsedCapacity.returns(50)
+    isNearToStub.returns(false)
+    runHarvesterCreep(creep)
+    expect(creep.moveTo.args[0]).to.deep.equal([10,10, { reusePath: 5, visualizePathStyle: { stroke: '#fff' } }])
+    expect(creep.moveTo.called).to.be.true
+  })
+
+  it('should harvest source if adjacent during harvesting', () => {
+    creep.memory.state = HarvesterState.harvesting
+    creep.memory.task = {
+      type: 'harvest',
+      sourceId: 'src1',
+      sourcePosition: { x: 20, y: 20 },
+      workParts: 1
+    }
+    runHarvesterCreep(creep)
+    expect(creep.moveTo).not.to.be.called
+    expect(creep.harvest.called).to.be.true
   })
 
   it('should send full event and continue if energy is full during harvesting', () => {
     creep.memory.state = HarvesterState.harvesting
     creep.memory.task = {
       type: 'harvest',
-      sourceId: 'source1',
+      sourceId: 'src1',
       sourcePosition: { x: 10, y: 10 },
       workParts: 1
     }
@@ -89,9 +148,9 @@ describe('runHarvesterCreep and processCurrentHarvesterState', () => {
   it('should log error and not continue if harvesting with invalid task', () => {
     creep.memory.state = HarvesterState.harvesting
     creep.memory.task = { type: 'deposit' }
-    const errorSpy = sandbox.spy(console, 'error')
+    const logSpy = sandbox.spy(console, 'log')
     runHarvesterCreep(creep)
-    expect(errorSpy.calledWithMatch(/Invalid creep task for harvesting/)).to.be.true
+    expect(logSpy.calledWithMatch(/Invalid creep task for harvesting/)).to.be.true
   })
 
   it('should send deposited event and continue if energy is empty during depositing', () => {

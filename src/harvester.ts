@@ -10,19 +10,30 @@ export function runHarvesterCreep(creep: Creep) {
     capacity: creep.store.getCapacity(RESOURCE_ENERGY),
     idleStarted: creep.memory.idleStarted
   }
-  console.log(`Running harvester creep: ${creep.name}, state: ${state}, energy: ${context.energy}/${context.capacity}, idleStarted: ${context.idleStarted}`)
+
   const harvesterService = interpret(createHarvesterMachine(() => context, state), () => {})
 
   let creepShouldContinue = false
+  let finalState = state
   let permittedIterations = 10 // Limit iterations to prevent infinite loops
   do {
-    const { continue: shouldContinue } = processCurrentHarvesterState(creep, harvesterService)
+    const { continue: shouldContinue, state } = processCurrentHarvesterState(creep, harvesterService)
     creepShouldContinue = shouldContinue
+    finalState = state
   } while (creepShouldContinue && permittedIterations-- > 0)
+  creep.memory.state = finalState
+  creep.say(`${creepStateSpeechEmojis[finalState]}`, false)
 }
 
 interface ProcessCurrentHarvesterStateOutput {
     continue: boolean
+    state: HarvesterState
+}
+
+const creepStateSpeechEmojis = {
+  [HarvesterState.idle]: '😴',
+  [HarvesterState.harvesting]: '⛏️',
+  [HarvesterState.depositing]: '🏗'
 }
 
 const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<HarvesterMachine>): ProcessCurrentHarvesterStateOutput => {
@@ -33,13 +44,13 @@ const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<Ha
     /* istanbul ignore next */
     default:
       console.log(`Unknown harvester state: ${harvesterService.machine.current}`)
-      return { continue: false }
+      return { continue: false, state: HarvesterState.idle }
     case HarvesterState.idle:
       const harvestTaskAvailable = creepTask?.type === 'harvest' && creepTask.sourceId && creepTask.sourcePosition
 
       if (harvestTaskAvailable) {
         harvesterService.send({ type: HarvesterEventType.startHarvest })
-        return { continue: true }
+        return { continue: true, state: HarvesterState.harvesting }
       }
       const idleForTooLong = Game.time - (context.idleStarted || 0) > 50
       if (idleForTooLong) {
@@ -48,19 +59,18 @@ const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<Ha
       //   harvesterService.send({ type: HarvesterEventType.recycleSelf })
       }
 
-      // TODO: If idle for too long - move to recycle state
-      return { continue: false }
+      return { continue: false, state: HarvesterState.idle }
     case HarvesterState.harvesting:
       const isFull = context.energy >= context.capacity
 
       if (isFull) {
         harvesterService.send({ type: HarvesterEventType.full })
-        return { continue: true }
+        return { continue: true, state: HarvesterState.depositing }
       }
 
       if (!creepTask || creepTask.type !== 'harvest') {
-        console.error(`Invalid creep task for harvesting: ${JSON.stringify(creepTask)}`)
-        return { continue: false }
+        console.log(`Invalid creep task for harvesting: ${JSON.stringify(creepTask)}`)
+        return { continue: false, state: HarvesterState.idle }
       }
 
       const {
@@ -68,27 +78,44 @@ const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<Ha
         sourcePosition,
       } = creepTask
 
+      const source = creep.room.find(FIND_SOURCES).find(s => s.id === sourceId)
+
+      if (!source) {
+        console.log(`Source with ID ${sourceId} not found for creep ${creep.name}`)
+
+        harvesterService.send({ type: HarvesterEventType.stopHarvest })
+
+        return { continue: false, state: HarvesterState.idle }
+      }
+
       const isAdjacentToSource = creep.pos.isNearTo(sourcePosition)
 
       if (!isAdjacentToSource) {
-        creep.moveTo(sourcePosition, { visualizePathStyle: { stroke: '#ffaa00' } })
-        return { continue: false }
+        creep.moveTo(sourcePosition.x, sourcePosition.y, { reusePath: 5, visualizePathStyle: { stroke: '#ffaa00' } })
       }
+      creep.harvest(source)
 
-      const source = creep.pos.findInRange(FIND_SOURCES, 1).find(s => s.id === sourceId)
-      source && creep.harvest(source)
-
-      return { continue: false }
+      return { continue: false, state: HarvesterState.harvesting }
     case HarvesterState.depositing:
       // Handle depositing logic
       // ...your depositing logic here...
       const isEmpty = context.energy === 0
       if (isEmpty) {
         harvesterService.send({ type: HarvesterEventType.deposited })
-        return { continue: true }
+        return { continue: true, state: HarvesterState.idle }
       }
+
+      const spawn = creep.room.find(FIND_MY_SPAWNS)[0]
+      const isAdjacentToSpawn = spawn && creep.pos.isNearTo(spawn)
+
+      if (!isAdjacentToSpawn) {
+        creep.moveTo(spawn.pos.x, spawn.pos.y, { reusePath: 5, visualizePathStyle: { stroke: '#fff' } })
+      }
+
+      spawn && creep.transfer(spawn, RESOURCE_ENERGY)
+
       //   - Move to depositing position
       //   - Deposit energy
-      return { continue: false }
+      return { continue: false, state: HarvesterState.depositing }
   }
 }

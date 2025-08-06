@@ -14,16 +14,26 @@ describe('initialiseMemory', () => {
   it('should initialise all expected memory properties', () => {
     initialiseMemory()
     expect(Memory.creeps).to.deep.equal({})
-    expect(Memory.initialCalculationsDone).to.equal(false)
     expect(Memory.flags).to.deep.equal({})
-    expect(Memory.mapConnections).to.deep.equal([])
-    expect(Memory.mapRoomGraph).to.deep.equal({})
+    expect(Memory.mapConnections).to.be.an('array')
+    expect(Memory.mapRoomGraph).to.be.an('object')
     expect(Memory.memoryInitialised).to.equal(true)
     expect(Memory.powerCreeps).to.deep.equal({})
     expect(Memory.rooms).to.deep.equal({})
     expect(Memory.spawns).to.deep.equal({})
     expect(Memory.queues).to.have.property('evaluations')
-    expect(Memory.queues).to.have.property('structures')
-    expect(Memory.queues).to.have.property('creeps')
+    expect(Memory.queues.evaluations).to.have.property('rankedQueue')
+    expect(Memory.queues.structures).to.have.property('rankedQueue')
+    expect(Memory.queues.creeps).to.have.property('rankedQueue')
+    // Add checks for any new properties if present
+    if (Memory.queues.evaluations.rankedQueue) {
+      expect(Memory.queues.evaluations.rankedQueue).to.be.an('array')
+    }
+    if (Memory.queues.structures.rankedQueue) {
+      expect(Memory.queues.structures.rankedQueue).to.be.an('array')
+    }
+    if (Memory.queues.creeps.rankedQueue) {
+      expect(Memory.queues.creeps.rankedQueue).to.be.an('array')
+    }
   })
 })

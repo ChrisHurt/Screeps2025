@@ -33,9 +33,9 @@ declare global {
     shard: Shard
     time: number
   }
+  interface CreepMemory extends CustomCreepMemory {}
   interface Memory {
-    creeps: { [name: string]: Partial<CreepMemory> }
-    initialCalculationsDone?: boolean
+    creeps: { [name: string]: CreepMemory }
     flags: { [name: string]: Partial<FlagMemory> }
     mapConnections: string[]  // List of connections between rooms in the format "roomNameOne-roomNameTwo"
     mapRoomGraph: {           // Denotes connections between rooms
@@ -74,7 +74,6 @@ declare global {
     }
     totalEnergyGenerationPerTick: number
   }
-  interface CreepMemory extends CustomCreepMemory {}
 
   interface Creep {
     workParts: number

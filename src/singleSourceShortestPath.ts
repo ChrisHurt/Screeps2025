@@ -15,7 +15,7 @@ export const singleSourceShortestPaths = ({
     startingPoints,
     terrainArray
 }: SingleSourceShortestPathParams): Position[] => {
-    const terrainDistances: TerrainDistanceArray[] = startingPoints.map(start => floodfillDistances(terrainArray, start))
+    const terrainDistances: TerrainDistanceArray[] = startingPoints.map(start => floodfillDistances(terrainArray, start, startingPoints))
     const terrainDistanceSum: TerrainDistanceArray = terrainDistances.reduce<TerrainDistanceArray>(function (distancesSum: TerrainDistanceArray, terrainDistance: TerrainDistanceArray): TerrainDistanceArray {
         return distancesSum.map<number>((value, index) => {
             return value + terrainDistance[index]
@@ -51,22 +51,34 @@ export const singleSourceShortestPaths = ({
     return optimumSpawnLocationIndices.map(convertTerrainIndexToPosition)
 }
 
-const floodfillDistances = (terrainArray: TerrainTypeArray, start: Position): TerrainDistanceArray => {
+const floodfillDistances = (terrainArray: TerrainTypeArray, start: Position, requiredPositions: RoomPosition[]): TerrainDistanceArray => {
     const distances: number[] = new Array(ROOM_GRID_COUNT).fill(Infinity) as TerrainDistanceArray
     const queue: Position [] = []
     const startIndex = convertPositionToTerrainIndex(start)
     distances[startIndex] = 0
     queue.push(start)
 
+    // Track which required positions have been touched
+    const requiredIndices = new Set<number>(requiredPositions.map(convertPositionToTerrainIndex))
+    const touchedIndices = new Set<number>()
+
     while (queue.length > 0) {
+        // Exit early if all required positions have been touched
+        if (touchedIndices.size === requiredIndices.size) break
+
         const currentPosition = queue.shift()!
         const currentIndex = convertPositionToTerrainIndex(currentPosition)
+
+        // Mark as touched if it's a required position
+        if (requiredIndices.has(currentIndex)) {
+            touchedIndices.add(currentIndex)
+        }
 
         const currentDistance = distances[currentIndex]
         const currentTerrainType = terrainArray[currentIndex]
 
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
+        for (const dx of [-1, 0, 1]) {
+            for (const dy of [-1, 0, 1]) {
                 if (dx === 0 && dy === 0) continue // Skip the current position
 
                 const nx = currentPosition.x + dx

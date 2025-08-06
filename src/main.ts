@@ -5,6 +5,9 @@ import { renderMapConnections } from "renderMapConnections"
 import { initialiseMemory } from "initialiseMemory"
 import { spawnCreeps } from "spawnCreeps"
 import { ErrorMapper } from "utils/ErrorMapper"
+import { runHarvesterCreep } from "harvester"
+import { CreepRole } from "types"
+import { isEmpty } from "lodash"
 
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`\nCurrent game tick is ${Game.time}`)
@@ -15,19 +18,34 @@ export const loop = ErrorMapper.wrapLoop(() => {
     initialiseMemory()
   }
 
-  if (!Memory.initialCalculationsDone) {
+  if(Memory.mapConnections.length === 0) {
     createMapConnections()
-
-    const startingRoomName = Object.keys(Game.rooms)[0]
-    roomValuation(startingRoomName)
-    generateRoomTasksOnSpawn(startingRoomName)
-
-    Memory.initialCalculationsDone = true
   } else {
     renderMapConnections()
   }
 
+  if (isEmpty(Memory.rooms)) {
+    const startingRoomName = Object.keys(Game.rooms)[0]
+    roomValuation(startingRoomName)
+    generateRoomTasksOnSpawn(startingRoomName)
+  }
+
   spawnCreeps()
+
+  // Process creeps
+  for (const name in Game.creeps) {
+    const creep = Game.creeps[name]
+
+    if (!creep.memory?.role) {
+      console.log(`Creep ${name} has no role, skipping`)
+      continue
+    }
+
+    if (creep.memory?.role === CreepRole.HARVESTER) {
+      console.log(`Processing harvester creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
+      runHarvesterCreep(creep)
+    }
+  }
 
   // Initial map calculations
   // - Add rooms for evaluation to the evaluation queue as low priority tasks

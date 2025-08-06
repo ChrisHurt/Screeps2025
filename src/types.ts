@@ -78,10 +78,16 @@ export interface InTickCache {
   }
 }
 
+export enum CreepRole {
+  HARVESTER = 'harvester',
+  UPGRADER = 'upgrader',
+}
+
 export interface CreepMemory {
-  task?: CreepHarvestTask | CreepUpgradeTask
-  state?: HarvesterState // | UpgraderState
   idleStarted?: number // Game Timestamp when the creep went idle
+  role: CreepRole
+  state?: HarvesterState // | UpgraderState
+  task?: CreepHarvestTask | CreepUpgradeTask
 }
 
 export interface FlagMemory {}

@@ -1,7 +1,6 @@
 import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import { findFreeAdjacentPositions } from '../../src/findFreeAdjacentPositions'
-import { mockGame, mockMemory } from '../helpers/mock'
 import { convertPositionToTerrainIndex } from '../../src/conversions'
 import { ROOM_GRID_COUNT, TerrainTypeArray } from 'types'
 import { setupGlobals } from '../helpers/setupGlobals'
@@ -17,12 +16,10 @@ describe('findFreeAdjacentPositions', () => {
   })
 
   it('should return all 8 adjacent positions if all are walkable', () => {
-    // @ts-ignore "Type instantiation is excessively deep and possibly infinite."
     const terrainArray = new Array(ROOM_GRID_COUNT).fill(0) as TerrainTypeArray // all plain
     const roomPosition = new RoomPosition(13, 13, 'W1N1')
     const result = findFreeAdjacentPositions({ roomPosition, terrainArray })
     expect(result).to.have.length(8)
-    // Check that all returned positions are adjacent
     for (const pos of result) {
       expect(Math.abs(pos.x - roomPosition.x)).to.be.at.most(1)
       expect(Math.abs(pos.y - roomPosition.y)).to.be.at.most(1)
