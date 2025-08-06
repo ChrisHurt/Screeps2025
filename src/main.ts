@@ -41,7 +41,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
       continue
     }
 
-    if (creep.memory?.role === CreepRole.HARVESTER) {
+    if (creep.memory.role === CreepRole.HARVESTER) {
       console.log(`Processing harvester creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
       runHarvesterCreep(creep)
     }
