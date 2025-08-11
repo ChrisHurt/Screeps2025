@@ -1,8 +1,8 @@
 import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
-import { singleSourceShortestPaths } from '../../src/singleSourceShortestPath'
+import { singleSourceShortestPaths } from '../../src/helpers/singleSourceShortestPath'
 import { ROOM_GRID_COUNT, TerrainTypeArray } from 'types'
-import { convertPositionToTerrainIndex } from 'conversions'
+import { convertPositionToTerrainIndex } from 'helpers/conversions'
 import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('singleSourceShortestPaths', () => {

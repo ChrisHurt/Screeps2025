@@ -1,18 +1,15 @@
 import {
   CreepMemory as CustomCreepMemory,
-  FlagMemory,
-  LinkedListQueue,
   PowerCreepMemory,
-  SpawnMemory,
   RoomId,
   CustomRoomMemory,
   RoomHarvestTask,
   RoomUpgradeTask,
-  Position,
-  TaskType,
-  CreepTask,
+  StructureEnergyImpact,
+  CreepEnergyImpact,
+  CreepUpgradeTask,
   CreepHarvestTask,
-  CreepUpgradeTask
+
 } from "types"
 
 declare global {
@@ -36,20 +33,20 @@ declare global {
   interface CreepMemory extends CustomCreepMemory {}
   interface Memory {
     creeps: { [name: string]: CreepMemory }
-    flags: { [name: string]: Partial<FlagMemory> }
+    production: {
+      energy: Record<string,StructureEnergyImpact | CreepEnergyImpact>
+    }
+    reservations: {
+      energy: Record<string, StructureEnergyImpact | CreepEnergyImpact>
+      tasks: Record<string, CreepUpgradeTask | CreepHarvestTask>
+    }
     mapConnections: string[]  // List of connections between rooms in the format "roomNameOne-roomNameTwo"
     mapRoomGraph: {           // Denotes connections between rooms
       [roomId: RoomId]: RoomId[]
     }
     memoryInitialised?: boolean
     powerCreeps: { [name: string]: Partial<PowerCreepMemory> }
-    queues: {
-      evaluations: LinkedListQueue
-      structures: LinkedListQueue
-      creeps: LinkedListQueue
-    }
     rooms: { [name: RoomId]: RoomMemory }
-    spawns: { [name: string]: Partial<SpawnMemory> }
   }
   interface RoomMemory extends CustomRoomMemory {
     mineral?: {
@@ -72,7 +69,8 @@ declare global {
       upgrade?: RoomUpgradeTask
       harvest: RoomHarvestTask[]
     }
-    totalEnergyGenerationPerTick: number
+    effectiveEnergyPerTick: number
+    totalSourceEnergyPerTick: number
   }
 
   interface Creep {

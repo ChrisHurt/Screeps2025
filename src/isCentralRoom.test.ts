@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { isCentralRoom } from './isCentralRoom'
+import { isCentralRoom } from './helpers/isCentralRoom'
 
 describe('isCentralRoom', () => {
   it('returns false for invalid room name format', () => {

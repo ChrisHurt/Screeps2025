@@ -1,7 +1,7 @@
 import { describe, beforeEach, it } from 'mocha'
 import { expect } from 'chai'
 const _ = require('lodash')
-import { convertPositionToTerrainIndex, convertTerrainIndexToPosition } from "../../src/conversions"
+import { convertPositionToTerrainIndex, convertTerrainIndexToPosition } from "../../src/helpers/conversions"
 import { Position, ROOM_GRID_COUNT } from "../../src/types"
 import { setupGlobals } from '../helpers/setupGlobals'
 

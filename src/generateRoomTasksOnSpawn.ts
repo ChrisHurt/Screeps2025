@@ -1,7 +1,7 @@
 import { findFreeAdjacentPositions } from "findFreeAdjacentPositions"
-import { generateTerrainArray } from "generateTerrainArray"
-import { singleSourceShortestPaths } from "singleSourceShortestPath"
-import { RoomHarvestTask, RoomUpgradeTask } from "types"
+import { generateTerrainArray } from "helpers/generateTerrainArray"
+import { singleSourceShortestPaths } from "helpers/singleSourceShortestPath"
+import { EnergyImpactType, RoomHarvestTask, RoomUpgradeTask } from "types"
 
 export const generateRoomTasksOnSpawn = (roomName: string) => {
   const room = Game.rooms[roomName]
@@ -18,8 +18,25 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     return
   }
 
+  const spawn = room.find(FIND_MY_SPAWNS)[0]
+
+  if (!spawn) {
+    console.log(`GenerateRoomTasksError: No spawn found in room ${roomName}`)
+    return
+  }
+
+  // NOTE: Update rooms energy production
+  Memory.production.energy[spawn.id] = {
+    perTickAmount: 1,
+    roomNames: [roomName],
+    type: EnergyImpactType.SPAWN,
+  }
+
   Memory.rooms[roomName] = Memory.rooms[roomName] || {}
   const roomMemory = Memory.rooms[roomName]
+
+  // NOTE: Set rooms initial energy production
+  roomMemory.effectiveEnergyPerTick = 1
 
   const terrainArray = generateTerrainArray(roomName)
 
@@ -37,6 +54,7 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     upgrade: upgradeTask,
     harvest: []
   }
+
   const roomTasks = roomMemory.tasks
 
   const sources = room.find(FIND_SOURCES)
@@ -68,9 +86,9 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     return total + sourceEnergyCapacity
   }, 0)
 
-  const totalEnergyGenerationPerTick = energyGenerationPerTickCycle / 300 // Source generation per tick over a 300 tick cycle
+  const totalSourceEnergyPerTick = energyGenerationPerTickCycle / 300 // Source generation per tick over a 300 tick cycle
 
-  roomMemory.totalEnergyGenerationPerTick = totalEnergyGenerationPerTick
+  roomMemory.totalSourceEnergyPerTick = totalSourceEnergyPerTick
 
   const roomMineral = room.find(FIND_MINERALS)[0]
 

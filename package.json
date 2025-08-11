@@ -7,8 +7,8 @@
   "scripts": {
     "lint": "eslint \"src/**/*.ts\"",
     "build": "rollup -c",
-    "push-local": "rollup -c && cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/127_0_0_1___21025/local",
-    "push-server": "rollup -c  && cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/0_tcp_au_ngrok_io___19216/default",
+    "push-local": "rollup -c && cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/192_168_50_92___21025/default",
+    "push-server": "rollup -c  && cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/0_tcp_au_ngrok_io___17837/default",
     "push-pserver": "rollup -c --environment DEST:pserver",
     "test": "mocha --require ts-node/register test/**/*.ts",
     "test:ci": "nyc --reporter=text --reporter=text-summary mocha --require ts-node/register test/**/*.ts --reporter spec",

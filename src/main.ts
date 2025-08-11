@@ -5,18 +5,32 @@ import { renderMapConnections } from "renderMapConnections"
 import { initialiseMemory } from "initialiseMemory"
 import { spawnCreeps } from "spawnCreeps"
 import { ErrorMapper } from "utils/ErrorMapper"
-import { runHarvesterCreep } from "harvester"
+import { runHarvesterCreep } from "creepProcessors/harvester"
 import { CreepRole } from "types"
 import { isEmpty } from "lodash"
+import { runUpgraderCreep } from "creepProcessors/upgrader"
+import { calculateEnergyProductionByRoom } from "helpers/calculateEnergyProductionByRoom"
 
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`\nCurrent game tick is ${Game.time}`)
+
+  // Automatically delete memory of missing creeps
+  for (const creepName in Memory.creeps) {
+    if (!(creepName in Game.creeps)) {
+      delete Memory.creeps[creepName]
+      delete Memory.production.energy[creepName]
+      delete Memory.reservations.energy[creepName]
+      delete Memory.reservations.tasks[creepName]
+    }
+  }
 
   const memoryIsInitialised = Memory.memoryInitialised
 
   if (!memoryIsInitialised) {
     initialiseMemory()
   }
+
+  calculateEnergyProductionByRoom()
 
   if(Memory.mapConnections.length === 0) {
     createMapConnections()
@@ -36,14 +50,19 @@ export const loop = ErrorMapper.wrapLoop(() => {
   for (const name in Game.creeps) {
     const creep = Game.creeps[name]
 
-    if (!creep.memory?.role) {
-      console.log(`Creep ${name} has no role, skipping`)
-      continue
-    }
-
-    if (creep.memory.role === CreepRole.HARVESTER) {
-      console.log(`Processing harvester creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
-      runHarvesterCreep(creep)
+    switch (creep.memory?.role) {
+      case CreepRole.HARVESTER:
+        console.log(`Processing harvester creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
+        runHarvesterCreep(creep)
+        break
+      case CreepRole.UPGRADER:
+        console.log(`Processing upgrader creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
+        runUpgraderCreep(creep)
+        break
+      // Add cases for other roles as needed
+      default:
+        console.log(`Creep ${name} has invalid role, skipping`)
+        break
     }
   }
 
@@ -60,11 +79,4 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   // Analyse new rooms and evaluate their potential for direction-dependent remote gathering or expansion
   // Analyse existing rooms when all connections have complete internal evaluations
-
-  // Automatically delete memory of missing creeps
-  for (const name in Memory.creeps) {
-    if (!(name in Game.creeps)) {
-      delete Memory.creeps[name]
-    }
-  }
 })

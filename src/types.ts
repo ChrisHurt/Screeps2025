@@ -1,4 +1,27 @@
 import { HarvesterState } from "stateMachines/harvester-machine"
+import { UpgraderState } from "stateMachines/upgrader-machine"
+
+export enum EnergyImpactType {
+  CREEP = 'creep',
+  SPAWN = 'spawn',
+  CONTAINERS = 'containers',
+  RAMPARTS = 'ramparts',
+  ROADS = 'roads',
+}
+
+export interface EnergyImpact {
+  perTickAmount: number // + is Production, - is Upkeep
+  roomNames: string[]
+}
+
+export interface StructureEnergyImpact extends EnergyImpact {
+  roomNames: [string]
+  type: Omit<EnergyImpactType, 'CREEP'>
+}
+export interface CreepEnergyImpact extends EnergyImpact {
+  role: CreepRole
+  type: EnergyImpactType.CREEP
+}
 
 export interface Position {
   x: number
@@ -23,6 +46,7 @@ export interface CreepUpgradeTask extends CreepTask {
   workParts: number
 }
 export interface CreepHarvestTask extends CreepTask {
+  returnPath: RoomPosition[]
   sourceId: string
   sourcePosition: RoomPosition
   type: 'harvest'
@@ -78,6 +102,21 @@ export interface InTickCache {
   }
 }
 
+export type SharedCreepContext = {
+  idleStarted?: number
+}
+
+export enum SharedCreepEventType {
+  idle = 'idle',
+  recycleSelf = 'recycleSelf'
+}
+
+export enum SharedCreepState {
+  error = 'error',
+  idle = 'idle',
+  recycling = 'recycling'
+}
+
 export enum CreepRole {
   HARVESTER = 'harvester',
   UPGRADER = 'upgrader',
@@ -86,7 +125,7 @@ export enum CreepRole {
 export interface CreepMemory {
   idleStarted?: number // Game Timestamp when the creep went idle
   role: CreepRole
-  state?: HarvesterState // | UpgraderState
+  state?: HarvesterState | UpgraderState | SharedCreepState
   task?: CreepHarvestTask | CreepUpgradeTask
 }
 
@@ -113,7 +152,7 @@ export interface CustomRoomMemory {
     upgrade?: RoomUpgradeTask
     harvest: RoomHarvestTask[]
   }
-  totalEnergyGenerationPerTick: number
+  totalSourceEnergyPerTick: number
 }
 export interface SpawnMemory {}
 

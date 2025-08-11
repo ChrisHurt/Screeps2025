@@ -1,4 +1,4 @@
-import { convertPositionToTerrainIndex } from "conversions"
+import { convertPositionToTerrainIndex } from "helpers/conversions"
 import { Position, ROOM_GRID_COUNT, ROOM_SIZE, TerrainTypeArray } from "types"
 
 interface FindFreeAdjacentPositionsParams {

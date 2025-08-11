@@ -32,12 +32,14 @@ export const mockMemory: Memory = {
   mapRoomGraph: {},
   mapConnections: [],
   memoryInitialised: false,
-  powerCreeps: {},
-  queues: {
-    evaluations: { head: null, tail: null, rankedQueue: [{},{},{}] },
-    structures: { head: null, tail: null, rankedQueue: [{},{},{}] },
-    creeps: { head: null, tail: null, rankedQueue: [{},{},{}] }
+  production: {
+    energy: {}
   },
+  reservations: {
+    energy: {},
+    tasks: {}
+  },
+  powerCreeps: {},
   spawns: {}
 }
 

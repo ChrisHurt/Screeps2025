@@ -1,7 +1,7 @@
 import { describe, it, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import { findFreeAdjacentPositions } from '../../src/findFreeAdjacentPositions'
-import { convertPositionToTerrainIndex } from '../../src/conversions'
+import { convertPositionToTerrainIndex } from '../../src/helpers/conversions'
 import { ROOM_GRID_COUNT, TerrainTypeArray } from 'types'
 import { setupGlobals } from '../helpers/setupGlobals'
 

@@ -1,7 +1,7 @@
 import { describe, beforeEach, it } from 'mocha'
 import { expect } from 'chai'
-import { generateTerrainArray } from "../../src/generateTerrainArray"
-import { convertPositionToTerrainIndex } from "../../src/conversions"
+import { generateTerrainArray } from "../../src/helpers/generateTerrainArray"
+import { convertPositionToTerrainIndex } from "../../src/helpers/conversions"
 import { ROOM_GRID_COUNT } from 'types'
 import { setupGlobals } from '../helpers/setupGlobals'
 

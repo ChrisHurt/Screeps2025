@@ -5,7 +5,7 @@ import * as renderMapConnections from "../../src/renderMapConnections"
 import * as sinon from "sinon"
 import { CreepRole } from "types"
 import { HarvesterState } from "stateMachines/harvester-machine"
-import * as harvester from "../../src/harvester"
+import * as harvester from "creepProcessors/harvester"
 
 describe("main", () => {
   let renderMapConnectionsMock: sinon.SinonStubbedInstance<typeof renderMapConnections>

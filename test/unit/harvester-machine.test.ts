@@ -2,6 +2,7 @@ import { HarvesterContext, HarvesterEventType, HarvesterMachine, HarvesterState,
 import { interpret, Service } from 'robot3'
 import { expect } from 'chai'
 import { setupGlobals } from '../helpers/setupGlobals'
+import { SharedCreepState } from 'types'
 
 describe('harvesterMachine', () => {
     let service: Service<HarvesterMachine>
@@ -9,7 +10,7 @@ describe('harvesterMachine', () => {
     beforeEach(() => {
         setupGlobals()
         context = { energy: 0, capacity: 50 }
-        service = interpret(createHarvesterMachine(() => context, HarvesterState.idle), () => {})
+        service = interpret(createHarvesterMachine(() => context, SharedCreepState.idle), () => {})
     })
 
     it('should start in idle state and idleStarted should be undefined', () => {

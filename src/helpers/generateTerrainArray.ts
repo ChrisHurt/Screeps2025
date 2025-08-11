@@ -1,4 +1,4 @@
-import { convertTerrainIndexToPosition } from "conversions"
+import { convertTerrainIndexToPosition } from "helpers/conversions"
 import { ROOM_GRID_COUNT, TerrainTypeArray } from "types"
 
 // @ts-ignore "Type instantiation is excessively deep and possibly infinite."

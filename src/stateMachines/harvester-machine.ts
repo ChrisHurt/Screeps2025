@@ -1,14 +1,13 @@
 
-import { createMachine, invoke, immediate, reduce, ReduceFunction, state, transition, Machine, MachineStates } from 'robot3'
+import { createMachine, reduce, ReduceFunction, state, state as final, transition, Machine, MachineStates } from 'robot3'
+import { SharedCreepContext, SharedCreepEventType, SharedCreepState } from 'types'
 
-export type HarvesterContext = {
+export interface HarvesterContext extends SharedCreepContext {
   energy: number
   capacity: number
-  idleStarted?: number
 }
 
-export enum HarvesterState {
-  idle = 'idle',
+export enum HarvesterState  {
   harvesting = 'harvesting',
   depositing = 'depositing'
 }
@@ -39,26 +38,30 @@ const clearIdleTick: ReduceFunction<HarvesterContext, HarvesterEvent> = (ctx, ev
 
 // Define the type for the harvester state machine
 export type HarvesterMachine = Machine<MachineStates<{
-    idle: {},
-    harvesting: {},
-    depositing: {}
+    [SharedCreepState.idle]: {},
+    [SharedCreepState.recycling]: {},
+    [HarvesterState.harvesting]: {},
+    [HarvesterState.depositing]: {}
 }>,HarvesterContext>
-type CreateHarvesterMachine = (contextFn: () => HarvesterContext, initialState?: HarvesterState) => HarvesterMachine
+type CreateHarvesterMachine = (contextFn: () => HarvesterContext, initialState?: HarvesterState | SharedCreepState) => HarvesterMachine
 
-export const createHarvesterMachine: CreateHarvesterMachine = (contextFn: () => HarvesterContext, initialState = HarvesterState.idle) =>
-    createMachine(
-      initialState,
-        {
-            idle: state(
-                transition(HarvesterEventType.startHarvest, HarvesterState.harvesting, reduce(clearIdleTick)),
-            ),
-            harvesting: state(
-                transition(HarvesterEventType.full, HarvesterState.depositing),
-                transition(HarvesterEventType.stopHarvest, HarvesterState.idle, reduce(setIdleTick))
-            ),
-            depositing: state(
-                transition(HarvesterEventType.deposited, HarvesterState.idle, reduce(setIdleTick))
-            )
-        },
-        contextFn,
-    )
+export const createHarvesterMachine: CreateHarvesterMachine = (contextFn: () => HarvesterContext, initialState = SharedCreepState.idle) =>
+  createMachine(
+    initialState,
+      {
+          idle: state(
+              transition(HarvesterEventType.startHarvest, HarvesterState.harvesting, reduce(clearIdleTick)),
+              transition(SharedCreepEventType.recycleSelf, SharedCreepState.recycling)
+          ),
+          harvesting: state(
+              transition(HarvesterEventType.full, HarvesterState.depositing),
+              transition(HarvesterEventType.stopHarvest, SharedCreepState.idle, reduce(setIdleTick))
+          ),
+          depositing: state(
+            transition(HarvesterEventType.deposited, SharedCreepState.idle, reduce(setIdleTick))
+          ),
+          error: final(),
+          recycling: final()
+      },
+      contextFn,
+  )
