@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { isCentralRoom } from './helpers/isCentralRoom'
+import { isCentralRoom } from 'helpers/isCentralRoom'
 
 describe('isCentralRoom', () => {
   it('returns false for invalid room name format', () => {
@@ -22,6 +22,8 @@ describe('isCentralRoom', () => {
   it('returns false if ordinate cardinal is missing', () => {
     expect(isCentralRoom('E4')).to.equal(false)
     expect(isCentralRoom('W5')).to.equal(false)
+    expect(isCentralRoom('E44')).to.equal(false)
+    expect(isCentralRoom('W55')).to.equal(false)
   })
 
   it('returns false for non-numeric coordinates', () => {
@@ -49,5 +51,8 @@ describe('isCentralRoom', () => {
   it('returns false for rooms with neither coordinate central', () => {
     expect(isCentralRoom('E1N2')).to.equal(false)
     expect(isCentralRoom('W8S9')).to.equal(false)
+  })
+  it('returns false for invalid numeric coordinates', () => {
+    expect(isCentralRoom('EfooNbar')).to.equal(false)
   })
 })

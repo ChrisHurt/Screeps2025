@@ -96,4 +96,21 @@ describe("main", () => {
     assert.isDefined(Memory.creeps.persistValue)
     assert.isUndefined(Memory.creeps.notPersistValue)
   })
+
+    it("should log and skip creeps with invalid roles", () => {
+      const logStub = sinon.stub(console, "log")
+      // @ts-ignore : Permit invalid memory for testing
+      Game.creeps = {
+        invalidRoleCreep: ({
+          name: "invalidRoleCreep",
+          memory: {
+            role: "INVALID_ROLE",
+            state: "anyState"
+          }
+        } as unknown) as Creep
+      }
+      loop()
+      expect(logStub).to.have.been.calledWithExactly("Creep invalidRoleCreep has invalid role, skipping")
+      logStub.restore()
+    })
 })

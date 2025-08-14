@@ -49,19 +49,19 @@ export const createHarvesterMachine: CreateHarvesterMachine = (contextFn: () => 
   createMachine(
     initialState,
       {
-          idle: state(
+          [SharedCreepState.idle]: state(
               transition(HarvesterEventType.startHarvest, HarvesterState.harvesting, reduce(clearIdleTick)),
               transition(SharedCreepEventType.recycleSelf, SharedCreepState.recycling)
           ),
-          harvesting: state(
+          [HarvesterState.harvesting]: state(
               transition(HarvesterEventType.full, HarvesterState.depositing),
               transition(HarvesterEventType.stopHarvest, SharedCreepState.idle, reduce(setIdleTick))
           ),
-          depositing: state(
+          [HarvesterState.depositing]: state(
             transition(HarvesterEventType.deposited, SharedCreepState.idle, reduce(setIdleTick))
           ),
-          error: final(),
-          recycling: final()
+          [SharedCreepState.error]: final(),
+          [SharedCreepState.recycling]: final()
       },
       contextFn,
   )

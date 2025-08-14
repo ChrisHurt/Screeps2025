@@ -52,20 +52,20 @@ export const createUpgraderMachine: CreateUpgraderMachine = (contextFn, initialS
   createMachine(
     initialState,
     {
-      idle: state(
+      [SharedCreepState.idle]: state(
         transition(UpgraderEventType.startCollecting, UpgraderState.collecting, reduce(clearIdleTick)),
         transition(SharedCreepEventType.recycleSelf, SharedCreepState.recycling),
       ),
-      collecting: state(
+      [UpgraderState.collecting]: state(
         transition(UpgraderEventType.collected, UpgraderState.upgrading, reduce(clearIdleTick)),
         transition(SharedCreepEventType.idle, SharedCreepState.idle, reduce(setIdleTick)),
       ),
-      upgrading: state(
+      [UpgraderState.upgrading]: state(
         transition(UpgraderEventType.empty, UpgraderState.collecting, reduce(setIdleTick)),
         transition(SharedCreepEventType.idle, SharedCreepState.idle, reduce(setIdleTick)),
       ),
-      error: final(),
-      recycling: final()
+      [SharedCreepState.error]: final(),
+      [SharedCreepState.recycling]: final()
     },
     contextFn,
   )

@@ -16,7 +16,7 @@ export const checkIfUnused = ({
     service,
     threshold = 50
 }: CheckIfUnusedParams): boolean => {
-  if (Game.time - (context.idleStarted || 0) > threshold) {
+  if (context.idleStarted && Game.time - context.idleStarted > threshold) {
     console.log(`Creep ${creep.name} has been idle for too long, recycling.`)
     service.send({ type: SharedCreepEventType.recycleSelf })
     return true

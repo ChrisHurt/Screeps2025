@@ -50,19 +50,19 @@ export const loop = ErrorMapper.wrapLoop(() => {
   for (const name in Game.creeps) {
     const creep = Game.creeps[name]
 
-    switch (creep.memory?.role) {
-      case CreepRole.HARVESTER:
-        console.log(`Processing harvester creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
-        runHarvesterCreep(creep)
-        break
-      case CreepRole.UPGRADER:
-        console.log(`Processing upgrader creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
-        runUpgraderCreep(creep)
-        break
-      // Add cases for other roles as needed
-      default:
-        console.log(`Creep ${name} has invalid role, skipping`)
-        break
+    if (!creep.memory.role) {
+      console.log(`Creep ${name} has invalid role, skipping`)
+      continue
+    }
+
+    if (creep.memory.role === CreepRole.HARVESTER) {
+      console.log(`Processing harvester creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
+      runHarvesterCreep(creep)
+    } else if (creep.memory.role === CreepRole.UPGRADER) {
+      console.log(`Processing upgrader creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
+      runUpgraderCreep(creep)
+    } else {
+      console.log(`Creep ${name} has invalid role, skipping`)
     }
   }
 

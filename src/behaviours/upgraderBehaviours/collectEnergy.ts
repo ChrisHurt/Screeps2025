@@ -15,6 +15,10 @@ interface CollectEnergyOutput {
     state: SharedCreepState | UpgraderState
 }
 
+type RetrievableStorage =
+    | StructureSpawn    | StructureExtension    | StructureTower
+    | StructureStorage  | StructureContainer    | StructureTerminal
+
 export const collectEnergy = ({
     creep,
     context,
@@ -58,10 +62,18 @@ export const collectEnergy = ({
         }
     }
 
-    const tombstones = room.find(FIND_TOMBSTONES, { filter: tombstone => !!tombstone.store?.getCapacity(RESOURCE_ENERGY)})
-    // TODO: Low frequency check
+    const tombstones = room.find(FIND_TOMBSTONES, { filter: tombstone => tombstone.store.getCapacity(RESOURCE_ENERGY)})
+    // TODO:    Pull these room searches out into a main.ts check and cache results in Memory.
+    //          Only check every 5 ticks or so to reduce CPU overhead
     const ruins = room.find(FIND_RUINS, { filter: ruin => !!ruin.store.getCapacity(RESOURCE_ENERGY) })
-    const structureStores = room.find(FIND_STRUCTURES, { filter: structure => 'store' in structure && structure.store.getCapacity(RESOURCE_ENERGY) > 0 })
+    const roomStructures = room.find(FIND_STRUCTURES) || []
+    const structureStores = roomStructures.filter(structure => {
+            const canWithdrawFrom ="store" in structure &&
+            (structure as RetrievableStorage).store.getCapacity(RESOURCE_ENERGY)
+            console.log(`Structure ${structure.id} can withdraw from: ${canWithdrawFrom}`)
+            return canWithdrawFrom
+        }
+    )
 
     const energyStorages = [
         ...tombstones,

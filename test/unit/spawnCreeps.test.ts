@@ -4,24 +4,37 @@ import * as sinon from 'sinon'
 import { spawnCreeps } from '../../src/spawnCreeps'
 import { CreepRole, RoomHarvestTask, RoomUpgradeTask, SharedCreepState } from 'types'
 import { setupGlobals } from '../helpers/setupGlobals'
-import { calculateHarvesterProduction } from '../../src/helpers/calculateHarvesterProduction'
-
 
 describe('spawnCreeps', () => {
-  let spawnCreepSpy: sinon.SinonSpy = sinon.spy()
-  const mockSpawn = {
-    id: 'Spawn1',
-    spawning: null,
-    spawnCreep: spawnCreepSpy
-  }
+  let spawnCreepSpy: sinon.SinonSpy
+  let mockSpawn: any
   let calculateHarvesterProductionStub: sinon.SinonStub
+  let pathFinderStub: sinon.SinonStub
+
+  before(() => {
+    spawnCreepSpy = sinon.spy()
+    mockSpawn = {
+      id: 'Spawn1',
+      spawning: null,
+      spawnCreep: spawnCreepSpy
+    }
+    calculateHarvesterProductionStub = sinon.stub(require('../../src/helpers/calculateHarvesterProduction'), 'calculateHarvesterProduction').returns(10)
+    // @ts-ignore
+    pathFinderStub = sinon.stub().returns({ path: [], ops: 0, cost: 0, incomplete: false })
+    // @ts-ignore
+    global.PathFinder = { search: pathFinderStub }
+  })
+
+  after(() => {
+    calculateHarvesterProductionStub.restore()
+    // @ts-ignore
+    pathFinderStub.reset && pathFinderStub.reset()
+  })
 
   beforeEach(() => {
     setupGlobals()
     // @ts-ignore
     global.Game.spawns = { 'Spawn1': mockSpawn }
-    calculateHarvesterProductionStub = sinon.stub(require('../../src/helpers/calculateHarvesterProduction'), 'calculateHarvesterProduction').returns(10)
-
     spawnCreepSpy.resetHistory()
     // @ts-ignore
     global.RoomPosition = class {
@@ -32,9 +45,289 @@ describe('spawnCreeps', () => {
     }
   })
 
-  afterEach(() => {
-    sinon.restore()
-  })
+
+    it('should spawn a harvester creep when all conditions are met', () => {
+      Game.rooms['W1N1'] = {
+        name: 'W1N1',
+        find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+        energyAvailable: 300,
+        controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+      } as unknown as Room
+      Memory.rooms['W1N1'] = {
+        tasks: {
+          harvest: [
+            {
+              availablePositions: [{ x: 2, y: 2 }],
+              requiredWorkParts: 1,
+              roomName: 'W1N1',
+              sourceId: 'src1',
+              sourcePosition: new RoomPosition(2, 2, 'W1N1'),
+              reservingCreeps: {}
+            }
+          ]
+        },
+        effectiveEnergyPerTick: 0,
+        totalSourceEnergyPerTick: 10
+      } as RoomMemory
+      Memory.reservations.tasks = {}
+      spawnCreeps()
+      expect(spawnCreepSpy.called).to.be.true
+      const args = spawnCreepSpy.getCall(0).args
+      expect(args[0]).to.deep.equal(['work', 'carry', 'move'])
+      expect(args[2].memory.role).to.equal(CreepRole.HARVESTER)
+      expect(args[2].memory.state).to.equal(SharedCreepState.idle)
+    })
+
+    it('should spawn an upgrader creep when all conditions are met', () => {
+      Game.rooms['W1N1'] = {
+        name: 'W1N1',
+        find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+        energyAvailable: 300,
+        controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+      } as unknown as Room
+      Memory.rooms['W1N1'] = {
+        tasks: {
+          harvest: [],
+          upgrade: {
+            availablePositions: [new RoomPosition(1, 1, 'W1N1')],
+            controllerId: 'ctrl1',
+            controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+            reservingCreeps: {},
+            roomName: 'W1N1'
+          }
+        },
+        effectiveEnergyPerTick: 0,
+        totalSourceEnergyPerTick: 10
+      } as RoomMemory
+      Memory.reservations.tasks = {}
+      spawnCreeps()
+      expect(spawnCreepSpy.called).to.be.true
+      const args = spawnCreepSpy.getCall(0).args
+      expect(args[0]).to.deep.equal(['work', 'carry', 'move'])
+      expect(args[2].memory.role).to.equal(CreepRole.UPGRADER)
+      expect(args[2].memory.state).to.equal(SharedCreepState.idle)
+    })
+
+    it('should not spawn if reserved creeps >= available positions', () => {
+      Game.rooms['W1N1'] = {
+        name: 'W1N1',
+        find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+        energyAvailable: 300,
+        controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+      } as unknown as Room
+      Memory.rooms['W1N1'] = {
+        tasks: {
+          harvest: [
+            {
+              availablePositions: [{ x: 2, y: 2 }],
+              requiredWorkParts: 1,
+              roomName: 'W1N1',
+              sourceId: 'src1',
+              sourcePosition: new RoomPosition(2, 2, 'W1N1'),
+              reservingCreeps: {}
+            }
+          ]
+        },
+        effectiveEnergyPerTick: 0,
+        totalSourceEnergyPerTick: 10
+      } as RoomMemory
+      Memory.reservations.tasks = {
+        'Harvester-src1-12345': {
+          type: 'harvest',
+          sourceId: 'src1',
+          sourcePosition: new RoomPosition(2, 2, 'W1N1'),
+          workParts: 1,
+          returnPath: [],
+          taskId: 'W1N1-src1'
+        },
+        'Upgrader-ctrl1-12345': {
+          type: 'upgrade',
+          controllerId: 'ctrl1',
+          controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+          workParts: 1,
+          taskId: 'W1N1-ctrl1'
+        }
+      }
+      spawnCreeps()
+      expect(spawnCreepSpy.notCalled).to.be.true
+    })
+
+    it('should spawn upgrader if there\'s enough energy generation', () => {
+      Game.rooms['W1N1'] = {
+        name: 'W1N1',
+        find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+        energyAvailable: 300,
+        controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+      } as unknown as Room
+      Memory.rooms['W1N1'] = {
+        tasks: {
+          harvest: [
+            {
+              availablePositions: [],
+              requiredWorkParts: 0,
+              roomName: 'W1N1',
+              sourceId: 'src1',
+              sourcePosition: new RoomPosition(2, 2, 'W1N1'),
+              reservingCreeps: {}
+            }
+          ],
+          upgrade: {
+            availablePositions: [],
+            roomName: 'W1N1',
+            controllerId: 'ctrl1',
+            controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+            reservingCreeps: {}
+          }
+        },
+        effectiveEnergyPerTick: 5,
+        totalSourceEnergyPerTick: 10
+      } as RoomMemory
+      Memory.reservations.tasks = {
+        'Harvester-src1-12345': {
+          type: 'harvest',
+          sourceId: 'src1',
+          sourcePosition: new RoomPosition(2, 2, 'W1N1'),
+          workParts: 1,
+          returnPath: [],
+          taskId: 'W1N1-src1'
+        },
+        'Upgrader-ctrl1-12345': {
+          type: 'upgrade',
+          controllerId: 'ctrl1',
+          controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+          workParts: 1,
+          taskId: 'W1N1-ctrl1'
+        }
+      }
+      spawnCreeps()
+      expect(spawnCreepSpy.args[0][0]).to.be.deep.equal(['work', 'carry', 'move'])
+      expect(spawnCreepSpy.args[0][1]).to.equal("Upgrader-ctrl1-12345")
+      expect(spawnCreepSpy.args[0][2]).to.deep.equal({
+        memory: {
+          "idleStarted": 12345,
+            "role": "upgrader",
+            "state": "idle",
+            "task": {
+              "controllerId": "ctrl1",
+              "controllerPosition": {
+                "roomName": "W1N1",
+                "x": 1,
+                "y": 1
+              },
+              "taskId": "W1N1-ctrl1",
+              "type": "upgrade",
+              "workParts": 1
+            }
+          }
+      })
+    })
+
+    it('should not spawn upgrader if there\'s not enough energy generation', () => {
+      Game.rooms['W1N1'] = {
+        name: 'W1N1',
+        find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+        energyAvailable: 300,
+        controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+      } as unknown as Room
+      Memory.rooms['W1N1'] = {
+        tasks: {
+          harvest: [
+            {
+              availablePositions: [],
+              requiredWorkParts: 0,
+              roomName: 'W1N1',
+              sourceId: 'src1',
+              sourcePosition: new RoomPosition(2, 2, 'W1N1'),
+              reservingCreeps: {}
+            }
+          ],
+          upgrade: {
+            availablePositions: [],
+            roomName: 'W1N1',
+            controllerId: 'ctrl1',
+            controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+            reservingCreeps: {}
+          }
+        },
+        effectiveEnergyPerTick: 0,
+        totalSourceEnergyPerTick: 10
+      } as RoomMemory
+      Memory.reservations.tasks = {
+        'Harvester-src1-12345': {
+          type: 'harvest',
+          sourceId: 'src1',
+          sourcePosition: new RoomPosition(2, 2, 'W1N1'),
+          workParts: 1,
+          returnPath: [],
+          taskId: 'W1N1-src1'
+        },
+        'Upgrader-ctrl1-12345': {
+          type: 'upgrade',
+          controllerId: 'ctrl1',
+          controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+          workParts: 1,
+          taskId: 'W1N1-ctrl1'
+        }
+      }
+      spawnCreeps()
+      expect(spawnCreepSpy.notCalled).to.be.true
+    })
+
+    it('should not spawn if energy is below threshold', () => {
+      Game.rooms['W1N1'] = {
+        name: 'W1N1',
+        find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+        energyAvailable: 100,
+        controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+      } as unknown as Room
+      Memory.rooms['W1N1'] = {
+        tasks: {
+          harvest: [
+            {
+              availablePositions: [{ x: 2, y: 2 }],
+              requiredWorkParts: 1,
+              roomName: 'W1N1',
+              sourceId: 'src1',
+              sourcePosition: new RoomPosition(2, 2, 'W1N1'),
+              reservingCreeps: {}
+            }
+          ]
+        },
+        effectiveEnergyPerTick: 0,
+        totalSourceEnergyPerTick: 10
+      } as RoomMemory
+      Memory.reservations.tasks = {}
+      spawnCreeps()
+      expect(spawnCreepSpy.notCalled).to.be.true
+    })
+
+    it('should not spawn if no available positions for harvest', () => {
+      Game.rooms['W1N1'] = {
+        name: 'W1N1',
+        find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+        energyAvailable: 300,
+        controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+      } as unknown as Room
+      Memory.rooms['W1N1'] = {
+        tasks: {
+          harvest: [
+            {
+              availablePositions: [],
+              requiredWorkParts: 1,
+              roomName: 'W1N1',
+              sourceId: 'src1',
+              sourcePosition: new RoomPosition(2, 2, 'W1N1'),
+              reservingCreeps: {}
+            }
+          ]
+        },
+        effectiveEnergyPerTick: 0,
+        totalSourceEnergyPerTick: 10
+      } as RoomMemory
+      Memory.reservations.tasks = {}
+      spawnCreeps()
+      expect(spawnCreepSpy.notCalled).to.be.true
+    })
 
   it('should not throw if no rooms', () => {
     Game.rooms = {}
@@ -45,9 +338,7 @@ describe('spawnCreeps', () => {
     Game.rooms = {
       'W1N1': {
         name: 'W1N1',
-        find: () => {
-          return []
-        },
+        find: () => [],
         tasks: {
           harvest: [],
         }

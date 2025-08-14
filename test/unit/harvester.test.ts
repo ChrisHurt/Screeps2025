@@ -4,25 +4,22 @@ import { setupGlobals } from '../helpers/setupGlobals'
 import { HarvesterState } from '../../src/stateMachines/harvester-machine'
 import { runHarvesterCreep } from 'creepProcessors/harvester'
 import { SharedCreepState } from 'types'
-import { inRange } from 'lodash'
 
 describe('harvester processor', () => {
-  // @ts-ignore
-  global.RESOURCE_ENERGY = 'energy'
-  // @ts-ignore
-  global.CREEP_LIFE_TIME = 1500
   let creep: any
   let sandbox: sinon.SinonSandbox
   let isNearToStub: sinon.SinonStub
   let inRangeToStub: sinon.SinonStub
   let renewCreepStub: sinon.SinonStub
+  let recycleCreepStub: sinon.SinonStub
 
   beforeEach(() => {
     setupGlobals()
     sandbox = sinon.createSandbox()
     renewCreepStub = sandbox.stub()
+    recycleCreepStub = sandbox.stub()
     const mockSource = { id: 'src1', pos: { x: 5, y: 5, roomName: 'W1N1' }, energyCapacity: 300 } as Source
-    const mockSpawn = { id: 'spawn1', pos: { x: 10, y: 10, roomName: 'W1N1' }, renewCreep: renewCreepStub, spawning: false } as unknown as StructureSpawn
+    const mockSpawn = { id: 'spawn1', pos: { x: 10, y: 10, roomName: 'W1N1' }, recycleCreep: recycleCreepStub, renewCreep: renewCreepStub, spawning: false } as unknown as StructureSpawn
     const find = (type: number) => {
       if (type === FIND_SOURCES) {
         return [mockSource]
@@ -157,6 +154,21 @@ describe('harvester processor', () => {
     expect(creep.harvest.called).to.be.true
   })
 
+  it('should not harvest source if not adjacent during harvesting', () => {
+    creep.memory.state = HarvesterState.harvesting
+    creep.memory.task = {
+      type: 'harvest',
+      sourceId: 'src1',
+      sourcePosition: { x: 20, y: 20 },
+      workParts: 1
+    }
+    isNearToStub.returns(false)
+    inRangeToStub.returns(false)
+    runHarvesterCreep(creep)
+    expect(creep.moveTo.called).to.be.true
+    expect(creep.harvest.called).to.be.false
+  })
+
   it('should send full event and continue if energy is full during harvesting', () => {
     creep.memory.state = HarvesterState.harvesting
     creep.memory.task = {
@@ -196,5 +208,15 @@ describe('harvester processor', () => {
     const logSpy = sandbox.spy(console, 'log')
     runHarvesterCreep(creep)
     expect(logSpy.args[0][0]).to.equal('Creep TestCreep has been idle for too long, recycling.')
+  })
+
+  it('should handle short creep idle state', () => {
+    creep.memory.state = SharedCreepState.idle
+    creep.memory.task = { type: 'harvest' }
+    creep.memory.idleStarted = 1000
+    global.Game.time = 1005
+    const logSpy = sandbox.spy(console, 'log')
+    runHarvesterCreep(creep)
+    expect(logSpy.notCalled).to.be.true
   })
 })

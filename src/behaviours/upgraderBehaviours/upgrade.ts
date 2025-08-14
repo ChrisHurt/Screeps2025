@@ -36,7 +36,7 @@ export const upgrade = ({
     moveInRangeOfPos({
         creep,
         offset: 1,
-        target: controller?.pos
+        target: controller.pos
     })
 
     if (controller.pos.inRangeTo(creep, 3)) {

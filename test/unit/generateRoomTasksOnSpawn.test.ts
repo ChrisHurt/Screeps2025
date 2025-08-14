@@ -56,6 +56,14 @@ describe('generateRoomTasksOnSpawn', () => {
     expect(Memory.rooms['W1N1']).to.be.undefined
   })
 
+  it('should not set memory if spawn is missing', () => {
+    Game.rooms['W1N1'] = {...mockRoom, find: (type: number) => {
+        return []
+      }}
+    expect(() => generateRoomTasksOnSpawn('W1N1')).to.not.throw()
+    expect(Memory.rooms['W1N1']).to.be.undefined
+  })
+
   it('should set up tasks and memory for a room with sources and controller', () => {
     Game.rooms['W1N1'] = mockRoom
     generateRoomTasksOnSpawn('W1N1')

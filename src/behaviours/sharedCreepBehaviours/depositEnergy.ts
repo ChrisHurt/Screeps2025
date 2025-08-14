@@ -1,7 +1,6 @@
 import { Service } from "robot3"
 import { HarvesterContext, HarvesterEventType, HarvesterMachine, HarvesterState } from "stateMachines/harvester-machine"
 import { SharedCreepState } from "types"
-import { moveInRangeOfPos } from "./moveInRangeOfPos"
 
 interface DepositEnergyParams {
     creep: Creep

@@ -6,17 +6,6 @@ import { runUpgraderCreep } from '../../src/creepProcessors/upgrader'
 import { SharedCreepState } from 'types'
 
 describe('upgrader processor', () => {
-  // @ts-ignore
-  global.RESOURCE_ENERGY = 'energy'
-  // @ts-ignore
-  global.FIND_DROPPED_RESOURCES = 106
-  // @ts-ignore
-  global.FIND_TOMBSTONES = 118
-  // @ts-ignore
-  global.FIND_RUINS = 123
-  // @ts-ignore
-  global.FIND_STRUCTURES = 107
-
   let creep: any
   let sandbox: sinon.SinonSandbox
   let isNearToStub: sinon.SinonStub
@@ -131,5 +120,50 @@ describe('upgrader processor', () => {
     runUpgraderCreep(creep)
     expect(creep.withdraw.called).to.be.true
     expect(creep.memory.state).to.equal(UpgraderState.collecting)
+  })
+
+  it('should set error state for invalid task', () => {
+    creep.memory.task = { type: 'harvest' }
+    runUpgraderCreep(creep)
+    expect(creep.memory.state).to.equal(SharedCreepState.error)
+    expect(creep.say.calledWith('�')).to.be.true
+  })
+
+  it('should call recycle for recycling state', () => {
+    // Patch recycle to set a flag
+    let recycled = false
+    const originalRecycle = require('../../src/behaviours/sharedCreepBehaviours/recycle').recycle
+    require('../../src/behaviours/sharedCreepBehaviours/recycle').recycle = () => { recycled = true; return { continue: false, state: SharedCreepState.recycling } }
+    creep.memory.state = SharedCreepState.recycling
+    creep.memory.task = { type: 'upgrade', controllerId: 'ctrl1', controllerPosition: { x: 5, y: 5, roomName: 'W1N1' } }
+    runUpgraderCreep(creep)
+    expect(recycled).to.be.true
+    expect(creep.memory.state).to.equal(SharedCreepState.recycling)
+    expect(creep.say.calledWith('💀')).to.be.true
+    // Restore original
+    require('../../src/behaviours/sharedCreepBehaviours/recycle').recycle = originalRecycle
+  })
+
+  // TODO: Unskip when collection tasking includes energy reservations
+  it.skip('should handle long creep idle state', () => {
+    creep.memory.state = SharedCreepState.idle
+    creep.memory.task = { type: 'upgrade' }
+    creep.memory.idleStarted = 1000
+    global.Game.time = 1051
+    const logSpy = sandbox.spy(console, 'log')
+    runUpgraderCreep(creep)
+    console.log(`LOGS: ${logSpy.args}`)
+    expect(logSpy.args[0][0]).to.equal('Creep TestCreep has been idle for too long, recycling.')
+  })
+
+  // TODO: Unskip when collection tasking includes energy reservations
+  it.skip('should handle short creep idle state', () => {
+    creep.memory.state = SharedCreepState.idle
+    creep.memory.task = { type: 'upgrade' }
+    creep.memory.idleStarted = 1000
+    global.Game.time = 1005
+    const logSpy = sandbox.spy(console, 'log')
+    runUpgraderCreep(creep)
+    expect(logSpy.notCalled).to.be.true
   })
 })

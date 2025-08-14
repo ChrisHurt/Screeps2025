@@ -56,7 +56,7 @@ export const spawnCreeps = () => {
             } = Object.values(Memory.reservations.tasks).reduce((totals, task) => {
                 if (task.type === "harvest" && task.sourceId === harvestTask.sourceId) {
                     return {
-                        workParts: totals.workParts + (task.workParts || 0),
+                        workParts: totals.workParts + task.workParts,
                         creeps: totals.creeps + 1
                     }
                 }
@@ -155,7 +155,7 @@ export const spawnCreeps = () => {
 
         const reservedUpgraderWorkParts = Object.values(Memory.reservations.tasks).reduce((total, task) => {
             if (task.type === "upgrade" && task.controllerId === upgradeTask.controllerId) {
-                return total + (task.workParts || 0)
+                return total + task.workParts
             }
             return total
         }, 0)

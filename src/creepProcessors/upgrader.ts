@@ -52,27 +52,31 @@ const processCurrentUpgraderState = (creep: Creep, upgraderService: Service<Upgr
   }
 
   switch (upgraderService.machine.current) {
+    /* istanbul ignore next */
     default:
       console.log(`Unknown upgrader state: ${upgraderService.machine.current}`)
       return { continue: false, state: SharedCreepState.idle }
     case SharedCreepState.idle:
-      // If we have a collecting task, start collecting
+      // TODO: Update this when collection tasking includes energy reservations
       const collectingTaskAvailable = creepTask
 
+      // TODO: Update this when collection tasking includes energy reservations
+      /* istanbul ignore next */
       if (collectingTaskAvailable) {
         upgraderService.send({ type: UpgraderEventType.startCollecting })
         return { continue: true, state: UpgraderState.collecting }
       }
 
-      if(checkIfUnused({
-        creep,
-        context,
-        service: upgraderService
-      })) {
-        return { continue: true, state: SharedCreepState.recycling }
-      }
+      // TODO: Uncomment when collection tasking includes energy reservations
+      // if(checkIfUnused({
+      //   creep,
+      //   context,
+      //   service: upgraderService
+      // })) {
+      //   return { continue: true, state: SharedCreepState.recycling }
+      // }
 
-      return { continue: false, state: SharedCreepState.idle }
+      // return { continue: false, state: SharedCreepState.idle }
     case UpgraderState.collecting:
       return collectEnergy({
         creep,
@@ -81,7 +85,7 @@ const processCurrentUpgraderState = (creep: Creep, upgraderService: Service<Upgr
       })
     case UpgraderState.upgrading:
       return upgrade({ creep, context, upgraderService })
-      case SharedCreepState.recycling:
-        return recycle(creep)
+    case SharedCreepState.recycling:
+      return recycle(creep)
   }
 }

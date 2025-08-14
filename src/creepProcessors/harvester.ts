@@ -3,7 +3,7 @@ import { createHarvesterMachine, HarvesterContext, HarvesterEventType, Harvester
 import { interpret, Service } from 'robot3'
 import { checkIfUnused } from "behaviours/sharedCreepBehaviours/checkIfUnused"
 import { recycle } from "behaviours/sharedCreepBehaviours/recycle"
-import { depositEnergy } from "behaviours/sharedCreepBehaviours/deposit"
+import { depositEnergy } from "behaviours/sharedCreepBehaviours/depositEnergy"
 import { harvest } from "behaviours/harvesterBehaviours/harvest"
 
 export function runHarvesterCreep(creep: Creep) {
@@ -56,18 +56,20 @@ const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<Ha
       console.log(`Unknown harvester state: ${harvesterService.machine.current}`)
       return { continue: false, state: SharedCreepState.idle }
     case SharedCreepState.idle:
-      const harvestTaskAvailable = creepTask?.type === 'harvest' && creepTask.sourceId && creepTask.sourcePosition
+      const harvestTaskAvailable = creepTask.type === 'harvest' && creepTask.sourceId && creepTask.sourcePosition
 
       if (harvestTaskAvailable) {
         harvesterService.send({ type: HarvesterEventType.startHarvest })
         return { continue: true, state: HarvesterState.harvesting }
       }
 
-      checkIfUnused({
+      if (checkIfUnused({
         creep,
         context,
         service: harvesterService
-      })
+      })) {
+        return { continue: true, state: SharedCreepState.recycling }
+      }
 
       return { continue: false, state: SharedCreepState.idle }
     case HarvesterState.harvesting:

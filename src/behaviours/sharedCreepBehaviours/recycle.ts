@@ -11,6 +11,8 @@ export const recycle = (creep: Creep): RecycleOutput => {
 
     if (!spawnRecycler) {
         console.log(`Spawn not found for creep ${creep.name}`)
+        creep.suicide()
+        return { continue: false, state: SharedCreepState.recycling }
     }
 
     if (!creep.pos.isNearTo(spawnRecycler)) {
