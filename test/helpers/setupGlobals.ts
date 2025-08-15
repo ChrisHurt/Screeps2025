@@ -10,6 +10,12 @@ export function setupGlobals({
     // @ts-ignore
     global.Memory = { ...mockMemory }
     // @ts-ignore
+    global.FIND_HOSTILE_CREEPS = 103
+    // @ts-ignore
+    global.FIND_HOSTILE_POWER_CREEPS = 121
+    // @ts-ignore
+    global.FIND_HOSTILE_STRUCTURES = 109
+    // @ts-ignore
     global.FIND_MY_CREEPS = 102
     // @ts-ignore
     global.FIND_MY_SPAWNS = 112
@@ -30,11 +36,15 @@ export function setupGlobals({
     // @ts-ignore
     global.CREEP_LIFE_TIME = 1500
     // @ts-ignore
-    global.WORK = 'work'
+    global.ATTACK = 'attack'
     // @ts-ignore
     global.CARRY = 'carry'
     // @ts-ignore
     global.MOVE = 'move'
+    // @ts-ignore
+    global.TOUGH = 'tough'
+    // @ts-ignore
+    global.WORK = 'work'
     // @ts-ignore
     global.TERRAIN_MASK_PLAIN = 0
     // @ts-ignore

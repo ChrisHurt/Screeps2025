@@ -1,3 +1,4 @@
+import { GuardState } from "stateMachines/guard-machine"
 import { HarvesterState } from "stateMachines/harvester-machine"
 import { UpgraderState } from "stateMachines/upgrader-machine"
 
@@ -119,13 +120,14 @@ export enum SharedCreepState {
 
 export enum CreepRole {
   HARVESTER = 'harvester',
+  GUARD = 'guard',
   UPGRADER = 'upgrader',
 }
 
 export interface CreepMemory {
   idleStarted?: number // Game Timestamp when the creep went idle
   role: CreepRole
-  state?: HarvesterState | UpgraderState | SharedCreepState
+  state?: GuardState | HarvesterState | UpgraderState | SharedCreepState
   task?: CreepHarvestTask | CreepUpgradeTask
 }
 
@@ -151,6 +153,12 @@ export interface CustomRoomMemory {
   tasks?: {
     upgrade?: RoomUpgradeTask
     harvest: RoomHarvestTask[]
+  }
+  threats?: {
+    enemyCreepCount: number
+    enemyPowerCreepCount: number
+    enemyStructures: string[]
+    lastObserved: number
   }
   totalSourceEnergyPerTick: number
 }

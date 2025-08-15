@@ -10,6 +10,8 @@ import { CreepRole } from "types"
 import { isEmpty } from "lodash"
 import { runUpgraderCreep } from "creepProcessors/upgrader"
 import { calculateEnergyProductionByRoom } from "helpers/calculateEnergyProductionByRoom"
+import { evaluateImmediateThreats } from "evaluateImmediateThreats"
+import { runGuardCreep } from "creepProcessors/guard"
 
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`\nCurrent game tick is ${Game.time}`)
@@ -44,6 +46,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
     generateRoomTasksOnSpawn(startingRoomName)
   }
 
+  evaluateImmediateThreats()
+
   spawnCreeps()
 
   // Process creeps
@@ -61,6 +65,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
     } else if (creep.memory.role === CreepRole.UPGRADER) {
       console.log(`Processing upgrader creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
       runUpgraderCreep(creep)
+    } else if (creep.memory.role === CreepRole.GUARD) {
+      console.log(`Processing guard creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
+      runGuardCreep(creep)
     } else {
       console.log(`Creep ${name} has invalid role, skipping`)
     }

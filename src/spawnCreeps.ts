@@ -36,6 +36,37 @@ export const spawnCreeps = () => {
             continue
         }
 
+        const myCreeps = room.find(FIND_MY_CREEPS)
+        const guardCount = myCreeps.filter(creep => creep.memory?.role === CreepRole.GUARD).length
+
+        if (roomMemory.threats && roomMemory.threats.enemyCreepCount > guardCount) {
+            if (room.energyAvailable < 140) {
+                console.log(`SpawnCreepsDebug: Not enough energy to spawn in room ${roomName}`)
+                continue
+            }
+
+            // Calculate cost -> Add to production.energy
+            const creepBody = [TOUGH, ATTACK, MOVE]
+            const spawn = roomSpawns[0]
+            const creepName = `Guard-${spawn.id}-${Game.time}`
+            const perTickUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: false })
+
+            // NOTE: Update rooms energy production
+            Memory.production.energy[creepName] = {
+                perTickAmount: - perTickUpkeep,
+                roomNames: [roomName],
+                type: EnergyImpactType.CREEP,
+            }
+
+            spawn.spawnCreep(creepBody, creepName, {
+                memory: {
+                    idleStarted: Game.time + creepBody.length * 3,
+                    role: CreepRole.GUARD,
+                    state: SharedCreepState.idle
+                }
+            })
+        }
+
         const harvestTasks = roomTasks.harvest
 
         if (!harvestTasks) {
@@ -183,11 +214,12 @@ export const spawnCreeps = () => {
 
         Memory.reservations.tasks[creepName] = creepUpgradeTask
 
-        const perTickUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: false })
+        const perTickBodyUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: false })
+        const perTickUpgradeUpkeep = 0 // TODO: Calculate upgrade creep upkeep - reuse harvester logic to some extent
 
         // NOTE: Update rooms energy production
         Memory.production.energy[creepName] = {
-            perTickAmount: -perTickUpkeep,
+            perTickAmount: - perTickBodyUpkeep - perTickUpgradeUpkeep,
             roomNames: [roomName],
             type: EnergyImpactType.CREEP,
         }
