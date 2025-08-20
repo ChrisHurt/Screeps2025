@@ -1,13 +1,12 @@
-import { SharedCreepState } from "types"
-import { createUpgraderMachine, UpgraderContext, UpgraderEventType, UpgraderMachine, UpgraderState } from "../stateMachines/upgrader-machine"
+import { SharedCreepEventType, SharedCreepState } from "types"
+import { createUpgraderMachine, UpgraderContext, UpgraderMachine, UpgraderMachineStateTypes, } from "../stateMachines/upgrader-machine"
 import { interpret, Service } from 'robot3'
-import { checkIfUnused } from "behaviours/sharedCreepBehaviours/checkIfUnused"
 import { recycle } from "behaviours/sharedCreepBehaviours/recycle"
 import { upgrade } from "behaviours/upgraderBehaviours/upgrade"
 import { collectEnergy } from "behaviours/upgraderBehaviours/collectEnergy"
 
 export function runUpgraderCreep(creep: Creep) {
-  const state = (creep.memory.state || SharedCreepState.idle) as UpgraderState | SharedCreepState
+  const state = (creep.memory.state || SharedCreepState.idle) as UpgraderMachineStateTypes
   const context: UpgraderContext = {
     energy: creep.store.getUsedCapacity(RESOURCE_ENERGY),
     capacity: creep.store.getCapacity(RESOURCE_ENERGY),
@@ -25,7 +24,7 @@ export function runUpgraderCreep(creep: Creep) {
     creepShouldContinue = shouldContinue
     finalState = state
   } while (creepShouldContinue && permittedIterations-- > 0)
-  creep.memory.state = finalState as UpgraderState
+  creep.memory.state = finalState
   creep.say(`${creepStateSpeechEmojis[finalState]}`, false)
 }
 
@@ -33,13 +32,13 @@ const creepStateSpeechEmojis = {
   [SharedCreepState.idle]: '😴',
   [SharedCreepState.error]: '�',
   [SharedCreepState.recycling]: '💀',
-  [UpgraderState.collecting]: '🔋',
-  [UpgraderState.upgrading]: '⚡'
+  [SharedCreepState.collectingEnergy]: '🔋',
+  [SharedCreepState.upgrading]: '⚡'
 }
 
 interface ProcessCurrentUpgraderStateOutput {
     continue: boolean
-    state: UpgraderState | SharedCreepState
+    state: UpgraderMachineStateTypes
 }
 
 const processCurrentUpgraderState = (creep: Creep, upgraderService: Service<UpgraderMachine>): ProcessCurrentUpgraderStateOutput => {
@@ -63,8 +62,8 @@ const processCurrentUpgraderState = (creep: Creep, upgraderService: Service<Upgr
       // TODO: Update this when collection tasking includes energy reservations
       /* istanbul ignore next */
       if (collectingTaskAvailable) {
-        upgraderService.send({ type: UpgraderEventType.startCollecting })
-        return { continue: true, state: UpgraderState.collecting }
+        upgraderService.send({ type: SharedCreepEventType.empty })
+        return { continue: true, state: SharedCreepState.collectingEnergy }
       }
 
       // TODO: Uncomment when collection tasking includes energy reservations
@@ -77,14 +76,14 @@ const processCurrentUpgraderState = (creep: Creep, upgraderService: Service<Upgr
       // }
 
       // return { continue: false, state: SharedCreepState.idle }
-    case UpgraderState.collecting:
+    case SharedCreepState.collectingEnergy:
       return collectEnergy({
         creep,
         context,
-        upgraderService
+        service: upgraderService
       })
-    case UpgraderState.upgrading:
-      return upgrade({ creep, context, upgraderService })
+    case SharedCreepState.upgrading:
+      return upgrade({ creep, context, service: upgraderService })
     case SharedCreepState.recycling:
       return recycle(creep)
   }

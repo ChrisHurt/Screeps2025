@@ -3,8 +3,7 @@ import { loop } from "../../src/main"
 import { setupGlobals } from "../helpers/setupGlobals"
 import * as renderMapConnections from "../../src/renderMapConnections"
 import * as sinon from "sinon"
-import { CreepRole } from "types"
-import { HarvesterState } from "stateMachines/harvester-machine"
+import { CreepRole, SharedCreepState } from "types"
 import * as harvester from "creepProcessors/harvester"
 
 describe("main", () => {
@@ -40,7 +39,7 @@ describe("main", () => {
         name: "harvester1",
         memory: {
           role: CreepRole.HARVESTER,
-          state: HarvesterState.harvesting
+          state: SharedCreepState.harvesting
         }
       } as Creep
     }
@@ -53,7 +52,7 @@ describe("main", () => {
       harvester1: {
         name: "harvester1",
         memory: {
-          state: HarvesterState.harvesting
+          state: SharedCreepState.harvesting
         }
       } as Creep
     }
@@ -69,7 +68,7 @@ describe("main", () => {
         name: "harvester1",
         memory: {
           role: CreepRole.UPGRADER,
-          state: HarvesterState.harvesting
+          state: SharedCreepState.harvesting
         }
       } as Creep
     }

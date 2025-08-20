@@ -1,4 +1,4 @@
-import { UpgraderContext, UpgraderEventType, UpgraderMachine, UpgraderState, createUpgraderMachine } from '../../src/stateMachines/upgrader-machine'
+import { UpgraderContext, UpgraderMachine, createUpgraderMachine } from '../../src/stateMachines/upgrader-machine'
 import { interpret, Service } from 'robot3'
 import { expect } from 'chai'
 import { setupGlobals } from '../helpers/setupGlobals'
@@ -20,31 +20,31 @@ describe('upgraderMachine', () => {
     })
 
     it('should transition to collecting on startCollecting and clear idleStarted', () => {
-        service.send({ type: UpgraderEventType.startCollecting })
-        expect(service.machine.current).to.equal('collecting')
+        service.send({ type: SharedCreepEventType.empty })
+        expect(service.machine.current).to.equal('collectingEnergy')
         expect(context.idleStarted).to.be.undefined
     })
 
     it('should transition to upgrading when collected', () => {
-        service.send({ type: UpgraderEventType.startCollecting })
-        service.send({ type: UpgraderEventType.collected })
+        service.send({ type: SharedCreepEventType.empty })
+        service.send({ type: SharedCreepEventType.full })
         expect(service.machine.current).to.equal('upgrading')
     })
 
     it('should return to collecting after empty and idleStarted should be set', () => {
         // @ts-ignore
         global.Game = { time: 5678 }
-        service.send({ type: UpgraderEventType.startCollecting })
-        service.send({ type: UpgraderEventType.collected })
-        service.send({ type: UpgraderEventType.empty })
-        expect(service.machine.current).to.equal('collecting')
+        service.send({ type: SharedCreepEventType.empty })
+        service.send({ type: SharedCreepEventType.full })
+        service.send({ type: SharedCreepEventType.empty })
+        expect(service.machine.current).to.equal('collectingEnergy')
         expect(service.context.idleStarted).to.equal(5678)
     })
 
     it('should return to idle from collecting on idle event and idleStarted should be set', () => {
         // @ts-ignore
         global.Game = { time: 9999 }
-        service.send({ type: UpgraderEventType.startCollecting })
+        service.send({ type: SharedCreepEventType.empty })
         service.send({ type: SharedCreepEventType.idle })
         expect(service.machine.current).to.equal('idle')
         expect(service.context.idleStarted).to.equal(9999)
@@ -53,48 +53,48 @@ describe('upgraderMachine', () => {
     it('should clear idleStarted when transitioning from idle to collecting', () => {
         // @ts-ignore
         global.Game = { time: 2222 }
-        service.send({ type: UpgraderEventType.startCollecting })
+        service.send({ type: SharedCreepEventType.empty })
         service.send({ type: SharedCreepEventType.idle })
         expect(service.context.idleStarted).to.equal(2222)
-        service.send({ type: UpgraderEventType.startCollecting })
+        service.send({ type: SharedCreepEventType.empty })
         expect(service.context.idleStarted).to.be.undefined
     })
 
     it('should remain in idle if receiving collected event in idle', () => {
         // @ts-ignore
         global.Game = { time: 8888 }
-        service.send({ type: UpgraderEventType.collected })
+        service.send({ type: SharedCreepEventType.full })
         expect(service.machine.current).to.equal('idle')
         expect(service.context.idleStarted).to.be.undefined
     })
 
     it('should remain in collecting if receiving startCollecting event in collecting', () => {
-        service.send({ type: UpgraderEventType.startCollecting })
-        service.send({ type: UpgraderEventType.startCollecting })
-        expect(service.machine.current).to.equal('collecting')
+        service.send({ type: SharedCreepEventType.empty })
+        service.send({ type: SharedCreepEventType.empty })
+        expect(service.machine.current).to.equal('collectingEnergy')
     })
 
     it('should remain in upgrading if receiving collected event in upgrading', () => {
-        service.send({ type: UpgraderEventType.startCollecting })
-        service.send({ type: UpgraderEventType.collected })
-        service.send({ type: UpgraderEventType.collected })
+        service.send({ type: SharedCreepEventType.empty })
+        service.send({ type: SharedCreepEventType.full })
+        service.send({ type: SharedCreepEventType.full })
         expect(service.machine.current).to.equal('upgrading')
     })
 
     it('should allow starting in collecting state', () => {
         context = { energy: 0, capacity: 50 }
-        service = interpret(createUpgraderMachine(() => context, UpgraderState.collecting),()=>{})
-        expect(service.machine.current).to.equal('collecting')
-        service.send({ type: UpgraderEventType.collected })
+        service = interpret(createUpgraderMachine(() => context, SharedCreepState.collectingEnergy),()=>{})
+        expect(service.machine.current).to.equal('collectingEnergy')
+        service.send({ type: SharedCreepEventType.full })
         expect(service.machine.current).to.equal('upgrading')
     })
 
     it('should allow starting in upgrading state', () => {
         context = { energy: 0, capacity: 50 }
-        service = interpret(createUpgraderMachine(() => context, UpgraderState.upgrading),()=>{})
+        service = interpret(createUpgraderMachine(() => context, SharedCreepState.upgrading),()=>{})
         expect(service.machine.current).to.equal('upgrading')
-        service.send({ type: UpgraderEventType.empty })
-        expect(service.machine.current).to.equal('collecting')
+        service.send({ type: SharedCreepEventType.empty })
+        expect(service.machine.current).to.equal('collectingEnergy')
     })
 
     it('should default to idle if initialState is not provided', () => {

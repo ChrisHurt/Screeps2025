@@ -1,5 +1,5 @@
-import { SharedCreepState } from "types"
-import { createHarvesterMachine, HarvesterContext, HarvesterEventType, HarvesterMachine, HarvesterState } from "../stateMachines/harvester-machine"
+import { SharedCreepEventType, SharedCreepState } from "types"
+import { createHarvesterMachine, HarvesterContext, HarvesterMachine, HarvesterMachineStateTypes, } from "../stateMachines/harvester-machine"
 import { interpret, Service } from 'robot3'
 import { checkIfUnused } from "behaviours/sharedCreepBehaviours/checkIfUnused"
 import { recycle } from "behaviours/sharedCreepBehaviours/recycle"
@@ -7,7 +7,7 @@ import { depositEnergy } from "behaviours/sharedCreepBehaviours/depositEnergy"
 import { harvest } from "behaviours/harvesterBehaviours/harvest"
 
 export function runHarvesterCreep(creep: Creep) {
-  const state = (creep.memory.state || SharedCreepState.idle) as HarvesterState | SharedCreepState
+  const state = (creep.memory.state || SharedCreepState.idle) as HarvesterMachineStateTypes
   const context: HarvesterContext = {
     energy: creep.store.getUsedCapacity(RESOURCE_ENERGY),
     capacity: creep.store.getCapacity(RESOURCE_ENERGY),
@@ -30,15 +30,15 @@ export function runHarvesterCreep(creep: Creep) {
 
 interface ProcessCurrentHarvesterStateOutput {
     continue: boolean
-    state: HarvesterState | SharedCreepState
+    state: HarvesterMachineStateTypes
 }
 
 const creepStateSpeechEmojis = {
   [SharedCreepState.idle]: '😴',
   [SharedCreepState.error]: '�',
   [SharedCreepState.recycling]: '💀',
-  [HarvesterState.harvesting]: '⛏️',
-  [HarvesterState.depositing]: '🏦'
+  [SharedCreepState.harvesting]: '⛏️',
+  [SharedCreepState.depositing]: '🏦'
 }
 
 const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<HarvesterMachine>): ProcessCurrentHarvesterStateOutput => {
@@ -59,8 +59,8 @@ const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<Ha
       const harvestTaskAvailable = creepTask.type === 'harvest' && creepTask.sourceId && creepTask.sourcePosition
 
       if (harvestTaskAvailable) {
-        harvesterService.send({ type: HarvesterEventType.startHarvest })
-        return { continue: true, state: HarvesterState.harvesting }
+        harvesterService.send({ type: SharedCreepEventType.empty })
+        return { continue: true, state: SharedCreepState.harvesting }
       }
 
       if (checkIfUnused({
@@ -72,14 +72,14 @@ const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<Ha
       }
 
       return { continue: false, state: SharedCreepState.idle }
-    case HarvesterState.harvesting:
+    case SharedCreepState.harvesting:
       return harvest({
         creep,
         creepTask,
         context,
         service: harvesterService
       })
-    case HarvesterState.depositing:
+    case SharedCreepState.depositing:
       return depositEnergy({
         creep,
         context,

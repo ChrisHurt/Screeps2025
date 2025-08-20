@@ -1,8 +1,8 @@
 import { collectEnergy } from 'behaviours/upgraderBehaviours/collectEnergy'
 import { expect } from 'chai'
 import * as sinon from 'sinon'
-import { UpgraderEventType, UpgraderState } from 'stateMachines/upgrader-machine'
 import { setupGlobals } from '../helpers/setupGlobals'
+import { SharedCreepEventType, SharedCreepState } from 'types'
 
 describe('collectEnergy', () => {
     beforeEach(() => {
@@ -17,10 +17,10 @@ describe('collectEnergy', () => {
     creep.pickup = sinon.spy()
     creep.store.energy = 10
     creep.store.getCapacity = sinon.stub().returns(50)
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.pickup.called).to.be.false
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.false
-    expect(result).to.deep.equal({ continue: false, state: UpgraderState.collecting })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.false
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
   })
 
   it('should not move if no dropped resources or stores found', () => {
@@ -34,11 +34,11 @@ describe('collectEnergy', () => {
     creep.pickup = sinon.spy()
     creep.store.energy = 10
     creep.store.getCapacity = sinon.stub().returns(50)
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.moveTo.called).to.be.false
     expect(creep.pickup.called).to.be.false
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.false
-    expect(result).to.deep.equal({ continue: false, state: UpgraderState.collecting })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.false
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
   })
 
   it('should filter tombstones, ruins, and structureStores for energy capacity', () => {
@@ -73,10 +73,10 @@ describe('collectEnergy', () => {
     creep.withdraw = sinon.spy()
     creep.store.energy = 10
     creep.store.getCapacity = sinon.stub().returns(50)
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.withdraw.called).to.be.false
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.false
-    expect(result).to.deep.equal({ continue: false, state: UpgraderState.collecting })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.false
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
   })
   it('should withdraw from tombstone if available and in range', () => {
     room.find.withArgs(FIND_DROPPED_RESOURCES, sinon.match.any).returns([])
@@ -89,10 +89,10 @@ describe('collectEnergy', () => {
     creep.withdraw = sinon.spy()
     creep.store.energy = 50
     creep.store.getCapacity = sinon.stub().returns(50)
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.withdraw.calledWith(tombstone, RESOURCE_ENERGY)).to.be.true
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.true
-    expect(result).to.deep.equal({ continue: true, state: UpgraderState.upgrading })
+    expect(upgraderService.send.args[0][0].type).to.equal(SharedCreepEventType.full)
+    expect(result).to.deep.equal({ continue: true, state: SharedCreepState.idle })
   })
 
   it('should withdraw from ruin if available and in range', () => {
@@ -106,10 +106,10 @@ describe('collectEnergy', () => {
     creep.withdraw = sinon.spy()
     creep.store.energy = 50
     creep.store.getCapacity = sinon.stub().returns(50)
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.withdraw.calledWith(ruin, RESOURCE_ENERGY)).to.be.true
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.true
-    expect(result).to.deep.equal({ continue: true, state: UpgraderState.upgrading })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.true
+    expect(result).to.deep.equal({ continue: true, state: SharedCreepState.idle })
   })
 
   it('should withdraw from structure store if available and in range', () => {
@@ -123,10 +123,10 @@ describe('collectEnergy', () => {
     creep.withdraw = sinon.spy()
     creep.store.energy = 50
     creep.store.getCapacity = sinon.stub().returns(50)
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.withdraw.calledWith(structureStore, RESOURCE_ENERGY)).to.be.true
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.true
-    expect(result).to.deep.equal({ continue: true, state: UpgraderState.upgrading })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.true
+    expect(result).to.deep.equal({ continue: true, state: SharedCreepState.idle })
   })
 
   it('should return collecting if closestStore is not in range', () => {
@@ -140,10 +140,10 @@ describe('collectEnergy', () => {
     creep.withdraw = sinon.spy()
     creep.store.energy = 10
     creep.store.getCapacity = sinon.stub().returns(50)
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.withdraw.called).to.be.false
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.false
-    expect(result).to.deep.equal({ continue: false, state: UpgraderState.collecting })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.false
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
   })
   let creep: any
   let context: any
@@ -181,17 +181,17 @@ describe('collectEnergy', () => {
     creep.pickup = sinon.spy()
     creep.store.energy = 10
     creep.store.getCapacity = sinon.stub().returns(50)
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.pickup.calledWith(dropped[0])).to.be.true
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.false
-    expect(result).to.deep.equal({ continue: false, state: UpgraderState.collecting })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.false
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
   })
 
   it('should transition to upgrading if creep is full', () => {
     context.energy = 50
-    const result = collectEnergy({ creep, context, upgraderService })
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.true
-    expect(result).to.deep.equal({ continue: true, state: UpgraderState.upgrading })
+    const result = collectEnergy({ creep, context, service: upgraderService })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.true
+    expect(result).to.deep.equal({ continue: true, state: SharedCreepState.idle })
   })
 
   it('should pick up dropped energy if available and in range', () => {
@@ -201,10 +201,10 @@ describe('collectEnergy', () => {
     creep.pos.isNearTo.returns(true)
     creep.pickup = sinon.spy()
     creep.store.energy = 50
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.pickup.calledWith(dropped[0])).to.be.true
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.true
-    expect(result).to.deep.equal({ continue: true, state: UpgraderState.upgrading })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.true
+    expect(result).to.deep.equal({ continue: true, state: SharedCreepState.idle })
   })
 
   it('should withdraw from closest store if available and in range', () => {
@@ -217,17 +217,17 @@ describe('collectEnergy', () => {
     creep.pos.isNearTo.returns(true)
     creep.withdraw = sinon.spy()
     creep.store.energy = 50
-    const result = collectEnergy({ creep, context, upgraderService })
+    const result = collectEnergy({ creep, context, service: upgraderService })
     expect(creep.withdraw.calledWith(store, RESOURCE_ENERGY)).to.be.true
-    expect(upgraderService.send.calledWith({ type: UpgraderEventType.collected })).to.be.true
-    expect(result).to.deep.equal({ continue: true, state: UpgraderState.upgrading })
+    expect(upgraderService.send.calledWith({ type: SharedCreepEventType.full })).to.be.true
+    expect(result).to.deep.equal({ continue: true, state: SharedCreepState.idle })
   })
 
   it('should return collecting if not in range of any energy source', () => {
     room.find.returns([])
     creep.pos.findClosestByPath.returns(null)
     creep.pos.isNearTo.returns(false)
-    const result = collectEnergy({ creep, context, upgraderService })
-    expect(result).to.deep.equal({ continue: false, state: UpgraderState.collecting })
+    const result = collectEnergy({ creep, context, service: upgraderService })
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
   })
 })

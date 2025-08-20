@@ -2,6 +2,7 @@ import { calculateRoomEnergyProduction } from "helpers/calculateRoomEnergyProduc
 import { calculateCreepUpkeep } from "helpers/calculateCreepUpkeep"
 import { CreepHarvestTask, CreepRole, CreepUpgradeTask, EnergyImpactType, ReservingCreeps, SharedCreepState } from "types"
 import { calculateHarvesterProduction } from "helpers/calculateHarvesterProduction"
+import { calculateUpgraderProduction } from "calculateUpgradeUpkeep"
 
 export const spawnCreeps = () => {
     const rooms = Game.rooms
@@ -38,6 +39,7 @@ export const spawnCreeps = () => {
 
         const myCreeps = room.find(FIND_MY_CREEPS)
         const guardCount = myCreeps.filter(creep => creep.memory?.role === CreepRole.GUARD).length
+        const upgraderCount = myCreeps.filter(creep => creep.memory?.role === CreepRole.UPGRADER).length
 
         if (roomMemory.threats && roomMemory.threats.enemyCreepCount > guardCount) {
             if (room.energyAvailable < 140) {
@@ -191,7 +193,7 @@ export const spawnCreeps = () => {
             return total
         }, 0)
 
-        const shouldSpawnUpgrader = reservedUpgraderWorkParts === 0 ? true : Math.floor(reservedUpgraderWorkParts / effectiveEnergyPerTick) < 4
+        const shouldSpawnUpgrader = reservedUpgraderWorkParts === 0 || (upgraderCount < 5 && effectiveEnergyPerTick > 3 && reservedUpgraderWorkParts < 15)
 
         if (!shouldSpawnUpgrader) continue
 
@@ -199,9 +201,20 @@ export const spawnCreeps = () => {
 
         const creepName = `Upgrader-${upgradeTask.controllerId}-${Game.time}`
         const creepBody = [WORK, CARRY, MOVE]
+
+        const {
+            productionPerTick,
+            returnPath
+        } = calculateUpgraderProduction({
+            carryParts: 1,
+            controllerPosition: upgradeTask.controllerPosition,
+            spawnPositions: [nearestSpawn.pos],
+            workParts: 1
+        })
         const creepUpgradeTask: CreepUpgradeTask = {
             controllerId: upgradeTask.controllerId,
             controllerPosition: upgradeTask.controllerPosition,
+            returnPath,
             taskId: `${upgradeTask.roomName}-${upgradeTask.controllerId}`,
             type: "upgrade",
             workParts: 1
@@ -214,12 +227,11 @@ export const spawnCreeps = () => {
 
         Memory.reservations.tasks[creepName] = creepUpgradeTask
 
-        const perTickBodyUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: false })
-        const perTickUpgradeUpkeep = 0 // TODO: Calculate upgrade creep upkeep - reuse harvester logic to some extent
+        const perTickBodyUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: true })
 
         // NOTE: Update rooms energy production
         Memory.production.energy[creepName] = {
-            perTickAmount: - perTickBodyUpkeep - perTickUpgradeUpkeep,
+            perTickAmount: - perTickBodyUpkeep - productionPerTick,
             roomNames: [roomName],
             type: EnergyImpactType.CREEP,
         }

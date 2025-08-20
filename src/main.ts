@@ -12,6 +12,7 @@ import { runUpgraderCreep } from "creepProcessors/upgrader"
 import { calculateEnergyProductionByRoom } from "helpers/calculateEnergyProductionByRoom"
 import { evaluateImmediateThreats } from "evaluateImmediateThreats"
 import { runGuardCreep } from "creepProcessors/guard"
+import { generateContainerTasks } from "generateContainerTasks"
 
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`\nCurrent game tick is ${Game.time}`)
@@ -46,10 +47,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
     generateRoomTasksOnSpawn(startingRoomName)
   }
 
-  evaluateImmediateThreats()
-
-  spawnCreeps()
-
   // Process creeps
   for (const name in Game.creeps) {
     const creep = Game.creeps[name]
@@ -70,6 +67,18 @@ export const loop = ErrorMapper.wrapLoop(() => {
       runGuardCreep(creep)
     } else {
       console.log(`Creep ${name} has invalid role, skipping`)
+    }
+  }
+
+  evaluateImmediateThreats()
+  spawnCreeps()
+
+  for (const roomName in Memory.rooms) {
+    const roomMemory = Memory.rooms[roomName]
+    const roomStructures = roomMemory.structures
+
+    if (!roomStructures?.containers.sources && Game.rooms[roomName]) {
+      generateContainerTasks({ room: Game.rooms[roomName], roomMemory })
     }
   }
 

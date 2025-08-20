@@ -1,7 +1,6 @@
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { setupGlobals } from '../helpers/setupGlobals'
-import { HarvesterState } from '../../src/stateMachines/harvester-machine'
 import { runHarvesterCreep } from 'creepProcessors/harvester'
 import { SharedCreepState } from 'types'
 
@@ -79,7 +78,7 @@ describe('harvester processor', () => {
   })
 
   it('should move to source if not adjacent during harvesting', () => {
-    creep.memory.state = HarvesterState.harvesting
+    creep.memory.state = SharedCreepState.harvesting
     creep.memory.task = {
       type: 'harvest',
       sourceId: 'src1',
@@ -93,7 +92,7 @@ describe('harvester processor', () => {
   })
 
   it('should become idle if target source does not exist', () => {
-    creep.memory.state = HarvesterState.harvesting
+    creep.memory.state = SharedCreepState.harvesting
     creep.memory.task = {
       type: 'harvest',
       sourceId: 'src1',
@@ -108,7 +107,7 @@ describe('harvester processor', () => {
   })
 
   it('should move to spawn if not adjacent during depositing', () => {
-    creep.memory.state = HarvesterState.depositing
+    creep.memory.state = SharedCreepState.depositing
     creep.memory.task = {
       type: 'harvest',
       sourceId: 'src1',
@@ -123,7 +122,7 @@ describe('harvester processor', () => {
   })
 
   it('should move to spawn, transfer and be renewed during depositing', () => {
-    creep.memory.state = HarvesterState.depositing
+    creep.memory.state = SharedCreepState.depositing
     creep.memory.task = {
       type: 'harvest',
       sourceId: 'src1',
@@ -142,7 +141,7 @@ describe('harvester processor', () => {
   })
 
   it('should harvest source if adjacent during harvesting', () => {
-    creep.memory.state = HarvesterState.harvesting
+    creep.memory.state = SharedCreepState.harvesting
     creep.memory.task = {
       type: 'harvest',
       sourceId: 'src1',
@@ -155,7 +154,7 @@ describe('harvester processor', () => {
   })
 
   it('should not harvest source if not adjacent during harvesting', () => {
-    creep.memory.state = HarvesterState.harvesting
+    creep.memory.state = SharedCreepState.harvesting
     creep.memory.task = {
       type: 'harvest',
       sourceId: 'src1',
@@ -170,7 +169,7 @@ describe('harvester processor', () => {
   })
 
   it('should send full event and continue if energy is full during harvesting', () => {
-    creep.memory.state = HarvesterState.harvesting
+    creep.memory.state = SharedCreepState.harvesting
     creep.memory.task = {
       type: 'harvest',
       sourceId: 'src1',
@@ -184,7 +183,7 @@ describe('harvester processor', () => {
   })
 
   it('should log error and not continue if harvesting with invalid task', () => {
-    creep.memory.state = HarvesterState.harvesting
+    creep.memory.state = SharedCreepState.harvesting
     creep.memory.task = { type: 'deposit' }
     const logSpy = sandbox.spy(console, 'log')
     runHarvesterCreep(creep)
@@ -192,7 +191,7 @@ describe('harvester processor', () => {
   })
 
   it('should send deposited event and continue if energy is empty during depositing', () => {
-    creep.memory.state = HarvesterState.depositing
+    creep.memory.state = SharedCreepState.depositing
     creep.memory.task = { type: 'deposit' }
     creep.store.getUsedCapacity.returns(0)
     runHarvesterCreep(creep)

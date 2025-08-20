@@ -1,6 +1,6 @@
 import { Service } from "robot3"
-import { HarvesterContext, HarvesterEventType, HarvesterMachine, HarvesterState } from "stateMachines/harvester-machine"
-import { CreepHarvestTask, SharedCreepState } from "types"
+import { HarvesterContext, HarvesterMachine, } from "stateMachines/harvester-machine"
+import { CreepHarvestTask, SharedCreepEventType, SharedCreepState } from "types"
 
 interface HarvestParams {
     creep: Creep
@@ -11,7 +11,7 @@ interface HarvestParams {
 
 interface HarvestOutput {
     continue: boolean
-    state: HarvesterState.harvesting | HarvesterState.depositing | SharedCreepState.idle
+    state: SharedCreepState.harvesting | SharedCreepState.depositing | SharedCreepState.idle
 }
 
 // NOTE: Returns true if should continue
@@ -19,8 +19,8 @@ export const harvest = ({ creep, creepTask, context, service}: HarvestParams): H
     const isFull = context.energy >= context.capacity
 
     if (isFull) {
-        service.send({ type: HarvesterEventType.full })
-        return { continue: true, state: HarvesterState.depositing }
+        service.send({ type: SharedCreepEventType.full })
+        return { continue: true, state: SharedCreepState.depositing }
     }
 
     const {
@@ -33,7 +33,7 @@ export const harvest = ({ creep, creepTask, context, service}: HarvestParams): H
     if (!source) {
         console.log(`Source with ID ${sourceId} not found for creep ${creep.name}`)
 
-        service.send({ type: HarvesterEventType.stopHarvest })
+        service.send({ type: SharedCreepEventType.idle })
 
         return { continue: true, state: SharedCreepState.idle }
     }
@@ -46,5 +46,5 @@ export const harvest = ({ creep, creepTask, context, service}: HarvestParams): H
         creep.harvest(source)
     }
 
-    return { continue: false, state: HarvesterState.harvesting }
+    return { continue: false, state: SharedCreepState.harvesting }
 }

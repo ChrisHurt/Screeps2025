@@ -1,6 +1,5 @@
 import { basicMeleeAttack } from '../../src/behaviours/sharedCreepBehaviours/basicMeleeAttack'
-import { GuardEventType, GuardState } from '../../src/stateMachines/guard-machine'
-import { SharedCreepState } from 'types'
+import { SharedCreepEventType, SharedCreepState } from 'types'
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { setupGlobals } from '../helpers/setupGlobals'
@@ -31,7 +30,7 @@ describe('basicMeleeAttack', () => {
         creep.pos.getRangeTo.returns(2)
         const result = basicMeleeAttack({ creep, service })
         expect(creep.moveTo.calledWith(hostile)).to.be.true
-        expect(result.state).to.equal(GuardState.attacking)
+        expect(result.state).to.equal(SharedCreepState.attacking)
         expect(result.continue).to.be.false
     })
 
@@ -44,7 +43,7 @@ describe('basicMeleeAttack', () => {
         creep.pos.getRangeTo.returns(1)
         const result = basicMeleeAttack({ creep, service })
         expect(creep.attack.calledWith(hostile2)).to.be.true
-        expect(result.state).to.equal(GuardState.attacking)
+        expect(result.state).to.equal(SharedCreepState.attacking)
         expect(result.continue).to.be.false
     })
 
@@ -52,7 +51,8 @@ describe('basicMeleeAttack', () => {
         creep.room.find.onCall(0).returns([])
         creep.room.find.onCall(1).returns([])
         const result = basicMeleeAttack({ creep, service })
-        expect(service.send.calledWith({ type: GuardEventType.hostilesNeutralised })).to.be.true
+
+        expect(service.send.args[0][0].type).to.equal(SharedCreepEventType.hostilesNeutralised)
         expect(result.state).to.equal(SharedCreepState.idle)
         expect(result.continue).to.be.true
     })
@@ -62,7 +62,7 @@ describe('basicMeleeAttack', () => {
         const result = basicMeleeAttack({ creep, service })
         expect(creep.moveTo.called).to.be.false
         expect(creep.attack.called).to.be.false
-        expect(service.send.calledWith({ type: GuardEventType.hostilesNeutralised })).to.be.true
+        expect(service.send.calledWith({ type: SharedCreepEventType.hostilesNeutralised })).to.be.true
         expect(result.state).to.equal(SharedCreepState.idle)
         expect(result.continue).to.be.true
     })
@@ -70,7 +70,7 @@ describe('basicMeleeAttack', () => {
     it('should retreat and recycle if creep has no attack parts', () => {
         creep.body = [{ type: TOUGH, hits: 100 }, { type: MOVE, hits: 100 }]
         const result = basicMeleeAttack({ creep, service })
-        expect(service.send.calledWith({ type: GuardEventType.retreatOrdered })).to.be.true
+        expect(service.send.calledWith({ type: SharedCreepEventType.recycleSelf })).to.be.true
         expect(result.state).to.equal(SharedCreepState.recycling)
         expect(result.continue).to.be.true
     })

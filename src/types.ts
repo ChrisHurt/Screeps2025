@@ -1,7 +1,3 @@
-import { GuardState } from "stateMachines/guard-machine"
-import { HarvesterState } from "stateMachines/harvester-machine"
-import { UpgraderState } from "stateMachines/upgrader-machine"
-
 export enum EnergyImpactType {
   CREEP = 'creep',
   SPAWN = 'spawn',
@@ -40,9 +36,12 @@ export interface CreepTask {
   type: TaskType
 }
 
+export interface CreepBuildTask extends CreepTask, BuildParams {}
+
 export interface CreepUpgradeTask extends CreepTask {
   controllerId: string
   controllerPosition: RoomPosition
+  returnPath: RoomPosition[]
   type: 'upgrade'
   workParts: number
 }
@@ -54,7 +53,7 @@ export interface CreepHarvestTask extends CreepTask {
   workParts: number
 }
 export interface RoomHarvestTask {
-  availablePositions: Position[]
+  availablePositions: RoomPosition[]
   sourceId: string
   sourcePosition: RoomPosition
   roomName: RoomId
@@ -68,6 +67,12 @@ export interface ReservingCreeps {
 
 export interface ReservingCreep {
   workParts: number
+}
+
+export interface RoomBuildTask {
+  buildParams: BuildParams
+  roomName: RoomId
+  reservingCreeps: ReservingCreeps
 }
 
 export interface RoomUpgradeTask {
@@ -108,31 +113,52 @@ export type SharedCreepContext = {
 }
 
 export enum SharedCreepEventType {
+  hostilesEngaged = 'hostilesEngaged',
+  hostilesNeutralised = 'hostilesNeutralised',
   idle = 'idle',
-  recycleSelf = 'recycleSelf'
+  recycleSelf = 'recycleSelf',
+  full = 'full',
+  empty = 'empty',
+  startUpgrading = 'startUpgrading',
+  upgraded = 'upgraded'
 }
 
 export enum SharedCreepState {
+  attacking = 'attacking',
+  building = 'building',
+  collectingEnergy = 'collectingEnergy',
+  collectingMineral = 'collectingMineral',
+  harvesting = 'harvesting',
+  depositing = 'depositing',
   error = 'error',
   idle = 'idle',
-  recycling = 'recycling'
+  recycling = 'recycling',
+  upgrading = 'upgrading'
 }
 
 export enum CreepRole {
   HARVESTER = 'harvester',
   GUARD = 'guard',
   UPGRADER = 'upgrader',
+  BUILDER = 'builder',
 }
 
 export interface CreepMemory {
   idleStarted?: number // Game Timestamp when the creep went idle
   role: CreepRole
-  state?: GuardState | HarvesterState | UpgraderState | SharedCreepState
+  state?: SharedCreepState
   task?: CreepHarvestTask | CreepUpgradeTask
 }
 
 export interface FlagMemory {}
 export interface PowerCreepMemory {}
+
+export interface BuildParams {
+  position: RoomPosition
+  repairDuringSiege: boolean
+  path: RoomPosition[]
+  structureType: BuildableStructureConstant
+}
 export interface CustomRoomMemory {
   mineral?: {
     type: MineralConstant
@@ -150,7 +176,19 @@ export interface CustomRoomMemory {
       position: { x: number; y: number }
     }
   }
+  structures?: {
+    containers: {
+      controller?: BuildParams
+      recycle?: BuildParams
+      sources?: {
+        [sourceId: string]: BuildParams
+      }
+    }
+    spawn?: BuildParams[]
+    towers?: BuildParams[]
+  }
   tasks?: {
+    build: RoomBuildTask[]
     upgrade?: RoomUpgradeTask
     harvest: RoomHarvestTask[]
   }
@@ -160,6 +198,7 @@ export interface CustomRoomMemory {
     enemyStructures: string[]
     lastObserved: number
   }
+  effectiveEnergyPerTick: number
   totalSourceEnergyPerTick: number
 }
 export interface SpawnMemory {}

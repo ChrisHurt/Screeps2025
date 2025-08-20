@@ -87,6 +87,7 @@ describe('spawnCreeps', () => {
       } as unknown as Room
       Memory.rooms['W1N1'] = {
         tasks: {
+          build: [],
           harvest: [],
           upgrade: {
             availablePositions: [new RoomPosition(1, 1, 'W1N1')],
@@ -141,11 +142,12 @@ describe('spawnCreeps', () => {
           taskId: 'W1N1-src1'
         },
         'Upgrader-ctrl1-12345': {
-          type: 'upgrade',
           controllerId: 'ctrl1',
           controllerPosition: new RoomPosition(1, 1, 'W1N1'),
           workParts: 1,
-          taskId: 'W1N1-ctrl1'
+          returnPath: [],
+          taskId: 'W1N1-ctrl1',
+          type: 'upgrade',
         }
       }
       spawnCreeps()
@@ -161,6 +163,7 @@ describe('spawnCreeps', () => {
       } as unknown as Room
       Memory.rooms['W1N1'] = {
         tasks: {
+          build: [],
           harvest: [
             {
               availablePositions: [],
@@ -192,11 +195,12 @@ describe('spawnCreeps', () => {
           taskId: 'W1N1-src1'
         },
         'Upgrader-ctrl1-12345': {
-          type: 'upgrade',
           controllerId: 'ctrl1',
           controllerPosition: new RoomPosition(1, 1, 'W1N1'),
           workParts: 1,
-          taskId: 'W1N1-ctrl1'
+          returnPath: [],
+          taskId: 'W1N1-ctrl1',
+          type: 'upgrade',
         }
       }
       spawnCreeps()
@@ -205,20 +209,21 @@ describe('spawnCreeps', () => {
       expect(spawnCreepSpy.args[0][2]).to.deep.equal({
         memory: {
           "idleStarted": 12345,
-            "role": "upgrader",
-            "state": "idle",
-            "task": {
-              "controllerId": "ctrl1",
-              "controllerPosition": {
-                "roomName": "W1N1",
-                "x": 1,
-                "y": 1
-              },
-              "taskId": "W1N1-ctrl1",
-              "type": "upgrade",
-              "workParts": 1
-            }
+          "role": "upgrader",
+          "state": "idle",
+          "task": {
+            "controllerId": "ctrl1",
+            "controllerPosition": {
+              "roomName": "W1N1",
+              "x": 1,
+              "y": 1
+            },
+            returnPath: [],
+            "taskId": "W1N1-ctrl1",
+            "type": "upgrade",
+            "workParts": 1
           }
+        }
       })
     })
 
@@ -231,6 +236,7 @@ describe('spawnCreeps', () => {
       } as unknown as Room
       Memory.rooms['W1N1'] = {
         tasks: {
+          build: [],
           harvest: [
             {
               availablePositions: [],
@@ -262,11 +268,12 @@ describe('spawnCreeps', () => {
           taskId: 'W1N1-src1'
         },
         'Upgrader-ctrl1-12345': {
-          type: 'upgrade',
           controllerId: 'ctrl1',
           controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+          returnPath: [],
+          taskId: 'W1N1-ctrl1',
+          type: 'upgrade',
           workParts: 1,
-          taskId: 'W1N1-ctrl1'
         }
       }
       spawnCreeps()
@@ -310,6 +317,7 @@ describe('spawnCreeps', () => {
       } as unknown as Room
       Memory.rooms['W1N1'] = {
         tasks: {
+          build: [],
           harvest: [
             {
               availablePositions: [],
@@ -395,7 +403,7 @@ describe('spawnCreeps', () => {
       tasks: {
         harvest: [
           {
-            availablePositions: [{ x: 6, y: 6 }],
+            availablePositions: [new RoomPosition(6, 6, 'W1N1')],
             reservingCreeps: {
               'Harvester-src1-12345': { workParts: 5 }
             },
@@ -438,7 +446,7 @@ describe('spawnCreeps', () => {
       tasks: {
         harvest: [
           {
-            availablePositions: [{ x: 6, y: 6 }],
+            availablePositions: [new RoomPosition(6, 6, 'W1N1')],
             reservingCreeps: {},
             requiredWorkParts: 5,
             roomName: 'W1N1',
@@ -496,7 +504,8 @@ describe('spawnCreeps', () => {
     } as unknown as Room
     Memory.rooms['W2N2'] = {
       tasks: {
-        harvest: [],
+          build: [],
+          harvest: [],
       },
       threats: {
         enemyCreepCount: 2,
@@ -530,6 +539,7 @@ describe('spawnCreeps', () => {
     } as unknown as Room
     Memory.rooms['W2N2'] = {
       tasks: {
+        build: [],
         harvest: [],
       },
       threats: {
@@ -560,6 +570,7 @@ describe('spawnCreeps', () => {
     } as unknown as Room
     Memory.rooms['W2N2'] = {
       tasks: {
+        build: [],
         harvest: [],
       },
       threats: {
@@ -590,7 +601,7 @@ describe('spawnCreeps', () => {
         controller: { id: 'ctrl4', pos: new RoomPosition(1, 1, 'W4N4') }
       } as unknown as Room
       Memory.rooms['W4N4'] = {
-        tasks: { harvest: [] },
+        tasks: { build: [], harvest: [] },
         threats: { enemyCreepCount: 2, enemyPowerCreepCount: 0, enemyStructures: [], lastObserved: Game.time || 0 },
         effectiveEnergyPerTick: 0,
         totalSourceEnergyPerTick: 0

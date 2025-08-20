@@ -1,29 +1,29 @@
 
 import { moveInRangeOfPos } from "behaviours/sharedCreepBehaviours/moveInRangeOfPos"
 import { Service } from "robot3"
-import { UpgraderContext, UpgraderEventType, UpgraderMachine, UpgraderState } from "stateMachines/upgrader-machine"
+import { UpgraderContext, UpgraderMachine, UpgraderMachineStateTypes } from "stateMachines/upgrader-machine"
 import { SharedCreepEventType, SharedCreepState } from "types"
 
 interface UpgradeInput {
     creep: Creep
     context: UpgraderContext
-    upgraderService: Service<UpgraderMachine>
+    service: Service<UpgraderMachine>
 }
 
 interface UpgradeOutput {
     continue: boolean
-    state: SharedCreepState | UpgraderState
+    state: UpgraderMachineStateTypes
 }
 
 export const upgrade = ({
     creep,
     context,
-    upgraderService
+    service: upgraderService
 }: UpgradeInput): UpgradeOutput => {
     const isEmpty = context.energy === 0
     if (isEmpty) {
-        upgraderService.send({ type: UpgraderEventType.empty })
-        return { continue: true, state: UpgraderState.collecting }
+        upgraderService.send({ type: SharedCreepEventType.empty })
+        return { continue: true, state: SharedCreepState.collectingEnergy }
     }
 
     const controller = creep.room.controller
@@ -35,7 +35,7 @@ export const upgrade = ({
 
     moveInRangeOfPos({
         creep,
-        offset: 1,
+        offset: 2,
         target: controller.pos
     })
 
@@ -43,5 +43,10 @@ export const upgrade = ({
         creep.upgradeController(controller)
     }
 
-    return { continue: false, state: UpgraderState.upgrading }
+    if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+        upgraderService.send({ type: SharedCreepEventType.empty })
+        return { continue: true, state: SharedCreepState.collectingEnergy }
+    }
+
+    return { continue: false, state: SharedCreepState.upgrading }
 }

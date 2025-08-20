@@ -1,4 +1,4 @@
-import { createGuardMachine, GuardContext, GuardEventType, GuardMachine, GuardState } from '../../src/stateMachines/guard-machine'
+import { createGuardMachine, GuardContext, GuardMachine } from '../../src/stateMachines/guard-machine'
 import { SharedCreepEventType, SharedCreepState } from 'types'
 import { interpret, Service } from 'robot3'
 import { expect } from 'chai'
@@ -18,13 +18,13 @@ describe('Guard State Machine', () => {
     })
 
     it('should start in attacking state', () => {
-    service = interpret(createGuardMachine(() => context, GuardState.attacking), () => {})
-        expect(service.machine.current).to.equal(GuardState.attacking)
+    service = interpret(createGuardMachine(() => context, SharedCreepState.attacking), () => {})
+        expect(service.machine.current).to.equal(SharedCreepState.attacking)
     })
 
     it('should transition to attacking on hostilesEngaged', () => {
-        service.send({ type: GuardEventType.hostilesEngaged })
-        expect(service.machine.current).to.equal(GuardState.attacking)
+        service.send({ type: SharedCreepEventType.hostilesEngaged })
+        expect(service.machine.current).to.equal(SharedCreepState.attacking)
     })
 
     it('should transition to recycling on recycleSelf', () => {
@@ -33,14 +33,14 @@ describe('Guard State Machine', () => {
     })
 
     it('should transition to idle on hostilesNeutralised', () => {
-    service = interpret(createGuardMachine(() => context, GuardState.attacking), () => {})
-        service.send({ type: GuardEventType.hostilesNeutralised })
+    service = interpret(createGuardMachine(() => context, SharedCreepState.attacking), () => {})
+        service.send({ type: SharedCreepEventType.hostilesNeutralised })
         expect(service.machine.current).to.equal(SharedCreepState.idle)
     })
 
     it('should transition to recycling on retreatOrdered', () => {
-    service = interpret(createGuardMachine(() => context, GuardState.attacking), () => {})
-        service.send({ type: GuardEventType.retreatOrdered })
+    service = interpret(createGuardMachine(() => context, SharedCreepState.attacking), () => {})
+        service.send({ type: SharedCreepEventType.recycleSelf })
         expect(service.machine.current).to.equal(SharedCreepState.recycling)
     })
 })

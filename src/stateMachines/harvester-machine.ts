@@ -7,24 +7,12 @@ export interface HarvesterContext extends SharedCreepContext {
   capacity: number
 }
 
-export enum HarvesterState  {
-  harvesting = 'harvesting',
-  depositing = 'depositing'
-}
-
-export enum HarvesterEventType {
-  startHarvest = 'startHarvest',
-  full = 'full',
-  stopHarvest = 'stopHarvest',
-  deposited = 'deposited'
-}
-
 // Define the possible events for the harvester machine
 export type HarvesterEvent =
-    | { type: HarvesterEventType.startHarvest }
-    | { type: HarvesterEventType.full }
-    | { type: HarvesterEventType.stopHarvest }
-    | { type: HarvesterEventType.deposited };
+  | { type: SharedCreepEventType.idle }
+  | { type: SharedCreepEventType.empty }
+  | { type: SharedCreepEventType.full }
+  | { type: SharedCreepEventType.recycleSelf }
 
 const setIdleTick: ReduceFunction<HarvesterContext, HarvesterEvent> = (ctx, event) => ({
   ...ctx,
@@ -36,29 +24,30 @@ const clearIdleTick: ReduceFunction<HarvesterContext, HarvesterEvent> = (ctx, ev
   idleStarted: undefined
 })
 
-// Define the type for the harvester state machine
-export type HarvesterMachine = Machine<MachineStates<{
-    [SharedCreepState.idle]: {},
-    [SharedCreepState.recycling]: {},
-    [HarvesterState.harvesting]: {},
-    [HarvesterState.depositing]: {}
-}>,HarvesterContext>
-type CreateHarvesterMachine = (contextFn: () => HarvesterContext, initialState?: HarvesterState | SharedCreepState) => HarvesterMachine
+export type HarvesterMachineStateTypes =
+    | SharedCreepState.idle
+    | SharedCreepState.harvesting
+    | SharedCreepState.depositing
+    | SharedCreepState.error
+    | SharedCreepState.recycling
+
+export type HarvesterMachine = Machine<MachineStates<Record<HarvesterMachineStateTypes, {}>>, HarvesterContext>
+type CreateHarvesterMachine = (contextFn: () => HarvesterContext, initialState?: HarvesterMachineStateTypes) => HarvesterMachine
 
 export const createHarvesterMachine: CreateHarvesterMachine = (contextFn: () => HarvesterContext, initialState = SharedCreepState.idle) =>
   createMachine(
     initialState,
       {
           [SharedCreepState.idle]: state(
-              transition(HarvesterEventType.startHarvest, HarvesterState.harvesting, reduce(clearIdleTick)),
+              transition(SharedCreepEventType.empty, SharedCreepState.harvesting, reduce(clearIdleTick)),
               transition(SharedCreepEventType.recycleSelf, SharedCreepState.recycling)
           ),
-          [HarvesterState.harvesting]: state(
-              transition(HarvesterEventType.full, HarvesterState.depositing),
-              transition(HarvesterEventType.stopHarvest, SharedCreepState.idle, reduce(setIdleTick))
+          [SharedCreepState.harvesting]: state(
+              transition(SharedCreepEventType.full, SharedCreepState.depositing),
+              transition(SharedCreepEventType.idle, SharedCreepState.idle, reduce(setIdleTick))
           ),
-          [HarvesterState.depositing]: state(
-            transition(HarvesterEventType.deposited, SharedCreepState.idle, reduce(setIdleTick))
+          [SharedCreepState.depositing]: state(
+            transition(SharedCreepEventType.empty, SharedCreepState.idle, reduce(setIdleTick))
           ),
           [SharedCreepState.error]: final(),
           [SharedCreepState.recycling]: final()

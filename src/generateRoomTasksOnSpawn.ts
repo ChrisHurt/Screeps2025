@@ -51,6 +51,7 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     controllerPosition: controller.pos,
   }
   roomMemory.tasks = {
+    build: [],
     upgrade: upgradeTask,
     harvest: []
   }
@@ -102,7 +103,7 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
   }
 
   const optimumSpawnPosition = singleSourceShortestPaths({
-    startingPoints: sources.map(source => source.pos),
+    startingPoints: [...sources.map(source => source.pos), controller.pos],
     terrainArray
   })
 

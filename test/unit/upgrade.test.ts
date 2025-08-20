@@ -1,8 +1,9 @@
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { upgrade } from '../../src/behaviours/upgraderBehaviours/upgrade'
-import { UpgraderState } from '../../src/stateMachines/upgrader-machine'
 import { SharedCreepState } from '../../src/types'
+import { setupGlobals } from '../helpers/setupGlobals'
+
 
 describe('upgrade behaviour', () => {
   let creep: any
@@ -13,6 +14,7 @@ describe('upgrade behaviour', () => {
   let sandbox: sinon.SinonSandbox
 
   beforeEach(() => {
+    setupGlobals()
     sandbox = sinon.createSandbox()
     controller = {
       pos: {
@@ -28,7 +30,10 @@ describe('upgrade behaviour', () => {
       room: { controller },
       upgradeController: sandbox.stub(),
       pos: creepPos,
-      moveTo: sandbox.stub()
+      moveTo: sandbox.stub(),
+      store: {
+        getUsedCapacity: (resource: string) => resource === RESOURCE_ENERGY ? 50 : 0
+      }
     }
     upgraderService = { send: sandbox.stub() }
     context = { energy: 10 }
@@ -40,35 +45,49 @@ describe('upgrade behaviour', () => {
 
   it('should return collecting state if energy is 0', () => {
     context.energy = 0
-    const result = upgrade({ creep, context, upgraderService })
+    const result = upgrade({ creep, context, service: upgraderService })
     expect(upgraderService.send.calledWith({ type: 'empty' })).to.be.true
-    expect(result.state).to.equal(UpgraderState.collecting)
+    expect(result.state).to.equal(SharedCreepState.collectingEnergy)
     expect(result.continue).to.be.true
   })
 
   it('should return idle state if controller is missing', () => {
     creep.room.controller = null
-    const result = upgrade({ creep, context, upgraderService })
+    const result = upgrade({ creep, context, service: upgraderService })
     expect(upgraderService.send.calledWith({ type: 'idle' })).to.be.true
     expect(result.state).to.equal(SharedCreepState.idle)
     expect(result.continue).to.be.true
   })
 
   it('should call upgradeController if in range', () => {
-  controller.pos.inRangeTo.returns(true)
-  creepPos.inRangeTo.returns(false)
-    const result = upgrade({ creep, context, upgraderService })
-    expect(creep.upgradeController.calledWith(controller)).to.be.true
-    expect(result.state).to.equal(UpgraderState.upgrading)
+    const upgradeControllerSpy = sinon.spy()
+    const mockController = { id: 'ctrl1', pos: { x: 1, y: 1, roomName: 'W1N1', inRangeTo: () => true } }
+    const mockCreep = {
+      store: {
+        getUsedCapacity: (resource: string) => resource === RESOURCE_ENERGY ? 50 : 0
+      },
+      pos: {
+        getRangeTo: () => 1,
+        inRangeTo: () => true
+      },
+      upgradeController: upgradeControllerSpy,
+      memory: {},
+      room: { controller: mockController }
+    }
+    controller.pos.inRangeTo.returns(true)
+    creepPos.inRangeTo.returns(false)
+    const result = upgrade({ creep: mockCreep as any, context, service: upgraderService })
+    expect(upgradeControllerSpy.calledWith(mockController)).to.be.true
+    expect(result.state).to.equal(SharedCreepState.upgrading)
     expect(result.continue).to.be.false
   })
 
   it('should not call upgradeController if not in range', () => {
-  controller.pos.inRangeTo.returns(false)
-  creepPos.inRangeTo.returns(false)
-    const result = upgrade({ creep, context, upgraderService })
+    controller.pos.inRangeTo.returns(false)
+    creepPos.inRangeTo.returns(false)
+    const result = upgrade({ creep, context, service: upgraderService })
     expect(creep.upgradeController.called).to.be.false
-    expect(result.state).to.equal(UpgraderState.upgrading)
+    expect(result.state).to.equal(SharedCreepState.upgrading)
     expect(result.continue).to.be.false
   })
 })

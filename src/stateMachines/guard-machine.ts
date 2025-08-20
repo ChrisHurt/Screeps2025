@@ -4,21 +4,11 @@ import { SharedCreepContext, SharedCreepEventType, SharedCreepState } from 'type
 
 export interface GuardContext extends SharedCreepContext {}
 
-export enum GuardState  {
-  attacking = 'attacking',
-}
-
-export enum GuardEventType {
-  hostilesEngaged = 'hostilesEngaged',
-  hostilesNeutralised = 'hostilesNeutralised',
-  retreatOrdered = 'retreatOrdered'
-}
-
 // Define the possible events for the guard machine
 export type GuardEvent =
-| { type: GuardEventType.hostilesEngaged }
-| { type: GuardEventType.hostilesNeutralised }
-| { type: GuardEventType.retreatOrdered }
+| { type: SharedCreepEventType.hostilesEngaged }
+| { type: SharedCreepEventType.hostilesNeutralised }
+| { type: SharedCreepEventType.recycleSelf }
 
 const setIdleTick: ReduceFunction<GuardContext, GuardEvent> = (ctx, event) => ({
   ...ctx,
@@ -30,26 +20,29 @@ const clearIdleTick: ReduceFunction<GuardContext, GuardEvent> = (ctx, event) => 
   idleStarted: undefined
 })
 
-// Define the type for the guard state machine
-export type GuardMachine = Machine<MachineStates<{
-    [SharedCreepState.idle]: {},
-    [GuardState.attacking]: {}
-    [SharedCreepState.error]: {},
-    [SharedCreepState.recycling]: {},
-}>, GuardContext>
-type CreateGuardMachine = (contextFn: () => GuardContext, initialState?: GuardState | SharedCreepState) => GuardMachine
+export type GuardMachineStateTypes =
+    | SharedCreepState.idle
+    | SharedCreepState.attacking
+    | SharedCreepState.error
+    | SharedCreepState.recycling
 
-export const createGuardMachine: CreateGuardMachine = (contextFn: () => GuardContext, initialState = SharedCreepState.idle) =>
+type GuardMachineStates = Record<GuardMachineStateTypes,{}>
+
+// Define the type for the guard state machine
+export type GuardMachine = Machine<MachineStates<GuardMachineStates>, GuardContext>
+type CreateGuardMachine = (contextFn: () => GuardContext, initialState?: GuardMachineStateTypes) => GuardMachine
+
+export const createGuardMachine: CreateGuardMachine = (contextFn: () => GuardContext, initialState = SharedCreepState.idle): GuardMachine =>
   createMachine(
     initialState,
       {
           [SharedCreepState.idle]: state(
-              transition(GuardEventType.hostilesEngaged, GuardState.attacking, reduce(clearIdleTick)),
+              transition(SharedCreepEventType.hostilesEngaged, SharedCreepState.attacking, reduce(clearIdleTick)),
               transition(SharedCreepEventType.recycleSelf, SharedCreepState.recycling, reduce(clearIdleTick))
           ),
-          [GuardState.attacking]: state(
-              transition(GuardEventType.hostilesNeutralised, SharedCreepState.idle, reduce(setIdleTick)),
-              transition(GuardEventType.retreatOrdered, SharedCreepState.recycling)
+          [SharedCreepState.attacking]: state(
+              transition(SharedCreepEventType.hostilesNeutralised, SharedCreepState.idle, reduce(setIdleTick)),
+              transition(SharedCreepEventType.recycleSelf, SharedCreepState.recycling)
           ),
           [SharedCreepState.error]: final(),
           [SharedCreepState.recycling]: final()

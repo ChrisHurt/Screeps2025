@@ -1,7 +1,6 @@
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { setupGlobals } from '../helpers/setupGlobals'
-import { UpgraderState } from '../../src/stateMachines/upgrader-machine'
 import { runUpgraderCreep } from '../../src/creepProcessors/upgrader'
 import { SharedCreepState } from 'types'
 
@@ -65,12 +64,12 @@ describe('upgrader processor', () => {
       controllerPosition: { x: 5, y: 5, roomName: 'W1N1' }
     }
     runUpgraderCreep(creep)
-    expect(creep.memory.state).to.equal(UpgraderState.collecting)
+    expect(creep.memory.state).to.equal(SharedCreepState.collectingEnergy)
     expect(creep.say.calledWith('🔋')).to.be.true
   })
 
   it('should transition from collecting to upgrading when full', () => {
-    creep.memory.state = UpgraderState.collecting
+    creep.memory.state = SharedCreepState.collectingEnergy
     creep.memory.task = {
       type: 'upgrade',
       controllerId: 'ctrl1',
@@ -78,12 +77,12 @@ describe('upgrader processor', () => {
     }
     creep.store.getUsedCapacity.returns(50)
     runUpgraderCreep(creep)
-    expect(creep.memory.state).to.equal(UpgraderState.upgrading)
+    expect(creep.memory.state).to.equal(SharedCreepState.upgrading)
     expect(creep.say.calledWith('⚡')).to.be.true
   })
 
   it('should transition from upgrading to collecting when empty', () => {
-    creep.memory.state = UpgraderState.upgrading
+    creep.memory.state = SharedCreepState.upgrading
     creep.memory.task = {
       type: 'upgrade',
       controllerId: 'ctrl1',
@@ -91,12 +90,12 @@ describe('upgrader processor', () => {
     }
     creep.store.getUsedCapacity.returns(0)
     runUpgraderCreep(creep)
-    expect(creep.memory.state).to.equal(UpgraderState.collecting)
+    expect(creep.memory.state).to.equal(SharedCreepState.collectingEnergy)
     expect(creep.say.calledWith('🔋')).to.be.true
   })
 
   it('should move to and upgrade controller in upgrading state', () => {
-    creep.memory.state = UpgraderState.upgrading
+    creep.memory.state = SharedCreepState.upgrading
     creep.memory.task = {
       type: 'upgrade',
       controllerId: 'ctrl1',
@@ -107,11 +106,11 @@ describe('upgrader processor', () => {
     runUpgraderCreep(creep)
     expect(creep.moveTo.args[0]).to.deep.equal([20,20,{ reusePath: 5, visualizePathStyle: { stroke: '#0000ff' } }])
     expect(creep.upgradeController.called).to.be.true
-    expect(creep.memory.state).to.equal(UpgraderState.upgrading)
+    expect(creep.memory.state).to.equal(SharedCreepState.upgrading)
   })
 
   it('should move to and withdraw from source in collecting state', () => {
-    creep.memory.state = UpgraderState.collecting
+    creep.memory.state = SharedCreepState.collectingEnergy
     creep.memory.task = {
       type: 'upgrade',
       controllerId: 'ctrl1',
@@ -119,7 +118,7 @@ describe('upgrader processor', () => {
     }
     runUpgraderCreep(creep)
     expect(creep.withdraw.called).to.be.true
-    expect(creep.memory.state).to.equal(UpgraderState.collecting)
+    expect(creep.memory.state).to.equal(SharedCreepState.collectingEnergy)
   })
 
   it('should set error state for invalid task', () => {

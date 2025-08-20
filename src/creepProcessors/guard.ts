@@ -1,12 +1,12 @@
-import { SharedCreepState } from "types"
-import { createGuardMachine, GuardContext, GuardEventType, GuardMachine, GuardState } from "../stateMachines/guard-machine"
+import { SharedCreepEventType, SharedCreepState } from "types"
+import { createGuardMachine, GuardContext, GuardMachine, GuardMachineStateTypes } from "../stateMachines/guard-machine"
 import { interpret, Service } from 'robot3'
 import { recycle } from "behaviours/sharedCreepBehaviours/recycle"
 import { basicMeleeAttack } from "behaviours/sharedCreepBehaviours/basicMeleeAttack"
 import { checkIfUnused } from "behaviours/sharedCreepBehaviours/checkIfUnused"
 
 export function runGuardCreep(creep: Creep) {
-  const state = (creep.memory.state || SharedCreepState.idle) as GuardState | SharedCreepState
+  const state = (creep.memory.state || SharedCreepState.idle) as GuardMachineStateTypes
   const context: GuardContext = {
     idleStarted: creep.memory.idleStarted
   }
@@ -27,14 +27,14 @@ export function runGuardCreep(creep: Creep) {
 
 interface ProcessCurrentGuardStateOutput {
     continue: boolean
-    state: GuardState | SharedCreepState
+    state: GuardMachineStateTypes
 }
 
-const creepStateSpeechEmojis = {
+const creepStateSpeechEmojis: Record<GuardMachineStateTypes, string> = {
+  [SharedCreepState.attacking]: '⚔️',
   [SharedCreepState.idle]: '😴',
   [SharedCreepState.error]: '�',
   [SharedCreepState.recycling]: '💀',
-  [GuardState.attacking]: '⚔️'
 }
 
 export const processCurrentGuardState = (creep: Creep, guardService: Service<GuardMachine>): ProcessCurrentGuardStateOutput => {
@@ -50,8 +50,8 @@ export const processCurrentGuardState = (creep: Creep, guardService: Service<Gua
         const hostilesPresent = !!creep.pos.findClosestByRange(newHostiles)
 
         if (hostilesPresent) {
-            guardService.send({ type: GuardEventType.hostilesEngaged })
-            return { continue: true, state: GuardState.attacking }
+            guardService.send({ type: SharedCreepEventType.hostilesEngaged })
+            return { continue: true, state: SharedCreepState.attacking }
         }
 
         if (checkIfUnused({
@@ -60,12 +60,12 @@ export const processCurrentGuardState = (creep: Creep, guardService: Service<Gua
             service: guardService,
             threshold: 5
         })) {
-            guardService.send({ type: GuardEventType.hostilesNeutralised })
+            guardService.send({ type: SharedCreepEventType.hostilesNeutralised })
             return { continue: true, state: SharedCreepState.recycling }
         }
 
         return { continue: false, state: SharedCreepState.idle }
-    case GuardState.attacking:
+    case SharedCreepState.attacking:
         return basicMeleeAttack({ creep, service: guardService })
     case SharedCreepState.recycling:
         return recycle(creep)

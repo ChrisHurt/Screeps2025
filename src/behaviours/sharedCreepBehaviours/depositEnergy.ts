@@ -1,6 +1,6 @@
 import { Service } from "robot3"
-import { HarvesterContext, HarvesterEventType, HarvesterMachine, HarvesterState } from "stateMachines/harvester-machine"
-import { SharedCreepState } from "types"
+import { HarvesterContext, HarvesterMachine } from "stateMachines/harvester-machine"
+import { SharedCreepEventType, SharedCreepState } from "types"
 
 interface DepositEnergyParams {
     creep: Creep
@@ -10,14 +10,14 @@ interface DepositEnergyParams {
 
 interface DepositEnergyOutput {
     continue: boolean
-    state: HarvesterState.depositing | SharedCreepState.idle
+    state: SharedCreepState.idle | SharedCreepState.depositing | SharedCreepState.error | SharedCreepState.recycling
 }
 
 // NOTE: Returns true if should continue
 export const depositEnergy = ({ creep, context, service}: DepositEnergyParams): DepositEnergyOutput => {
     const isEmpty = context.energy === 0
     if (isEmpty) {
-        service.send({ type: HarvesterEventType.deposited })
+        service.send({ type: SharedCreepEventType.empty })
         return { continue: true, state: SharedCreepState.idle }
     }
 
@@ -26,7 +26,7 @@ export const depositEnergy = ({ creep, context, service}: DepositEnergyParams): 
     if (!spawnStorage) {
         console.log(`Spawn not found for creep ${creep.name}`)
 
-        service.send({ type: HarvesterEventType.deposited })
+        service.send({ type: SharedCreepEventType.idle })
 
         return  { continue: true, state: SharedCreepState.idle }
     }
@@ -42,5 +42,5 @@ export const depositEnergy = ({ creep, context, service}: DepositEnergyParams): 
         }
         return  { continue: true, state: SharedCreepState.idle }
     }
-    return  { continue: false, state: HarvesterState.depositing }
+    return  { continue: false, state: SharedCreepState.depositing }
 }

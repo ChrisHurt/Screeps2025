@@ -1,8 +1,7 @@
 import { depositEnergy } from 'behaviours/sharedCreepBehaviours/depositEnergy'
 import { expect } from 'chai'
 import * as sinon from 'sinon'
-import { HarvesterEventType } from 'stateMachines/harvester-machine'
-import { SharedCreepState } from 'types'
+import { SharedCreepEventType, SharedCreepState } from 'types'
 import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('depositEnergy', () => {
@@ -40,17 +39,17 @@ describe('depositEnergy', () => {
     global.CREEP_LIFE_TIME = 1500
   })
 
-  it('should send deposited event and return idle if creep is empty', () => {
+  it('should send empty event and return idle if creep is empty', () => {
     context.energy = 0
     const result = depositEnergy({ creep, context, service })
-    expect(service.send.calledWith({ type: HarvesterEventType.deposited })).to.be.true
+    expect(service.send.calledWith({ type: SharedCreepEventType.empty })).to.be.true
     expect(result).to.deep.equal({ continue: true, state: SharedCreepState.idle })
   })
 
-  it('should send deposited event and return idle if no spawn found', () => {
+  it('should send idle event and return idle if no spawn found', () => {
     creep.room.find.returns([])
     const result = depositEnergy({ creep, context, service })
-    expect(service.send.calledWith({ type: HarvesterEventType.deposited })).to.be.true
+    expect(service.send.calledWith({ type: SharedCreepEventType.idle })).to.be.true
     expect(result).to.deep.equal({ continue: true, state: SharedCreepState.idle })
   })
 

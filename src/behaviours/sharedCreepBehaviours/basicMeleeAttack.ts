@@ -1,7 +1,7 @@
 
 import { Service } from "robot3"
-import { GuardEventType, GuardMachine, GuardState } from "stateMachines/guard-machine"
-import { SharedCreepState } from "types"
+import { GuardMachine, GuardMachineStateTypes } from "stateMachines/guard-machine"
+import { SharedCreepEventType, SharedCreepState } from "types"
 
 interface GuardInput {
     creep: Creep
@@ -10,7 +10,7 @@ interface GuardInput {
 
 interface GuardOutput {
     continue: boolean
-    state: GuardState | SharedCreepState
+    state: GuardMachineStateTypes
 }
 
 export const basicMeleeAttack = ({ creep, service }: GuardInput): GuardOutput => {
@@ -18,7 +18,7 @@ export const basicMeleeAttack = ({ creep, service }: GuardInput): GuardOutput =>
     // Check for attack parts
     const hasAttackParts = creep.body.some(part => part.type === ATTACK && part.hits > 0)
     if (!hasAttackParts) {
-        service.send({ type: GuardEventType.retreatOrdered })
+        service.send({ type: SharedCreepEventType.recycleSelf })
         return { continue: true, state: SharedCreepState.recycling }
     }
 
@@ -39,8 +39,8 @@ export const basicMeleeAttack = ({ creep, service }: GuardInput): GuardOutput =>
     // If no hostiles remain after attack, transition
     const stillHostiles = creep.room.find(FIND_HOSTILE_CREEPS)
     if (!stillHostiles || stillHostiles.length === 0) {
-        service.send({ type: GuardEventType.hostilesNeutralised })
+        service.send({ type: SharedCreepEventType.hostilesNeutralised })
         return { continue: true, state: SharedCreepState.idle }
     }
-    return { continue: false, state: GuardState.attacking }
+    return { continue: false, state: SharedCreepState.attacking }
 }

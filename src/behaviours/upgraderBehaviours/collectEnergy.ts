@@ -1,18 +1,19 @@
 
 import { moveInRangeOfPos } from "behaviours/sharedCreepBehaviours/moveInRangeOfPos"
 import { Service } from "robot3"
-import { UpgraderContext, UpgraderEventType, UpgraderMachine, UpgraderState } from "stateMachines/upgrader-machine"
-import { SharedCreepState } from "types"
+import { BuilderMachine } from "stateMachines/builder-machine"
+import { UpgraderContext, UpgraderMachine } from "stateMachines/upgrader-machine"
+import { SharedCreepEventType, SharedCreepState } from "types"
 
-interface CollectEnergyInput {
+interface CollectEnergyInput{
     creep: Creep
     context: UpgraderContext
-    upgraderService: Service<UpgraderMachine>
+    service: Service<BuilderMachine> | Service<UpgraderMachine>
 }
 
 interface CollectEnergyOutput {
     continue: boolean
-    state: SharedCreepState | UpgraderState
+    state: SharedCreepState.idle | SharedCreepState.collectingEnergy
 }
 
 type RetrievableStorage =
@@ -22,13 +23,13 @@ type RetrievableStorage =
 export const collectEnergy = ({
     creep,
     context,
-    upgraderService
+    service,
 }: CollectEnergyInput): CollectEnergyOutput => {
     const isFull = context.energy >= context.capacity
 
     if (isFull) {
-        upgraderService.send({ type: UpgraderEventType.collected })
-        return { continue: true, state: UpgraderState.upgrading }
+        service.send({ type: SharedCreepEventType.full })
+        return { continue: true, state: SharedCreepState.idle }
     }
 
     const room = creep.room
@@ -54,11 +55,11 @@ export const collectEnergy = ({
                 const creepIsFull = creep.store.energy >= creep.store.getCapacity(RESOURCE_ENERGY)
 
                 if (creepIsFull) {
-                    upgraderService.send({ type: UpgraderEventType.collected })
-                    return { continue: true, state: UpgraderState.upgrading }
+                    service.send({ type: SharedCreepEventType.full })
+                    return { continue: true, state: SharedCreepState.idle }
                 }
             }
-            return { continue: false, state: UpgraderState.collecting }
+            return { continue: false, state: SharedCreepState.collectingEnergy }
         }
     }
 
@@ -67,12 +68,8 @@ export const collectEnergy = ({
     //          Only check every 5 ticks or so to reduce CPU overhead
     const ruins = room.find(FIND_RUINS, { filter: ruin => !!ruin.store.getCapacity(RESOURCE_ENERGY) })
     const roomStructures = room.find(FIND_STRUCTURES) || []
-    const structureStores = roomStructures.filter(structure => {
-            const canWithdrawFrom ="store" in structure &&
-            (structure as RetrievableStorage).store.getCapacity(RESOURCE_ENERGY)
-            console.log(`Structure ${structure.id} can withdraw from: ${canWithdrawFrom}`)
-            return canWithdrawFrom
-        }
+    const structureStores = roomStructures.filter(structure =>
+        "store" in structure && (structure as RetrievableStorage).store.getCapacity(RESOURCE_ENERGY)
     )
 
     const energyStorages = [
@@ -90,19 +87,21 @@ export const collectEnergy = ({
             target: closestStore.pos
         })
 
-        const inRange = creep.pos.isNearTo(closestStore.pos)
-
-        if (inRange) {
+        if (creep.pos.isNearTo(closestStore.pos)) {
             creep.withdraw(closestStore, RESOURCE_ENERGY)
+
+            if ("renewCreep" in closestStore) {
+                closestStore.renewCreep(creep)
+            }
 
             const creepIsFull = creep.store.energy >= creep.store.getCapacity(RESOURCE_ENERGY)
 
             if (creepIsFull) {
-                upgraderService.send({ type: UpgraderEventType.collected })
-                return { continue: true, state: UpgraderState.upgrading }
+                service.send({ type: SharedCreepEventType.full })
+                return { continue: true, state: SharedCreepState.idle }
             }
         }
     }
 
-    return { continue: false, state: UpgraderState.collecting }
+    return { continue: false, state: SharedCreepState.collectingEnergy }
 }

@@ -48,30 +48,7 @@ declare global {
     powerCreeps: { [name: string]: Partial<PowerCreepMemory> }
     rooms: { [name: RoomId]: RoomMemory }
   }
-  interface RoomMemory extends CustomRoomMemory {
-    mineral?: {
-      type: MineralConstant
-      density: number
-      position: { x: number; y: number }
-      mineralGenerationPerTick: number
-    }
-    optimumSpawnPosition?: {
-      x: number
-      y: number
-    }
-    sources?: {
-      [sourceId: string]: {
-        energyGenerationPerTick: number
-        position: { x: number; y: number }
-      }
-    }
-    tasks?: {
-      upgrade?: RoomUpgradeTask
-      harvest: RoomHarvestTask[]
-    }
-    effectiveEnergyPerTick: number
-    totalSourceEnergyPerTick: number
-  }
+  interface RoomMemory extends CustomRoomMemory {}
 
   interface Creep {
     workParts: number
