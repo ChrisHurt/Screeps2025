@@ -1,5 +1,5 @@
 
-interface calculateUpgradeUpkeepInput {
+interface calculateUpgraderProductionInput {
     carryParts: number
     controllerPosition: RoomPosition
     roadsOnPlains?: boolean
@@ -8,7 +8,7 @@ interface calculateUpgradeUpkeepInput {
     workParts: number
 }
 
-interface CalculateHarvesterProductionOutput {
+interface CalculateUpgraderProductionOutput {
     productionPerTick: number
     returnPath: RoomPosition[]
 }
@@ -20,7 +20,7 @@ export const calculateUpgraderProduction = ({
     roadsOnSwamps = false,
     spawnPositions,
     workParts
-}: calculateUpgradeUpkeepInput): CalculateHarvesterProductionOutput => {
+}: calculateUpgraderProductionInput): CalculateUpgraderProductionOutput => {
     const { path: returnPath } = PathFinder.search(
         controllerPosition,
         spawnPositions,

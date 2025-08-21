@@ -13,6 +13,7 @@ import { calculateEnergyProductionByRoom } from "helpers/calculateEnergyProducti
 import { evaluateImmediateThreats } from "evaluateImmediateThreats"
 import { runGuardCreep } from "creepProcessors/guard"
 import { generateContainerTasks } from "generateContainerTasks"
+import { runBuilderCreep } from "creepProcessors/builder"
 
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`\nCurrent game tick is ${Game.time}`)
@@ -65,6 +66,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
     } else if (creep.memory.role === CreepRole.GUARD) {
       console.log(`Processing guard creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
       runGuardCreep(creep)
+    } else if (creep.memory.role === CreepRole.BUILDER) {
+      console.log(`Processing builder creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
+      runBuilderCreep(creep)
     } else {
       console.log(`Creep ${name} has invalid role, skipping`)
     }

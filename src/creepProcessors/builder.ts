@@ -1,11 +1,12 @@
-import { SharedCreepState, CreepRole } from "types"
-import { createBuilderMachine, BuilderContext, BuilderEventType, BuilderMachine, BuilderState } from "../stateMachines/builder-machine"
+import { SharedCreepState } from "types"
+import { createBuilderMachine, BuilderContext, BuilderEventType, BuilderMachine, BuilderMachineStateTypes } from "../stateMachines/builder-machine"
 import { interpret, Service } from 'robot3'
 import { recycle } from "behaviours/sharedCreepBehaviours/recycle"
 import { collectEnergy } from "behaviours/upgraderBehaviours/collectEnergy"
+import { build } from "behaviours/build"
 
 export function runBuilderCreep(creep: Creep) {
-  const state = (creep.memory.state || SharedCreepState.idle) as BuilderState | SharedCreepState
+  const state = (creep.memory.state || SharedCreepState.idle) as BuilderMachineStateTypes
   const context: BuilderContext = {
     energy: creep.store.getUsedCapacity(RESOURCE_ENERGY),
     capacity: creep.store.getCapacity(RESOURCE_ENERGY),
@@ -28,14 +29,14 @@ export function runBuilderCreep(creep: Creep) {
 
 interface ProcessCurrentBuilderStateOutput {
   continue: boolean
-  state: BuilderState | SharedCreepState
+  state: BuilderMachineStateTypes
 }
 
 const creepStateSpeechEmojis = {
   [SharedCreepState.idle]: '😴',
   [SharedCreepState.error]: '�',
   [SharedCreepState.recycling]: '💀',
-  [BuilderState.building]: '🚧',
+  [SharedCreepState.building]: '🚧',
   [SharedCreepState.collectingEnergy]: '🔄'
 }
 
@@ -50,7 +51,7 @@ export const processCurrentBuilderState = (creep: Creep, builderService: Service
       const buildTargets = creep.room.find(FIND_CONSTRUCTION_SITES)
       if (buildTargets.length > 0) {
         builderService.send({ type: BuilderEventType.buildTarget })
-        return { continue: true, state: BuilderState.building }
+        return { continue: true, state: SharedCreepState.building }
       }
       // If idle too long, recycle
       if (creep.memory.idleStarted && Game.time - creep.memory.idleStarted > 50) {
@@ -58,24 +59,11 @@ export const processCurrentBuilderState = (creep: Creep, builderService: Service
         return { continue: true, state: SharedCreepState.recycling }
       }
       return { continue: false, state: SharedCreepState.idle }
-    case BuilderState.building:
-      if (creep.store[RESOURCE_ENERGY] === 0) {
-        builderService.send({ type: BuilderEventType.energyDepleted })
-        return { continue: true, state: SharedCreepState.collectingEnergy }
-      }
-      const sites = creep.room.find(FIND_CONSTRUCTION_SITES)
-      if (sites.length === 0) {
-        builderService.send({ type: BuilderEventType.noBuildTarget })
-        return { continue: true, state: SharedCreepState.idle }
-      }
-      // Prioritise by progress
-      const target = sites.sort((a, b) => a.progress - b.progress)[0]
-      if (creep.pos.inRangeTo(target, 3)) {
-        creep.build(target)
-      } else {
-        creep.moveTo(target)
-      }
-      return { continue: false, state: BuilderState.building }
+    case SharedCreepState.building:
+      return build({
+        creep,
+        service: builderService
+      })
     case SharedCreepState.collectingEnergy:
       return collectEnergy({
         creep,

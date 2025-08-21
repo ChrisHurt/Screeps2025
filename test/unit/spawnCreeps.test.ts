@@ -55,9 +55,10 @@ describe('spawnCreeps', () => {
       } as unknown as Room
       Memory.rooms['W1N1'] = {
         tasks: {
+          build: [],
           harvest: [
             {
-              availablePositions: [{ x: 2, y: 2 }],
+              availablePositions: [new RoomPosition(2, 2, 'W1N1')],
               requiredWorkParts: 1,
               roomName: 'W1N1',
               sourceId: 'src1',
@@ -118,9 +119,10 @@ describe('spawnCreeps', () => {
       } as unknown as Room
       Memory.rooms['W1N1'] = {
         tasks: {
+          build: [],
           harvest: [
             {
-              availablePositions: [{ x: 2, y: 2 }],
+              availablePositions: [new RoomPosition(2, 2, 'W1N1')],
               requiredWorkParts: 1,
               roomName: 'W1N1',
               sourceId: 'src1',
@@ -289,9 +291,10 @@ describe('spawnCreeps', () => {
       } as unknown as Room
       Memory.rooms['W1N1'] = {
         tasks: {
+          build: [],
           harvest: [
             {
-              availablePositions: [{ x: 2, y: 2 }],
+              availablePositions: [new RoomPosition(2, 2, 'W1N1')],
               requiredWorkParts: 1,
               roomName: 'W1N1',
               sourceId: 'src1',
@@ -348,6 +351,7 @@ describe('spawnCreeps', () => {
         name: 'W1N1',
         find: () => [],
         tasks: {
+          build: [],
           harvest: [],
         }
       } as unknown as Room
@@ -373,7 +377,7 @@ describe('spawnCreeps', () => {
     expect(() => spawnCreeps()).to.not.throw()
   })
 
-  it('should not throw if no harvest tasks', () => {
+  it('should not throw if no harvest or build tasks', () => {
       Game.rooms['W1N1'] = { name: 'W1N1', find: () => [mockSpawn] } as unknown as Room
       Memory.rooms['W1N1'] = { tasks: { } } as RoomMemory
       expect(() => spawnCreeps()).to.not.throw()
@@ -401,6 +405,7 @@ describe('spawnCreeps', () => {
     Game.time = 12345
     Memory.rooms['W1N1'] = {
       tasks: {
+        build: [],
         harvest: [
           {
             availablePositions: [new RoomPosition(6, 6, 'W1N1')],
@@ -422,7 +427,7 @@ describe('spawnCreeps', () => {
           roomName: 'W1N1'
         }
       }
-    } as RoomMemory
+    } as unknown as RoomMemory
     expect(() => spawnCreeps()).to.not.throw()
     expect((Memory.rooms['W1N1'].tasks?.upgrade?.reservingCreeps)).to.deep.equal({})
     expect(spawnCreepSpy.notCalled).to.be.true
@@ -444,6 +449,7 @@ describe('spawnCreeps', () => {
     Game.time = 12345
     Memory.rooms['W1N1'] = {
       tasks: {
+        build: [],
         harvest: [
           {
             availablePositions: [new RoomPosition(6, 6, 'W1N1')],
@@ -456,7 +462,7 @@ describe('spawnCreeps', () => {
           } as RoomHarvestTask
           ]
       }
-    } as RoomMemory
+    } as unknown as RoomMemory
     expect(() => spawnCreeps()).to.not.throw()
     expect((Memory.rooms['W1N1'].tasks?.harvest[0].reservingCreeps)).to.deep.equal({})
     expect(spawnCreepSpy.notCalled).to.be.true
@@ -469,7 +475,9 @@ describe('spawnCreeps', () => {
       }
       return []
     }} as unknown as Room // No controller property
-    Memory.rooms['W7N7'] = { tasks: { harvest: [
+    Memory.rooms['W7N7'] = { tasks: {
+      build: [],
+      harvest: [
       {
         availablePositions: [],
         reservingCreeps: {},
@@ -486,7 +494,7 @@ describe('spawnCreeps', () => {
         reservingCreeps: {},
         roomName: 'W7N7'
       } as RoomUpgradeTask
-    } } as RoomMemory
+    } } as unknown as RoomMemory
     expect(() => spawnCreeps()).to.not.throw()
     expect(spawnCreepSpy.notCalled).to.be.true
     expect(Memory.rooms['W7N7'].tasks?.upgrade?.reservingCreeps).to.deep.equal({})
@@ -504,8 +512,8 @@ describe('spawnCreeps', () => {
     } as unknown as Room
     Memory.rooms['W2N2'] = {
       tasks: {
-          build: [],
-          harvest: [],
+        build: [],
+        harvest: [],
       },
       threats: {
         enemyCreepCount: 2,

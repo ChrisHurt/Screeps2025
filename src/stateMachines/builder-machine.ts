@@ -29,7 +29,7 @@ const clearIdleTick: ReduceFunction<BuilderContext, BuilderEvent> = (ctx, event)
   idleStarted: undefined
 })
 
-type BuilderMachineStateTypes =
+export type BuilderMachineStateTypes =
     | SharedCreepState.idle
     | SharedCreepState.building
     | SharedCreepState.collectingEnergy
@@ -50,12 +50,12 @@ export const createBuilderMachine: CreateGuardMachine = (contextFn: () => Builde
         transition(SharedCreepEventType.recycleSelf, SharedCreepState.recycling, reduce(clearIdleTick))
       ),
       [SharedCreepState.building]: state(
-        transition(BuilderEventType.energyDepleted, SharedCreepState.collectingEnergy),
-        transition(BuilderEventType.noBuildTarget, SharedCreepState.idle, reduce(setIdleTick))
+        transition(SharedCreepEventType.empty, SharedCreepState.collectingEnergy),
+        transition(SharedCreepEventType.idle, SharedCreepState.idle, reduce(setIdleTick))
       ),
       [SharedCreepState.collectingEnergy]: state(
         transition(SharedCreepEventType.full, SharedCreepState.building),
-        transition(BuilderEventType.noBuildTarget, SharedCreepState.idle, reduce(setIdleTick))
+        transition(SharedCreepEventType.idle, SharedCreepState.idle, reduce(setIdleTick))
       ),
       [SharedCreepState.error]: final(),
       [SharedCreepState.recycling]: final()

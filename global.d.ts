@@ -9,6 +9,7 @@ import {
   CreepEnergyImpact,
   CreepUpgradeTask,
   CreepHarvestTask,
+  CreepBuildTask,
 
 } from "types"
 
@@ -38,7 +39,7 @@ declare global {
     }
     reservations: {
       energy: Record<string, StructureEnergyImpact | CreepEnergyImpact>
-      tasks: Record<string, CreepUpgradeTask | CreepHarvestTask>
+      tasks: Record<string, CreepBuildTask | CreepUpgradeTask | CreepHarvestTask>
     }
     mapConnections: string[]  // List of connections between rooms in the format "roomNameOne-roomNameTwo"
     mapRoomGraph: {           // Denotes connections between rooms

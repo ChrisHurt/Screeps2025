@@ -36,7 +36,9 @@ export interface CreepTask {
   type: TaskType
 }
 
-export interface CreepBuildTask extends CreepTask, BuildParams {}
+export interface CreepBuildTask extends CreepTask, Omit<BuildParams, 'structureType'> {
+  type: 'build'
+}
 
 export interface CreepUpgradeTask extends CreepTask {
   controllerId: string
@@ -147,7 +149,7 @@ export interface CreepMemory {
   idleStarted?: number // Game Timestamp when the creep went idle
   role: CreepRole
   state?: SharedCreepState
-  task?: CreepHarvestTask | CreepUpgradeTask
+  task?: CreepHarvestTask | CreepUpgradeTask | CreepBuildTask
 }
 
 export interface FlagMemory {}
