@@ -20,6 +20,10 @@ export const calculateBuilderProduction = ({
         { carryCapacity: 0, workParts: 0 }
     )
 
+    if (workParts === 0 || carryCapacity === 0) {
+        return 0
+    }
+
     const buildTicks = Math.ceil(carryCapacity / (workParts * 2))
 
     const productionPerTick = carryCapacity / (buildTicks + roundTripTicks)

@@ -90,4 +90,27 @@ describe('upgrade behaviour', () => {
     expect(result.state).to.equal(SharedCreepState.upgrading)
     expect(result.continue).to.be.false
   })
+
+  it('should transition to collecting state after energy is depleted', () => {
+    controller.pos.inRangeTo.returns(true)
+    // Mock creep with no energy
+    creep.store.getUsedCapacity = (resource: string) => resource === RESOURCE_ENERGY ? 0 : 0
+    
+    const result = upgrade({ creep, context, service: upgraderService })
+    
+    expect(upgraderService.send.calledWith({ type: 'empty' })).to.be.true
+    expect(result.state).to.equal(SharedCreepState.collectingEnergy)
+    expect(result.continue).to.be.true
+  })
+
+  it('should move to controller if not in range', () => {
+    controller.pos.inRangeTo.returns(false)
+    creepPos.inRangeTo.returns(false)
+    
+    const result = upgrade({ creep, context, service: upgraderService })
+    
+    expect(creep.moveTo.calledWith(controller.pos.x, controller.pos.y)).to.be.true
+    expect(result.state).to.equal(SharedCreepState.upgrading)
+    expect(result.continue).to.be.false
+  })
 })

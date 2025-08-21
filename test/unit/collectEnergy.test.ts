@@ -223,6 +223,27 @@ describe('collectEnergy', () => {
     expect(result).to.deep.equal({ continue: true, state: SharedCreepState.idle })
   })
 
+  it('should call renewCreep if structure has renewCreep method', () => {
+    room.find.withArgs(FIND_DROPPED_RESOURCES, sinon.match.any).returns([])
+    room.find.withArgs(FIND_TOMBSTONES, sinon.match.any).returns([])
+    room.find.withArgs(FIND_RUINS, sinon.match.any).returns([])
+    const spawn = { 
+      pos: { x: 15, y: 23 }, 
+      store: { getCapacity: sinon.stub().returns(50) },
+      renewCreep: sinon.spy()
+    }
+    room.find.withArgs(FIND_STRUCTURES, sinon.match.any).returns([spawn])
+    creep.pos.findClosestByPath.returns(spawn)
+    creep.pos.isNearTo.returns(true)
+    creep.withdraw = sinon.spy()
+    creep.store.energy = 10 // Not full to avoid full transition
+    creep.store.getCapacity = sinon.stub().returns(50)
+    const result = collectEnergy({ creep, context, service: upgraderService })
+    expect(creep.withdraw.calledWith(spawn, RESOURCE_ENERGY)).to.be.true
+    expect(spawn.renewCreep.calledWith(creep)).to.be.true
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
+  })
+
   it('should return collecting if not in range of any energy source', () => {
     room.find.returns([])
     creep.pos.findClosestByPath.returns(null)

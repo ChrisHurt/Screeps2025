@@ -65,6 +65,29 @@ export function setupGlobals({
     global.STRUCTURE_CONTAINER = 'container'
     // @ts-ignore
     global.STRUCTURE_EXTENSION = 'extension'
+    // @ts-ignore
+    global.FIND_CONSTRUCTION_SITES = 108
+
+    // @ts-ignore
+    global.RoomPosition = class MockRoomPosition {
+      x: number
+      y: number
+      roomName: string
+
+      constructor(x: number, y: number, roomName: string) {
+        this.x = x
+        this.y = y
+        this.roomName = roomName
+      }
+
+      findInRange(findType: any, range: number) {
+        return []
+      }
+
+      inRangeTo(target: any, range: number) {
+        return false
+      }
+    }
 
     global.Game.rooms = {}
     global.Game.creeps = {}

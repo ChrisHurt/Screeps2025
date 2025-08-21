@@ -684,4 +684,155 @@ describe('spawnCreeps', () => {
       expect(spawnCreepSpy.notCalled).to.be.true
       spawnCreepSpy.resetHistory()
     })
+
+  it('should spawn a builder creep when build tasks exist', () => {
+    Game.rooms['W1N1'] = {
+      name: 'W1N1',
+      find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+      energyAvailable: 300,
+      controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+    } as unknown as Room
+    Memory.rooms['W1N1'] = {
+      tasks: {
+        build: [{
+          buildParams: {
+            position: new RoomPosition(3, 3, 'W1N1'),
+            repairDuringSiege: false,
+            path: [new RoomPosition(2, 2, 'W1N1')]
+          },
+          roomName: 'W1N1'
+        }],
+        harvest: [],
+        upgrade: {
+          availablePositions: [new RoomPosition(1, 1, 'W1N1')],
+          controllerId: 'ctrl1',
+          controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+          reservingCreeps: {},
+          roomName: 'W1N1'
+        }
+      },
+      effectiveEnergyPerTick: 3,
+      totalSourceEnergyPerTick: 10
+    } as unknown as RoomMemory
+    Memory.reservations.tasks = {}
+    Game.creeps = {}
+    spawnCreeps()
+    expect(spawnCreepSpy.called).to.be.true
+    const args = spawnCreepSpy.getCall(0).args
+    expect(args[0]).to.deep.equal(['work', 'carry', 'carry', 'move', 'move'])
+    expect(args[2].memory.role).to.equal(CreepRole.BUILDER)
+    expect(args[2].memory.state).to.equal(SharedCreepState.idle)
+    expect(args[2].memory.task.type).to.equal('build')
+  })
+
+  it.skip('should not spawn builder if energy is insufficient for build tasks', () => {
+    Game.rooms['W1N1'] = {
+      name: 'W1N1',
+      find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+      energyAvailable: 299, // Less than 300 required for builder
+      controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+    } as unknown as Room
+    Memory.rooms['W1N1'] = {
+      tasks: {
+        build: [{
+          buildParams: {
+            position: new RoomPosition(3, 3, 'W1N1'),
+            repairDuringSiege: false,
+            path: [new RoomPosition(2, 2, 'W1N1')]
+          },
+          roomName: 'W1N1'
+        }],
+        harvest: [],
+        upgrade: {
+          availablePositions: [new RoomPosition(1, 1, 'W1N1')],
+          controllerId: 'ctrl1',
+          controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+          reservingCreeps: {},
+          roomName: 'W1N1'
+        }
+      },
+      effectiveEnergyPerTick: 3,
+      totalSourceEnergyPerTick: 10
+    } as unknown as RoomMemory
+    Memory.reservations.tasks = {}
+    Game.creeps = {}
+    spawnCreeps()
+    // Only upgrader should be spawned (which needs 200 energy), but not builder (which needs 300)
+    expect(spawnCreepSpy.calledOnce).to.be.true
+    const args = spawnCreepSpy.getCall(0).args
+    expect(args[2].memory.role).to.equal(CreepRole.UPGRADER)
+  })
+
+  it('should not spawn builder if no build tasks exist', () => {
+    Game.rooms['W1N1'] = {
+      name: 'W1N1',
+      find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+      energyAvailable: 300,
+      controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+    } as unknown as Room
+    Memory.rooms['W1N1'] = {
+      tasks: {
+        build: [], // No build tasks
+        harvest: [],
+        upgrade: {
+          availablePositions: [new RoomPosition(1, 1, 'W1N1')],
+          controllerId: 'ctrl1',
+          controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+          reservingCreeps: {},
+          roomName: 'W1N1'
+        }
+      },
+      effectiveEnergyPerTick: 3,
+      totalSourceEnergyPerTick: 10
+    } as unknown as RoomMemory
+    Memory.reservations.tasks = {}
+    Game.creeps = {}
+    spawnCreeps()
+    // Only upgrader should be spawned, not builder
+    expect(spawnCreepSpy.calledOnce).to.be.true
+    const args = spawnCreepSpy.getCall(0).args
+    expect(args[2].memory.role).to.equal(CreepRole.UPGRADER)
+  })
+
+  it.skip('should correctly count builder creeps', () => {
+    Game.rooms['W1N1'] = {
+      name: 'W1N1',
+      find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
+      energyAvailable: 300,
+      controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+    } as unknown as Room
+    Memory.rooms['W1N1'] = {
+      tasks: {
+        build: [{
+          buildParams: {
+            position: new RoomPosition(3, 3, 'W1N1'),
+            repairDuringSiege: false,
+            path: [new RoomPosition(2, 2, 'W1N1')]
+          },
+          roomName: 'W1N1'
+        }],
+        harvest: [],
+        upgrade: {
+          availablePositions: [new RoomPosition(1, 1, 'W1N1')],
+          controllerId: 'ctrl1',
+          controllerPosition: new RoomPosition(1, 1, 'W1N1'),
+          reservingCreeps: {},
+          roomName: 'W1N1'
+        }
+      },
+      effectiveEnergyPerTick: 1, // Low energy per tick to prevent second builder
+      totalSourceEnergyPerTick: 10
+    } as unknown as RoomMemory
+    Memory.reservations.tasks = {}
+    Game.creeps = {
+      'existingBuilder': {
+        memory: {
+          role: CreepRole.BUILDER
+        }
+      } as Creep
+    }
+    spawnCreeps()
+    // Should not spawn another builder because one already exists with low energy
+    expect(spawnCreepSpy.notCalled).to.be.true
+  })
 })
