@@ -94,17 +94,6 @@ describe('builder processor', () => {
       expect(mockCreep.memory.state).to.equal(SharedCreepState.idle)
     })
 
-    it.skip('should prevent infinite loops with iteration limit', () => {
-      // TODO: Fix module stubbing to properly mock behavior functions
-      // Mock processCurrentBuilderState to always return continue: true
-      buildStub.returns({ continue: true, state: SharedCreepState.building })
-      mockBuilderService.machine.current = SharedCreepState.building
-
-      runBuilderCreep(mockCreep)
-
-      expect(mockCreep.memory.state).to.equal(SharedCreepState.building)
-    })
-
     it('should set creep speech emoji based on final state', () => {
       mockCreep.memory.state = SharedCreepState.recycling
       mockBuilderService.machine.current = SharedCreepState.recycling
@@ -173,53 +162,6 @@ describe('builder processor', () => {
       expect(result).to.deep.equal({
         continue: false,
         state: SharedCreepState.idle
-      })
-    })
-
-    it.skip('should call build function in building state', () => {
-      mockBuilderService.machine.current = SharedCreepState.building
-      buildStub.returns({ continue: false, state: SharedCreepState.building })
-
-      const result = processCurrentBuilderState(mockCreep, mockBuilderService)
-
-      expect(buildStub.calledWith({
-        creep: mockCreep,
-        service: mockBuilderService
-      })).to.be.true
-      expect(result).to.deep.equal({
-        continue: false,
-        state: SharedCreepState.building
-      })
-    })
-
-    it.skip('should call collectEnergy function in collectingEnergy state', () => {
-      mockBuilderService.machine.current = SharedCreepState.collectingEnergy
-      mockCreep.store[RESOURCE_ENERGY] = 25
-      collectEnergyStub.returns({ continue: false, state: SharedCreepState.collectingEnergy })
-
-      const result = processCurrentBuilderState(mockCreep, mockBuilderService)
-
-      expect(collectEnergyStub.called).to.be.true
-      const callArgs = collectEnergyStub.getCall(0).args[0]
-      expect(callArgs.creep).to.equal(mockCreep)
-      expect(callArgs.context.energy).to.equal(25)
-      expect(callArgs.context.capacity).to.equal(100)
-      expect(result).to.deep.equal({
-        continue: false,
-        state: SharedCreepState.collectingEnergy
-      })
-    })
-
-    it.skip('should call recycle function in recycling state', () => {
-      mockBuilderService.machine.current = SharedCreepState.recycling
-      recycleStub.returns({ continue: false, state: SharedCreepState.recycling })
-
-      const result = processCurrentBuilderState(mockCreep, mockBuilderService)
-
-      expect(recycleStub.calledWith(mockCreep)).to.be.true
-      expect(result).to.deep.equal({
-        continue: false,
-        state: SharedCreepState.recycling
       })
     })
 

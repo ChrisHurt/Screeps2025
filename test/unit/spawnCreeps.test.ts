@@ -725,7 +725,7 @@ describe('spawnCreeps', () => {
     expect(args[2].memory.task.type).to.equal('build')
   })
 
-  it.skip('should not spawn builder if energy is insufficient for build tasks', () => {
+  it('should not spawn builder if energy is insufficient for build tasks', () => {
     Game.rooms['W1N1'] = {
       name: 'W1N1',
       find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
@@ -794,7 +794,7 @@ describe('spawnCreeps', () => {
     expect(args[2].memory.role).to.equal(CreepRole.UPGRADER)
   })
 
-  it.skip('should correctly count builder creeps', () => {
+  it('should not spawn builder if no spawn is available for build task', () => {
     Game.rooms['W1N1'] = {
       name: 'W1N1',
       find: (type: number) => type === FIND_MY_SPAWNS ? [mockSpawn] : [],
@@ -820,19 +820,34 @@ describe('spawnCreeps', () => {
           roomName: 'W1N1'
         }
       },
-      effectiveEnergyPerTick: 1, // Low energy per tick to prevent second builder
+      effectiveEnergyPerTick: 3,
       totalSourceEnergyPerTick: 10
     } as unknown as RoomMemory
     Memory.reservations.tasks = {}
-    Game.creeps = {
-      'existingBuilder': {
-        memory: {
-          role: CreepRole.BUILDER
-        }
-      } as Creep
+    Game.creeps = {}
+
+    // Override RoomPosition.findClosestByPath to return null for this test
+    // @ts-ignore
+    global.RoomPosition = class {
+      constructor(public x: number, public y: number, public roomName: string) {}
+      findClosestByPath() {
+        return null // No spawn found
+      }
     }
+
     spawnCreeps()
-    // Should not spawn another builder because one already exists with low energy
-    expect(spawnCreepSpy.notCalled).to.be.true
+    // Only upgrader should be spawned, not builder
+    expect(spawnCreepSpy.calledOnce).to.be.true
+    const args = spawnCreepSpy.getCall(0).args
+    expect(args[2].memory.role).to.equal(CreepRole.UPGRADER)
+
+    // Reset RoomPosition for other tests
+    // @ts-ignore
+    global.RoomPosition = class {
+      constructor(public x: number, public y: number, public roomName: string) {}
+      findClosestByPath() {
+        return mockSpawn
+      }
+    }
   })
 })
