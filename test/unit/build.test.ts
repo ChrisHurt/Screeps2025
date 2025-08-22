@@ -118,8 +118,29 @@ describe('build behaviour', () => {
     })
   })
 
-  it('should handle case where no construction site is found', () => {
-    // Mock findInRange to return empty array
+  it('should handle case where no construction site is found and cleanup room memory', () => {
+    // Setup memory structure with build tasks that don't match the current task
+    const memoryBefore = {
+      rooms: {
+        'W1N1': {
+          tasks: {
+            build: [
+              {
+                buildParams: {
+                  position: { x: 20, y: 20, roomName: 'W1N1' },  // Different position 
+                  repairDuringSiege: false,
+                  path: []
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+    // @ts-ignore - Bypass type checking for test setup
+    Memory.rooms = memoryBefore.rooms
+
+    // Mock findInRange to return empty array (no construction site found)
     // @ts-ignore
     global.RoomPosition = class MockRoomPosition {
       x: number
@@ -137,16 +158,67 @@ describe('build behaviour', () => {
       }
     }
 
-    // Create a spy to catch potential errors
-    const consoleErrorSpy = sinon.spy(console, 'error')
-    
-    // This should handle the case where no site is found - may cause an error internally
-    expect(() => {
-      build({ creep: mockCreep, service: mockService })
-    }).to.not.throw()
-    
-    // Clean up the spy
-    consoleErrorSpy.restore()
+    const result = build({ creep: mockCreep, service: mockService })
+
+    // Should return idle state when construction site is complete
+    expect(result).to.deep.equal({
+      continue: false,
+      state: SharedCreepState.idle
+    })
+
+    // Should not call build or moveTo
+    expect(mockCreep.build.called).to.be.false
+    expect(mockCreep.moveTo.called).to.be.false
+  })
+
+  it('should remove matching build task from room memory when site is complete', () => {
+    // Setup memory with exact matching task that should be removed
+    const mockRoomMemory = {
+      tasks: {
+        build: [
+          {
+            buildParams: {
+              position: { x: 15, y: 15, roomName: 'W1N1' }  // Exact match
+            }
+          },
+          {
+            buildParams: {
+              position: { x: 20, y: 20, roomName: 'W1N1' }  // Different task
+            }
+          }
+        ]
+      }
+    }
+    // @ts-ignore
+    Memory.rooms = { 'W1N1': mockRoomMemory }
+
+    // Mock findInRange to return empty array (no construction site found)
+    // @ts-ignore
+    global.RoomPosition = class MockRoomPosition {
+      x: number
+      y: number
+      roomName: string
+
+      constructor(x: number, y: number, roomName: string) {
+        this.x = x
+        this.y = y
+        this.roomName = roomName
+      }
+
+      findInRange(findType: any, range: number) {
+        return []
+      }
+    }
+
+    build({ creep: mockCreep, service: mockService })
+
+    // Should have filtered out the matching task, leaving only the non-matching one
+    const remainingTasks = Memory.rooms['W1N1']?.tasks?.build
+    expect(remainingTasks).to.have.length(1)
+    // @ts-ignore - Type bypass for test
+    expect(remainingTasks![0].buildParams.position.x).to.equal(20)
+    // @ts-ignore - Type bypass for test  
+    expect(remainingTasks![0].buildParams.position.y).to.equal(20)
   })
 
   it('should handle null site gracefully', () => {

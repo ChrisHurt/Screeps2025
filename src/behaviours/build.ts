@@ -21,6 +21,21 @@ export const build = ({ creep, service }: BuildInput): BuildOutput => {
     // Prioritise by progress
     const targetPos = new RoomPosition(buildTask.position.x, buildTask.position.y, buildTask.position.roomName)
     const site = targetPos.findInRange(FIND_CONSTRUCTION_SITES,0)[0]
+
+    if (!site) {
+        // Construction site is complete, remove the task from room memory
+        const roomName = buildTask.position.roomName
+        const roomMemory = Memory.rooms[roomName]
+        if (roomMemory?.tasks?.build) {
+            roomMemory.tasks.build = roomMemory.tasks.build.filter(
+                task => !(task.buildParams.position.x === buildTask.position.x &&
+                         task.buildParams.position.y === buildTask.position.y &&
+                         task.buildParams.position.roomName === buildTask.position.roomName)
+            )
+        }
+        return { continue: false, state: SharedCreepState.idle }
+    }
+
     if (creep.pos.inRangeTo(site, 3)) {
         creep.build(site)
     }
