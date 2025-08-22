@@ -596,94 +596,138 @@ describe('spawnCreeps', () => {
     expect(spawnCreepSpy.notCalled).to.be.true
   })
 
-    it('should fully cover guardCount filter logic and spawning behavior', () => {
-      // Case 1: No guards, should spawn
-      Game.rooms['W4N4'] = {
-        name: 'W4N4',
-        find: (type: number, opts?: any) => {
-          if (type === FIND_MY_SPAWNS) return [mockSpawn]
-          if (type === FIND_MY_CREEPS) return []
-          return []
-        },
-        energyAvailable: 200,
-        controller: { id: 'ctrl4', pos: new RoomPosition(1, 1, 'W4N4') }
-      } as unknown as Room
-      Memory.rooms['W4N4'] = {
-        tasks: { build: [], harvest: [] },
-        threats: { enemyCreepCount: 2, enemyPowerCreepCount: 0, enemyStructures: [], lastObserved: Game.time || 0 },
-        effectiveEnergyPerTick: 0,
-        totalSourceEnergyPerTick: 0
-      } as RoomMemory
-      Memory.reservations.tasks = {}
-      Memory.production = { energy: {} }
-      spawnCreeps()
-      expect(spawnCreepSpy.called).to.be.true
-      const args = spawnCreepSpy.getCall(0).args
-      expect(args[0]).to.deep.equal([TOUGH, ATTACK, MOVE])
-      expect(args[2].memory.role).to.equal(CreepRole.GUARD)
-      spawnCreepSpy.resetHistory()
+  it('should fully cover guardCount filter logic and spawning behavior', () => {
+    // Case 1: No guards, should spawn
+    Game.rooms['W4N4'] = {
+      name: 'W4N4',
+      find: (type: number, opts?: any) => {
+        if (type === FIND_MY_SPAWNS) return [mockSpawn]
+        if (type === FIND_MY_CREEPS) return []
+        return []
+      },
+      energyAvailable: 200,
+      controller: { id: 'ctrl4', pos: new RoomPosition(1, 1, 'W4N4') }
+    } as unknown as Room
+    Memory.rooms['W4N4'] = {
+      tasks: { build: [], harvest: [] },
+      threats: { enemyCreepCount: 2, enemyPowerCreepCount: 0, enemyStructures: [], lastObserved: Game.time || 0 },
+      effectiveEnergyPerTick: 0,
+      totalSourceEnergyPerTick: 0
+    } as RoomMemory
+    Memory.reservations.tasks = {}
+    Memory.production = { energy: {} }
+    spawnCreeps()
+    expect(spawnCreepSpy.called).to.be.true
+    const args = spawnCreepSpy.getCall(0).args
+    expect(args[0]).to.deep.equal([TOUGH, ATTACK, MOVE])
+    expect(args[2].memory.role).to.equal(CreepRole.GUARD)
+    spawnCreepSpy.resetHistory()
 
-      // Case 2: One guard, enemyCreepCount == guardCount, should NOT spawn
-      Game.rooms['W4N4'] = {
-        name: 'W4N4',
-        find: (type: number, opts?: any) => {
-          if (type === FIND_MY_SPAWNS) return [mockSpawn]
-          if (type === FIND_MY_CREEPS) return [{ memory: { role: CreepRole.GUARD } }]
-          return []
-        },
-        energyAvailable: 200,
-        controller: { id: 'ctrl4', pos: new RoomPosition(1, 1, 'W4N4') }
-      } as unknown as Room
-      if (Memory.rooms['W4N4'] && Memory.rooms['W4N4'].threats) {
-        Memory.rooms['W4N4'].threats.enemyCreepCount = 1
-      }
-      spawnCreeps()
-      expect(spawnCreepSpy.notCalled).to.be.true
-      spawnCreepSpy.resetHistory()
+    // Case 2: One guard, enemyCreepCount == guardCount, should NOT spawn
+    Game.rooms['W4N4'] = {
+      name: 'W4N4',
+      find: (type: number, opts?: any) => {
+        if (type === FIND_MY_SPAWNS) return [mockSpawn]
+        if (type === FIND_MY_CREEPS) return [{ memory: { role: CreepRole.GUARD } }]
+        return []
+      },
+      energyAvailable: 200,
+      controller: { id: 'ctrl4', pos: new RoomPosition(1, 1, 'W4N4') }
+    } as unknown as Room
+    if (Memory.rooms['W4N4'] && Memory.rooms['W4N4'].threats) {
+      Memory.rooms['W4N4'].threats.enemyCreepCount = 1
+    }
+    spawnCreeps()
+    expect(spawnCreepSpy.notCalled).to.be.true
+    spawnCreepSpy.resetHistory()
 
-      // Case 3: Multiple guards, enemyCreepCount < guardCount, should NOT spawn
-      Game.rooms['W4N4'] = {
-        name: 'W4N4',
-        find: (type: number, opts?: any) => {
-          if (type === FIND_MY_SPAWNS) return [mockSpawn]
-          if (type === FIND_MY_CREEPS) return [
-            { memory: { role: CreepRole.GUARD } },
-            { memory: { role: CreepRole.GUARD } }
+    // Case 3: Multiple guards, enemyCreepCount < guardCount, should NOT spawn
+    Game.rooms['W4N4'] = {
+      name: 'W4N4',
+      find: (type: number, opts?: any) => {
+        if (type === FIND_MY_SPAWNS) return [mockSpawn]
+        if (type === FIND_MY_CREEPS) return [
+          { memory: { role: CreepRole.GUARD } },
+          { memory: { role: CreepRole.GUARD } }
+        ]
+        return []
+      },
+      energyAvailable: 200,
+      controller: { id: 'ctrl4', pos: new RoomPosition(1, 1, 'W4N4') }
+    } as unknown as Room
+    if (Memory.rooms['W4N4'] && Memory.rooms['W4N4'].threats) {
+      Memory.rooms['W4N4'].threats.enemyCreepCount = 1
+    }
+    spawnCreeps()
+    expect(spawnCreepSpy.notCalled).to.be.true
+    spawnCreepSpy.resetHistory()
+
+    // Case 4: Guards with other roles, only GUARDs should be counted
+    Game.rooms['W4N4'] = {
+      name: 'W4N4',
+      find: (type: number, opts?: any) => {
+        if (type === FIND_MY_SPAWNS) return [mockSpawn]
+        if (type === FIND_MY_CREEPS) return [
+          { memory: { role: CreepRole.GUARD } },
+          { memory: { role: CreepRole.HARVESTER } },
+          { memory: { role: CreepRole.UPGRADER } }
+        ]
+        return []
+      },
+      energyAvailable: 200,
+      controller: { id: 'ctrl4', pos: new RoomPosition(1, 1, 'W4N4') }
+    } as unknown as Room
+    if (Memory.rooms['W4N4'] && Memory.rooms['W4N4'].threats) {
+      Memory.rooms['W4N4'].threats.enemyCreepCount = 1
+    }
+    spawnCreeps()
+    expect(spawnCreepSpy.notCalled).to.be.true
+    spawnCreepSpy.resetHistory()
+  })
+
+  it('should not spawn builder when existing builders exceeds 2', () => {
+    Game.rooms['W1N1'] = {
+      name: 'W1N1',
+      find: (type: number) =>
+        type === FIND_MY_SPAWNS
+        ? [mockSpawn]
+        : type === FIND_MY_CREEPS
+        ? [
+            { memory: { role: CreepRole.BUILDER } } as Creep,
+            { memory: { role: CreepRole.BUILDER } } as Creep,
+            { memory: { role: CreepRole.BUILDER } } as Creep
           ]
-          return []
-        },
-        energyAvailable: 200,
-        controller: { id: 'ctrl4', pos: new RoomPosition(1, 1, 'W4N4') }
-      } as unknown as Room
-      if (Memory.rooms['W4N4'] && Memory.rooms['W4N4'].threats) {
-        Memory.rooms['W4N4'].threats.enemyCreepCount = 1
-      }
-      spawnCreeps()
-      expect(spawnCreepSpy.notCalled).to.be.true
-      spawnCreepSpy.resetHistory()
-
-      // Case 4: Guards with other roles, only GUARDs should be counted
-      Game.rooms['W4N4'] = {
-        name: 'W4N4',
-        find: (type: number, opts?: any) => {
-          if (type === FIND_MY_SPAWNS) return [mockSpawn]
-          if (type === FIND_MY_CREEPS) return [
-            { memory: { role: CreepRole.GUARD } },
-            { memory: { role: CreepRole.HARVESTER } },
-            { memory: { role: CreepRole.UPGRADER } }
-          ]
-          return []
-        },
-        energyAvailable: 200,
-        controller: { id: 'ctrl4', pos: new RoomPosition(1, 1, 'W4N4') }
-      } as unknown as Room
-      if (Memory.rooms['W4N4'] && Memory.rooms['W4N4'].threats) {
-        Memory.rooms['W4N4'].threats.enemyCreepCount = 1
-      }
-      spawnCreeps()
-      expect(spawnCreepSpy.notCalled).to.be.true
-      spawnCreepSpy.resetHistory()
-    })
+        : [],
+      energyAvailable: 300,
+      controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+    } as unknown as Room
+    Memory.rooms['W1N1'] = {
+      tasks: {
+        build: [
+          {
+            buildParams: {
+              position: { x: 3, y: 3, roomName: 'W1N1' },
+              repairDuringSiege: false,
+              path: [{ x: 2, y: 2, roomName: 'W1N1' }]
+            },
+            roomName: 'W1N1'
+          }
+        ],
+        harvest: [],
+      },
+      effectiveEnergyPerTick: 3,
+      totalSourceEnergyPerTick: 10
+    } as unknown as RoomMemory
+    Memory.reservations.tasks = {}
+    Game.creeps = {
+      creep1: { memory: { role: CreepRole.BUILDER } } as Creep,
+      creep2: { memory: { role: CreepRole.BUILDER } } as Creep,
+      creep3: { memory: { role: CreepRole.BUILDER } } as Creep
+    }
+    spawnCreeps()
+    expect(spawnCreepSpy.notCalled).to.be.true
+    spawnCreepSpy.resetHistory()
+  })
 
   it('should spawn a builder creep when build tasks exist', () => {
     Game.rooms['W1N1'] = {
