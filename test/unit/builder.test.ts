@@ -3,6 +3,9 @@ import * as sinon from 'sinon'
 import { runBuilderCreep, processCurrentBuilderState } from '../../src/creepProcessors/builder'
 import { SharedCreepState } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
+import * as buildBehavior from '../../src/behaviours/build'
+import * as recycleBehavior from '../../src/behaviours/sharedCreepBehaviours/recycle'
+import * as collectEnergyBehavior from '../../src/behaviours/upgraderBehaviours/collectEnergy'
 
 describe('builder processor', () => {
   let mockCreep: any
@@ -56,9 +59,9 @@ describe('builder processor', () => {
     // @ts-ignore
     global.interpret = interpretStub
 
-    recycleStub = sinon.stub().returns({ continue: false, state: SharedCreepState.recycling })
-    collectEnergyStub = sinon.stub().returns({ continue: false, state: SharedCreepState.collectingEnergy })
-    buildStub = sinon.stub().returns({ continue: false, state: SharedCreepState.building })
+    buildStub = sinon.stub(buildBehavior, 'build').returns({ continue: false, state: SharedCreepState.building })
+    recycleStub = sinon.stub(recycleBehavior, 'recycle').returns({ continue: false, state: SharedCreepState.recycling })
+    collectEnergyStub = sinon.stub(collectEnergyBehavior, 'collectEnergy').returns({ continue: false, state: SharedCreepState.collectingEnergy })
   })
 
   afterEach(() => {
@@ -101,6 +104,27 @@ describe('builder processor', () => {
       runBuilderCreep(mockCreep)
 
       expect(mockCreep.say.calledWith('💀', false)).to.be.true
+    })
+
+    it('should handle infinite loop protection with permittedIterations', () => {
+      mockCreep.memory.state = SharedCreepState.idle
+      mockBuilderService.machine.current = SharedCreepState.idle
+      
+      // Mock room with construction sites to trigger continue: true
+      mockRoom.find.returns([{ id: 'site1' }])
+      
+      // Mock processCurrentBuilderState to always return continue: true
+      let callCount = 0
+      buildStub.callsFake(() => {
+        callCount++
+        return { continue: true, state: SharedCreepState.building }
+      })
+      
+      runBuilderCreep(mockCreep)
+      
+      // Should only run 10 iterations then stop due to permittedIterations limit
+      expect(callCount).to.equal(10)
+      expect(mockCreep.memory.state).to.equal(SharedCreepState.building)
     })
   })
 
@@ -165,6 +189,55 @@ describe('builder processor', () => {
       })
     })
 
+    it('should call build behavior for building state', () => {
+      mockBuilderService.machine.current = SharedCreepState.building
+
+      const result = processCurrentBuilderState(mockCreep, mockBuilderService)
+
+      expect(buildStub.calledWith({
+        creep: mockCreep,
+        service: mockBuilderService
+      })).to.be.true
+      expect(result).to.deep.equal({
+        continue: false,
+        state: SharedCreepState.building
+      })
+    })
+
+    it('should call collectEnergy behavior for collectingEnergy state', () => {
+      mockBuilderService.machine.current = SharedCreepState.collectingEnergy
+      mockCreep.store[RESOURCE_ENERGY] = 25
+      mockCreep.store.getCapacity.returns(100)
+
+      const result = processCurrentBuilderState(mockCreep, mockBuilderService)
+
+      expect(collectEnergyStub.calledWith({
+        creep: mockCreep,
+        context: {
+          energy: 25,
+          capacity: 100,
+          idleStarted: undefined
+        },
+        service: mockBuilderService
+      })).to.be.true
+      expect(result).to.deep.equal({
+        continue: false,
+        state: SharedCreepState.collectingEnergy
+      })
+    })
+
+    it('should call recycle behavior for recycling state', () => {
+      mockBuilderService.machine.current = SharedCreepState.recycling
+
+      const result = processCurrentBuilderState(mockCreep, mockBuilderService)
+
+      expect(recycleStub.calledWith(mockCreep)).to.be.true
+      expect(result).to.deep.equal({
+        continue: false,
+        state: SharedCreepState.recycling
+      })
+    })
+
     it('should handle unknown state gracefully', () => {
       const consoleStub = sinon.stub(console, 'log')
       mockBuilderService.machine.current = 'unknownState'
@@ -187,6 +260,21 @@ describe('builder processor', () => {
         continue: false,
         state: SharedCreepState.idle
       })
+    })
+
+    it('should handle processCurrentBuilderState with actual unknown state logging', () => {
+      const consoleStub = sinon.stub(console, 'log')
+      mockBuilderService.machine.current = 'completely_unknown_state'
+
+      const result = processCurrentBuilderState(mockCreep, mockBuilderService)
+
+      expect(consoleStub.calledWith('Unknown builder state: completely_unknown_state')).to.be.true
+      expect(result).to.deep.equal({
+        continue: false,
+        state: SharedCreepState.idle
+      })
+      
+      consoleStub.restore()
     })
   })
 })

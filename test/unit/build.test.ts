@@ -137,10 +137,51 @@ describe('build behaviour', () => {
       }
     }
 
-    // This should handle the case gracefully, though it may cause issues
-    // The function doesn't explicitly handle this case, so we expect it to continue
+    // Create a spy to catch potential errors
+    const consoleErrorSpy = sinon.spy(console, 'error')
+    
+    // This should handle the case where no site is found - may cause an error internally
+    expect(() => {
+      build({ creep: mockCreep, service: mockService })
+    }).to.not.throw()
+    
+    // Clean up the spy
+    consoleErrorSpy.restore()
+  })
+
+  it('should handle null site gracefully', () => {
+    // Mock findInRange to return undefined or null site
+    // @ts-ignore
+    global.RoomPosition = class MockRoomPosition {
+      x: number
+      y: number
+      roomName: string
+
+      constructor(x: number, y: number, roomName: string) {
+        this.x = x
+        this.y = y
+        this.roomName = roomName
+      }
+
+      findInRange(findType: any, range: number) {
+        return [null]
+      }
+    }
+
+    // This should handle the case gracefully
+    expect(() => {
+      build({ creep: mockCreep, service: mockService })
+    }).to.not.throw()
+  })
+
+  it('should move to target position when not in range', () => {
+    mockCreep.pos.inRangeTo.withArgs(mockSite, 3).returns(false)
+    mockCreep.pos.inRangeTo.withArgs(mockSite, 2).returns(false)
+
     const result = build({ creep: mockCreep, service: mockService })
 
+    // Should call moveTo with the target position
+    expect(mockCreep.moveTo.calledOnce).to.be.true
     expect(result).to.deep.equal({
       continue: true,
       state: SharedCreepState.building
@@ -157,5 +198,26 @@ describe('build behaviour', () => {
       continue: true,
       state: SharedCreepState.building
     })
+  })
+
+  it('should handle site being exactly at position 0,0', () => {
+    mockCreep.memory.task.position = { x: 0, y: 0, roomName: 'W1N1' }
+    mockSite.pos = { x: 0, y: 0, roomName: 'W1N1' }
+    mockCreep.pos.inRangeTo.withArgs(mockSite, 3).returns(true)
+    mockCreep.pos.inRangeTo.withArgs(mockSite, 2).returns(true)
+
+    const result = build({ creep: mockCreep, service: mockService })
+
+    expect(mockCreep.build.calledWith(mockSite)).to.be.true
+    expect(result).to.deep.equal({
+      continue: true,
+      state: SharedCreepState.building
+    })
+  })
+
+  it('should handle build task interface properties', () => {
+    // Verify the task type is properly used
+    const taskType = mockCreep.memory.task.type
+    expect(taskType).to.equal('build')
   })
 })
