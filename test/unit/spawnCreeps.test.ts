@@ -894,4 +894,42 @@ describe('spawnCreeps', () => {
       }
     }
   })
+
+  it('should not spawn builder when builderCount = 1 and effectiveEnergyPerTick <= 2', () => {
+    Game.rooms['W1N1'] = {
+      name: 'W1N1',
+      find: (type: number) =>
+        type === FIND_MY_SPAWNS
+        ? [mockSpawn]
+        : type === FIND_MY_CREEPS
+        ? [{ memory: { role: CreepRole.BUILDER } } as Creep]
+        : [],
+      energyAvailable: 300,
+      controller: { id: 'ctrl1', pos: new RoomPosition(1, 1, 'W1N1') }
+    } as unknown as Room
+    Memory.rooms['W1N1'] = {
+      tasks: {
+        build: [
+          {
+            buildParams: {
+              position: { x: 3, y: 3, roomName: 'W1N1' },
+              repairDuringSiege: false,
+              path: [{ x: 2, y: 2, roomName: 'W1N1' }]
+            },
+            roomName: 'W1N1'
+          }
+        ],
+        harvest: [],
+      },
+      effectiveEnergyPerTick: 2, // This is <= 2, so shouldn't spawn builder with count = 1
+      totalSourceEnergyPerTick: 10
+    } as unknown as RoomMemory
+    Memory.reservations.tasks = {}
+    Game.creeps = {
+      creep1: { memory: { role: CreepRole.BUILDER } } as Creep
+    }
+    spawnCreeps()
+    expect(spawnCreepSpy.notCalled).to.be.true
+    spawnCreepSpy.resetHistory()
+  })
 })
