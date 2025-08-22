@@ -369,4 +369,70 @@ describe('collectEnergy', () => {
     // The filter should exclude structures[1] (no store) and structures[2] (no energy capacity)
     expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
   })
+
+  it('should execute dropped resources filter function', () => {
+    const droppedResources = [
+      { pos: { x: 11, y: 20 }, resourceType: RESOURCE_ENERGY, amount: 100 },
+      { pos: { x: 12, y: 20 }, resourceType: 'hydrogen' as ResourceConstant, amount: 50 }
+    ]
+    
+    // Use callsFake to actually execute the filter
+    room.find.withArgs(FIND_DROPPED_RESOURCES, sinon.match.any).callsFake((_type: any, options: any) => {
+      return droppedResources.filter(options.filter)
+    })
+    room.find.withArgs(FIND_TOMBSTONES, sinon.match.any).returns([])
+    room.find.withArgs(FIND_RUINS, sinon.match.any).returns([])
+    room.find.withArgs(FIND_STRUCTURES, sinon.match.any).returns([])
+    
+    creep.pos.findClosestByPath.returns(droppedResources[0])
+    creep.pos.isNearTo.returns(false)
+    
+    const result = collectEnergy({ creep, context, service: upgraderService })
+    
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
+  })
+
+  it('should execute tombstone filter function', () => {
+    const tombstones = [
+      { pos: { x: 13, y: 21 }, store: { getCapacity: sinon.stub().returns(100) } },
+      { pos: { x: 14, y: 21 }, store: { getCapacity: sinon.stub().returns(0) } }
+    ]
+    
+    room.find.withArgs(FIND_DROPPED_RESOURCES, sinon.match.any).returns([])
+    // Use callsFake to actually execute the filter
+    room.find.withArgs(FIND_TOMBSTONES, sinon.match.any).callsFake((_type: any, options: any) => {
+      return tombstones.filter(options.filter)
+    })
+    room.find.withArgs(FIND_RUINS, sinon.match.any).returns([])
+    room.find.withArgs(FIND_STRUCTURES, sinon.match.any).returns([])
+    
+    creep.pos.findClosestByPath.returns(tombstones[0])
+    creep.pos.isNearTo.returns(false)
+    
+    const result = collectEnergy({ creep, context, service: upgraderService })
+    
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
+  })
+
+  it('should execute ruin filter function', () => {
+    const ruins = [
+      { pos: { x: 14, y: 22 }, store: { getCapacity: sinon.stub().returns(75) } },
+      { pos: { x: 15, y: 22 }, store: { getCapacity: sinon.stub().returns(0) } }
+    ]
+    
+    room.find.withArgs(FIND_DROPPED_RESOURCES, sinon.match.any).returns([])
+    room.find.withArgs(FIND_TOMBSTONES, sinon.match.any).returns([])
+    // Use callsFake to actually execute the filter
+    room.find.withArgs(FIND_RUINS, sinon.match.any).callsFake((_type: any, options: any) => {
+      return ruins.filter(options.filter)
+    })
+    room.find.withArgs(FIND_STRUCTURES, sinon.match.any).returns([])
+    
+    creep.pos.findClosestByPath.returns(ruins[0])
+    creep.pos.isNearTo.returns(false)
+    
+    const result = collectEnergy({ creep, context, service: upgraderService })
+    
+    expect(result).to.deep.equal({ continue: false, state: SharedCreepState.collectingEnergy })
+  })
 })

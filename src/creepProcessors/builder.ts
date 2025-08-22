@@ -4,6 +4,7 @@ import { interpret, Service } from 'robot3'
 import { recycle } from "behaviours/sharedCreepBehaviours/recycle"
 import { collectEnergy } from "behaviours/upgraderBehaviours/collectEnergy"
 import { build } from "behaviours/build"
+import { assignNextBuildTask } from "../helpers/assignNextBuildTask"
 
 export function runBuilderCreep(creep: Creep) {
   const state = (creep.memory.state || SharedCreepState.idle) as BuilderMachineStateTypes
@@ -48,11 +49,19 @@ export const processCurrentBuilderState = (creep: Creep, builderService: Service
       console.log(`Unknown builder state: ${builderService.machine.current}`)
       return { continue: false, state: SharedCreepState.idle }
     case SharedCreepState.idle:
+      // Try to assign the next available build task from room memory
+      if (assignNextBuildTask(creep)) {
+        builderService.send({ type: BuilderEventType.buildTarget })
+        return { continue: true, state: SharedCreepState.building }
+      }
+      
+      // If no tasks from memory, fall back to finding any construction sites in room
       const buildTargets = creep.room.find(FIND_CONSTRUCTION_SITES)
       if (buildTargets.length > 0) {
         builderService.send({ type: BuilderEventType.buildTarget })
         return { continue: true, state: SharedCreepState.building }
       }
+      
       // If idle too long, recycle
       if (creep.memory.idleStarted && Game.time - creep.memory.idleStarted > 50) {
         builderService.send({ type: SharedCreepState.recycling })

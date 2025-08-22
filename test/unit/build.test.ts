@@ -221,6 +221,122 @@ describe('build behaviour', () => {
     expect(remainingTasks![0].buildParams.position.y).to.equal(20)
   })
 
+  it('should assign next build task when current task is complete and continue building', () => {
+    // Setup memory with multiple build tasks, first one will be completed, second should be assigned
+    const mockRoomMemory = {
+      tasks: {
+        build: [
+          {
+            buildParams: {
+              position: { x: 15, y: 15, roomName: 'W1N1' }  // Current task (will be completed)
+            }
+          },
+          {
+            buildParams: {
+              position: { x: 25, y: 25, roomName: 'W1N1' },  // Next task to assign
+              repairDuringSiege: false,
+              path: [{ x: 24, y: 24, roomName: 'W1N1' }]
+            }
+          }
+        ]
+      }
+    }
+    // @ts-ignore
+    Memory.rooms = { 'W1N1': mockRoomMemory }
+
+    // Mock the creep to have a room so assignNextBuildTask can work
+    const mockRoom = { name: 'W1N1' }
+    mockCreep.room = mockRoom as any
+
+    // Mock findInRange to return empty array (no construction site found, task complete)
+    // @ts-ignore
+    global.RoomPosition = class MockRoomPosition {
+      x: number
+      y: number
+      roomName: string
+
+      constructor(x: number, y: number, roomName: string) {
+        this.x = x
+        this.y = y
+        this.roomName = roomName
+      }
+
+      findInRange(findType: any, range: number) {
+        return []
+      }
+    }
+
+    const result = build({ creep: mockCreep, service: mockService })
+
+    // Should continue building with the new task
+    expect(result).to.deep.equal({
+      continue: true,
+      state: SharedCreepState.building
+    })
+
+    // Should have removed the completed task
+    const remainingTasks = Memory.rooms['W1N1']?.tasks?.build
+    expect(remainingTasks).to.have.length(1)
+    // @ts-ignore - Type bypass for test
+    expect(remainingTasks![0].buildParams.position.x).to.equal(25)
+
+    // Should have assigned the new task to the creep
+    expect(mockCreep.memory.task.position.x).to.equal(25)
+    expect(mockCreep.memory.task.position.y).to.equal(25)
+    expect(mockCreep.memory.task.type).to.equal('build')
+  })
+
+  it('should go idle when current task is complete and no more tasks available', () => {
+    // Setup memory with only one build task that will be completed
+    const mockRoomMemory = {
+      tasks: {
+        build: [
+          {
+            buildParams: {
+              position: { x: 15, y: 15, roomName: 'W1N1' }  // Only task, will be completed
+            }
+          }
+        ]
+      }
+    }
+    // @ts-ignore
+    Memory.rooms = { 'W1N1': mockRoomMemory }
+
+    // Mock the creep to have a room so assignNextBuildTask can work
+    const mockRoom = { name: 'W1N1' }
+    mockCreep.room = mockRoom as any
+
+    // Mock findInRange to return empty array (no construction site found, task complete)
+    // @ts-ignore
+    global.RoomPosition = class MockRoomPosition {
+      x: number
+      y: number
+      roomName: string
+
+      constructor(x: number, y: number, roomName: string) {
+        this.x = x
+        this.y = y
+        this.roomName = roomName
+      }
+
+      findInRange(findType: any, range: number) {
+        return []
+      }
+    }
+
+    const result = build({ creep: mockCreep, service: mockService })
+
+    // Should go idle when no more tasks available
+    expect(result).to.deep.equal({
+      continue: false,
+      state: SharedCreepState.idle
+    })
+
+    // Should have removed the completed task
+    const remainingTasks = Memory.rooms['W1N1']?.tasks?.build
+    expect(remainingTasks).to.have.length(0)
+  })
+
   it('should handle null site gracefully', () => {
     // Mock findInRange to return undefined or null site
     // @ts-ignore

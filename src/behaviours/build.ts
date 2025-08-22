@@ -1,6 +1,7 @@
 import { Service } from "robot3"
 import { BuilderEventType, BuilderMachine } from "stateMachines/builder-machine"
 import { CreepBuildTask, SharedCreepEventType, SharedCreepState } from "types"
+import { assignNextBuildTask } from "../helpers/assignNextBuildTask"
 
 interface BuildInput {
     creep: Creep
@@ -33,6 +34,14 @@ export const build = ({ creep, service }: BuildInput): BuildOutput => {
                          task.buildParams.position.roomName === buildTask.position.roomName)
             )
         }
+        
+        // Try to assign the next available task (index 0 is top priority)
+        if (assignNextBuildTask(creep)) {
+            // Successfully assigned a new task, continue building
+            return { continue: true, state: SharedCreepState.building }
+        }
+        
+        // No more build tasks available, go idle
         return { continue: false, state: SharedCreepState.idle }
     }
 

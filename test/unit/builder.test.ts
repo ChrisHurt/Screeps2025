@@ -6,6 +6,7 @@ import { setupGlobals } from '../helpers/setupGlobals'
 import * as buildBehavior from '../../src/behaviours/build'
 import * as recycleBehavior from '../../src/behaviours/sharedCreepBehaviours/recycle'
 import * as collectEnergyBehavior from '../../src/behaviours/upgraderBehaviours/collectEnergy'
+import { BuilderEventType } from '../../src/stateMachines/builder-machine'
 
 describe('builder processor', () => {
   let mockCreep: any
@@ -275,6 +276,39 @@ describe('builder processor', () => {
       })
       
       consoleStub.restore()
+    })
+
+    it('should execute assignNextBuildTask successfully when build task available', () => {
+      // Setup global Memory with build tasks
+      // @ts-ignore
+      global.Memory = {
+        rooms: {
+          TestRoom: {
+            tasks: {
+              build: [{
+                buildParams: {
+                  position: { x: 10, y: 10, roomName: 'TestRoom' },
+                  repairDuringSiege: true,
+                  path: [{ x: 9, y: 9, roomName: 'TestRoom' }]
+                },
+                roomName: 'TestRoom'
+              }],
+              harvest: []
+            }
+          }
+        }
+      }
+
+      mockCreep.room = { name: 'TestRoom' }
+      mockBuilderService.machine.current = SharedCreepState.idle
+
+      const result = processCurrentBuilderState(mockCreep, mockBuilderService)
+
+      expect(mockBuilderService.send.calledWith({ type: BuilderEventType.buildTarget })).to.be.true
+      expect(result).to.deep.equal({
+        continue: true,
+        state: SharedCreepState.building
+      })
     })
   })
 })
