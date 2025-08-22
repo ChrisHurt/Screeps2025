@@ -46,6 +46,12 @@ export function setupGlobals({
     // @ts-ignore
     global.WORK = 'work'
     // @ts-ignore
+    global.RANGED_ATTACK = 'ranged_attack'
+    // @ts-ignore
+    global.HEAL = 'heal'
+    // @ts-ignore
+    global.CLAIM = 'claim'
+    // @ts-ignore
     global.TERRAIN_MASK_PLAIN = 0
     // @ts-ignore
     global.TERRAIN_MASK_WALL = 1
