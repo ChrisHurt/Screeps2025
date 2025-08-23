@@ -1,4 +1,4 @@
-import { checkIfUnused } from 'behaviours/sharedCreepBehaviours/checkIfUnused'
+import { checkIfUnused } from 'behaviours/checkIfUnused'
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { SharedCreepEventType } from 'types'

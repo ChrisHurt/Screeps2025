@@ -1,10 +1,10 @@
 import { SharedCreepEventType, SharedCreepState } from "types"
 import { createHarvesterMachine, HarvesterContext, HarvesterMachine, HarvesterMachineStateTypes, } from "../stateMachines/harvester-machine"
 import { interpret, Service } from 'robot3'
-import { checkIfUnused } from "behaviours/sharedCreepBehaviours/checkIfUnused"
-import { recycle } from "behaviours/sharedCreepBehaviours/recycle"
-import { depositEnergy } from "behaviours/sharedCreepBehaviours/depositEnergy"
-import { harvest } from "behaviours/harvesterBehaviours/harvest"
+import { checkIfUnused } from "behaviours/checkIfUnused"
+import { recycle } from "behaviours/recycle"
+import { depositEnergy } from "behaviours/depositEnergy"
+import { harvest } from "behaviours/harvest"
 
 export function runHarvesterCreep(creep: Creep) {
   const state = (creep.memory.state || SharedCreepState.idle) as HarvesterMachineStateTypes

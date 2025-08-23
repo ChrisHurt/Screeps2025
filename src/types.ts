@@ -28,7 +28,12 @@ export interface LinkedListTask {
   next: LinkedListTask | null
   prev: LinkedListTask | null
 }
-export type TaskType = 'harvest' | 'upgrade' | 'build' | 'repair' | 'attack' | 'defend' | 'claim' | 'withdraw' | 'transfer' | 'drop' | 'pickup'
+export type TaskType =
+  | 'harvest' | 'upgrade' | 'build'
+  | 'repair' | 'attack' | 'defend'
+  | 'claim' | 'withdraw' | 'transfer'
+  | 'drop' | 'pickup'
+  | 'collectEnergy' | 'deliverEnergy'
 export interface EvaluationTask extends LinkedListTask {}
 export interface StructureTask extends LinkedListTask {}
 export interface CreepTask {
@@ -38,6 +43,20 @@ export interface CreepTask {
 
 export interface CreepBuildTask extends CreepTask, Omit<BuildParams, 'structureType'> {
   type: 'build'
+}
+
+export interface DeliverEnergyTask extends CreepTask {
+  amount: number
+  action: 'transfer' | 'drop'
+  position: RoomPosition
+  type: 'deliverEnergy'
+}
+
+export interface CollectEnergyTask extends CreepTask {
+  amount: number
+  action: 'withdraw' | 'pickup'
+  position: RoomPosition
+  type: 'collectEnergy'
 }
 
 export interface CreepUpgradeTask extends CreepTask {

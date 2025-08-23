@@ -9,9 +9,9 @@ const basicMeleeAttack = sinon.stub()
 const checkIfUnused = sinon.stub()
 const recycle = sinon.stub()
 
-rewiremock('../../src/behaviours/sharedCreepBehaviours/basicMeleeAttack').with({ basicMeleeAttack })
-rewiremock('../../src/behaviours/sharedCreepBehaviours/checkIfUnused').with({ checkIfUnused })
-rewiremock('../../src/behaviours/sharedCreepBehaviours/recycle').with({ recycle })
+rewiremock('../../src/behaviours/basicMeleeAttack').with({ basicMeleeAttack })
+rewiremock('../../src/behaviours/checkIfUnused').with({ checkIfUnused })
+rewiremock('../../src/behaviours/recycle').with({ recycle })
 
 let runGuardCreep: typeof import('../../src/creepProcessors/guard').runGuardCreep
 

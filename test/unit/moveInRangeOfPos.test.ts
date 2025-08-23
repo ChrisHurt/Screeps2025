@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import * as sinon from 'sinon'
-import { moveInRangeOfPos } from '../../src/behaviours/sharedCreepBehaviours/moveInRangeOfPos'
+import { moveInRangeOfPos } from '../../src/behaviours/moveInRangeOfPos'
 import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('moveInRangeOfPos', () => {

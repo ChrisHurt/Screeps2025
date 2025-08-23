@@ -1,5 +1,5 @@
 
-import { moveInRangeOfPos } from "behaviours/sharedCreepBehaviours/moveInRangeOfPos"
+import { moveInRangeOfPos } from "behaviours/moveInRangeOfPos"
 import { Service } from "robot3"
 import { UpgraderContext, UpgraderMachine, UpgraderMachineStateTypes } from "stateMachines/upgrader-machine"
 import { SharedCreepEventType, SharedCreepState } from "types"

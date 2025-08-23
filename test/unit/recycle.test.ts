@@ -1,4 +1,4 @@
-import { recycle } from 'behaviours/sharedCreepBehaviours/recycle'
+import { recycle } from 'behaviours/recycle'
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { SharedCreepState } from 'types'

@@ -1,4 +1,4 @@
-import { depositEnergy } from 'behaviours/sharedCreepBehaviours/depositEnergy'
+import { depositEnergy } from 'behaviours/depositEnergy'
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { SharedCreepEventType, SharedCreepState } from 'types'

@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import * as sinon from 'sinon'
-import { harvest } from '../../src/behaviours/harvesterBehaviours/harvest'
+import { harvest } from '../../src/behaviours/harvest'
 import { SharedCreepEventType, SharedCreepState } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 

@@ -1,9 +1,9 @@
 import { SharedCreepEventType, SharedCreepState } from "types"
 import { createGuardMachine, GuardContext, GuardMachine, GuardMachineStateTypes } from "../stateMachines/guard-machine"
 import { interpret, Service } from 'robot3'
-import { recycle } from "behaviours/sharedCreepBehaviours/recycle"
-import { basicMeleeAttack } from "behaviours/sharedCreepBehaviours/basicMeleeAttack"
-import { checkIfUnused } from "behaviours/sharedCreepBehaviours/checkIfUnused"
+import { recycle } from "behaviours/recycle"
+import { basicMeleeAttack } from "behaviours/basicMeleeAttack"
+import { checkIfUnused } from "behaviours/checkIfUnused"
 
 export function runGuardCreep(creep: Creep) {
   const state = (creep.memory.state || SharedCreepState.idle) as GuardMachineStateTypes

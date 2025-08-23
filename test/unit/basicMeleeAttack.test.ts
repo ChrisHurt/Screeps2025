@@ -1,4 +1,4 @@
-import { basicMeleeAttack } from '../../src/behaviours/sharedCreepBehaviours/basicMeleeAttack'
+import { basicMeleeAttack } from '../../src/behaviours/basicMeleeAttack'
 import { SharedCreepEventType, SharedCreepState } from 'types'
 import { expect } from 'chai'
 import * as sinon from 'sinon'

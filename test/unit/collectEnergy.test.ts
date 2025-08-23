@@ -1,4 +1,4 @@
-import { collectEnergy } from 'behaviours/upgraderBehaviours/collectEnergy'
+import { collectEnergy } from 'behaviours/collectEnergy'
 import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { setupGlobals } from '../helpers/setupGlobals'

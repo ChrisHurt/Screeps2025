@@ -4,8 +4,8 @@ import { runBuilderCreep, processCurrentBuilderState } from '../../src/creepProc
 import { SharedCreepState } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 import * as buildBehavior from '../../src/behaviours/build'
-import * as recycleBehavior from '../../src/behaviours/sharedCreepBehaviours/recycle'
-import * as collectEnergyBehavior from '../../src/behaviours/upgraderBehaviours/collectEnergy'
+import * as recycleBehavior from '../../src/behaviours/recycle'
+import * as collectEnergyBehavior from '../../src/behaviours/collectEnergy'
 import { BuilderEventType } from '../../src/stateMachines/builder-machine'
 
 describe('builder processor', () => {

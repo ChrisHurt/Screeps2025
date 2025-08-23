@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import * as sinon from 'sinon'
-import { upgrade } from '../../src/behaviours/upgraderBehaviours/upgrade'
+import { upgrade } from '../../src/behaviours/upgrade'
 import { SharedCreepState } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 
