@@ -7,6 +7,7 @@ import {
   CreepHarvestTask,
   CreepBuildTask,
   RoomName,
+  EnergyLogistics,
 
 } from "types"
 
@@ -31,6 +32,7 @@ declare global {
   interface CreepMemory extends CustomCreepMemory {}
   interface Memory {
     creeps: { [name: string]: CreepMemory }
+    energyLogistics: EnergyLogistics
     production: {
       energy: Record<string,StructureEnergyImpact | CreepEnergyImpact>
     }

@@ -28,6 +28,13 @@ export type ConsumerTypes = ConsumerStructures | ConsumerCreeps
 export type ProducerTypes = ProducerStructures | ProducerCreeps
 export type StoreTypes = STRUCTURE_CONTAINER | STRUCTURE_STORAGE | STRUCTURE_TERMINAL
 
+export enum Urgency {
+  CRITICAL = 3,
+  HIGH = 2,
+  MEDIUM = 1,
+  LOW = 0,
+}
+
 export interface BaseLogisticsContext {
   energy: {
     current: number
@@ -36,8 +43,8 @@ export interface BaseLogisticsContext {
   pos: Position
   roomName: string
   urgency: {
-    peace: number
-    war: number
+    peace: Urgency
+    war: Urgency
   }
 }
 
@@ -93,8 +100,6 @@ export interface RoomState {
   isUnderAttack: boolean,
   energyEmergency: boolean,
   netEnergyProduction: number,
-  totalEnergyAvailable: number,
-  totalEnergyCapacity: number,
   rcl: number
 }
 

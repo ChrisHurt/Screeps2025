@@ -40,7 +40,16 @@ export const mockMemory: Memory = {
     tasks: {}
   },
   powerCreeps: {},
-  spawns: {}
+  spawns: {},
+  energyLogistics: {
+    carriers: {},
+    consumers: {},
+    linkGroups: {},
+    producers: {},
+    roomStates: {},
+    stores: {},
+    terminals: {},
+  }
 }
 
 export type ExitKey = "1" | "3" | "5" | "7"

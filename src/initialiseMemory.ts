@@ -12,4 +12,13 @@ export const initialiseMemory = () => {
         energy: {},
         tasks: {}
     }
+    Memory.energyLogistics = {
+        carriers: {},
+        consumers: {},
+        producers: {},
+        stores: {},
+        linkGroups: {},
+        roomStates: {},
+        terminals: {},
+    }
 }

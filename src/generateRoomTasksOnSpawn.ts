@@ -1,7 +1,7 @@
 import { findFreeAdjacentPositions } from "findFreeAdjacentPositions"
 import { generateTerrainArray } from "helpers/generateTerrainArray"
 import { singleSourceShortestPaths } from "helpers/singleSourceShortestPath"
-import { EnergyImpactType, RoomHarvestTask, RoomUpgradeTask } from "types"
+import { EnergyImpactType, RoomHarvestTask, RoomUpgradeTask, Urgency } from "types"
 
 export const generateRoomTasksOnSpawn = (roomName: string) => {
   const room = Game.rooms[roomName]
@@ -108,4 +108,51 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
   })
 
   roomMemory.optimumSpawnPosition = optimumSpawnPosition[0]
+
+  // Energy Logistics Initialisation
+  Memory.energyLogistics.roomStates[roomName] = {
+    isUnderAttack: false,
+    energyEmergency: false,
+    netEnergyProduction: 0,
+    rcl: 1,
+  }
+
+  // Spawns are both producers and consumers
+  Memory.energyLogistics.producers[spawn.id] = {
+    energy: {
+      current: 300,
+      capacity: 300
+    },
+    pos: spawn.pos,
+    productionPerTick: 1,
+    roomName,
+    withdrawTiming: {
+      earliestTick: Game.time,
+      latestTick: Game.time
+    },
+    urgency: {
+      peace: Urgency.HIGH,
+      war: Urgency.HIGH
+    },
+    type: STRUCTURE_SPAWN
+  }
+  Memory.energyLogistics.consumers[spawn.id] = {
+    decays: false,
+    energy: {
+      current: 300,
+      capacity: 300,
+    },
+    pos: spawn.pos,
+    productionPerTick: 1,
+    roomName,
+    depositTiming: {
+      earliestTick: Game.time,
+      latestTick: Game.time
+    },
+    urgency: {
+      peace: Urgency.HIGH,
+      war: Urgency.HIGH
+    },
+    type: STRUCTURE_SPAWN
+  }
 }
