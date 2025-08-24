@@ -1,3 +1,113 @@
+// NOTE: These are convenience types, to make the purpose of each ID clear in its context
+export type SourceId = string     // Id of StructureSource
+export type SpawnId = string      // Id of StructureSpawn
+export type CreepId = string      // Id of Creep
+export type StructureId = string  // Id of any structure
+export type RoomName = string     // Name of Room
+export type TerminalId = string   // Id of StructureTerminal
+
+// ------ Energy State Types ------
+export type DECAYABLE_STRUCTURE =
+| STRUCTURE_CONTAINER | STRUCTURE_ROAD | STRUCTURE_RAMPART
+
+export type PERSISTENT_STRUCTURE =
+| STRUCTURE_SPAWN | STRUCTURE_EXTENSION
+| STRUCTURE_TOWER | STRUCTURE_LAB
+
+export type ProducerCreeps = CreepRole.HARVESTER
+export type ProducerStructures = STRUCTURE_SPAWN
+
+export type ConsumerCreeps =
+| CreepRole.BUILDER
+| CreepRole.UPGRADER
+export type ConsumerStructures =
+| PERSISTENT_STRUCTURE
+| DECAYABLE_STRUCTURE
+
+export type ConsumerTypes = ConsumerStructures | ConsumerCreeps
+export type ProducerTypes = ProducerStructures | ProducerCreeps
+export type StoreTypes = STRUCTURE_CONTAINER | STRUCTURE_STORAGE | STRUCTURE_TERMINAL
+
+export interface BaseLogisticsContext {
+  energy: {
+    current: number
+    capacity: number
+  }
+  pos: Position
+  roomName: string
+  urgency: {
+    peace: number
+    war: number
+  }
+}
+
+export interface Consumer extends BaseLogisticsContext {
+  decayTiming?: {
+    earliestTick: number  // Game tick when decay is anticipated to start.
+                          // If not at intended health, this will remain in the past until resolved
+    latestTick: number    // Game tick when decay is anticipated to drop hits below `hitsThreshold`
+    hitsThreshold: number
+  }
+  depositTiming: {
+    earliestTick: number  // Game tick when minimum of 50 free energy capacity is anticipated
+    latestTick: number    // Game tick when store is anticipated to be completely empty
+  }
+  decays: boolean  // For repair targets
+  productionPerTick: number
+  type: ConsumerTypes
+}
+
+export interface Producer extends BaseLogisticsContext {
+  withdrawTiming: {
+    earliestTick: number  // Game tick when minimum of 50 used energy capacity is anticipated
+    latestTick: number    // Game tick when store (of creep or structure) is anticipated to be completely full
+  }
+  productionPerTick: number
+  type: ProducerTypes
+}
+
+export interface Store extends BaseLogisticsContext {
+  type: StoreTypes
+}
+
+export interface Link extends BaseLogisticsContext {
+  transferTiming: {
+    earliestTick: number  // Game tick when link will be ready for transfer
+  }
+}
+
+export interface Terminal extends BaseLogisticsContext {
+  sendTiming: {
+    earliestTick: number  // Game tick when terminal will be ready for send
+  }
+}
+
+export interface Carrier extends BaseLogisticsContext {
+  arrivalTiming: number
+  anticipatedArrivalTick: number,
+  currentTask: CollectEnergyTask | DeliverEnergyTask | IdleTask,
+  isIdle: boolean
+}
+
+export interface RoomState {
+  isUnderAttack: boolean,
+  energyEmergency: boolean,
+  netEnergyProduction: number,
+  totalEnergyAvailable: number,
+  totalEnergyCapacity: number,
+  rcl: number
+}
+
+export interface EnergyLogistics {
+  consumers: Record<CreepId | StructureId, Consumer>
+  producers: Record<CreepId | SpawnId, Producer>
+  stores: Record<CreepId | StructureId, Store>
+  terminals: Record<TerminalId, Terminal>
+  linkGroups: Record<RoomName, Link[]>
+  carriers: Record<CreepId, Carrier>
+  roomStates: Record<RoomName, RoomState>
+}
+
 export enum EnergyImpactType {
   CREEP = 'creep',
   SPAWN = 'spawn',
@@ -24,22 +134,19 @@ export interface Position {
   x: number
   y: number
 }
-export interface LinkedListTask {
-  next: LinkedListTask | null
-  prev: LinkedListTask | null
-}
 export type TaskType =
   | 'harvest' | 'upgrade' | 'build'
   | 'repair' | 'attack' | 'defend'
   | 'claim' | 'withdraw' | 'transfer'
   | 'drop' | 'pickup'
   | 'collectEnergy' | 'deliverEnergy'
-export interface EvaluationTask extends LinkedListTask {}
-export interface StructureTask extends LinkedListTask {}
+
 export interface CreepTask {
-  taskId: string
+  taskId: SourceId | CreepId | StructureId
   type: TaskType
 }
+
+export interface IdleTask extends CreepTask {}
 
 export interface CreepBuildTask extends CreepTask, Omit<BuildParams, 'structureType'> {
   type: 'build'
@@ -77,7 +184,7 @@ export interface RoomHarvestTask {
   availablePositions: RoomPosition[]
   sourceId: string
   sourcePosition: RoomPosition
-  roomName: RoomId
+  roomName: RoomName
   requiredWorkParts: number
   reservingCreeps: ReservingCreeps
 }
@@ -92,7 +199,7 @@ export interface ReservingCreep {
 
 export interface RoomBuildTask {
   buildParams: BuildParams
-  roomName: RoomId
+  roomName: RoomName
   reservingCreeps: ReservingCreeps
 }
 
@@ -100,35 +207,11 @@ export interface RoomUpgradeTask {
   availablePositions: RoomPosition[]
   controllerId: string
   controllerPosition: RoomPosition
-  roomName: RoomId
+  roomName: RoomName
   reservingCreeps: ReservingCreeps
 }
 
-export type TaskId = string
-export type RoomId = string
-export enum QueuePriority {
-  LOW = 0,
-  MEDIUM = 1,
-  HIGH = 2
-}
-
-export type TaskQueue = Record<TaskId, LinkedListTask>
-
-export interface LinkedListQueue {
-  head: LinkedListTask | null
-  tail: LinkedListTask | null
-  rankedQueue: Record<QueuePriority, TaskQueue>
-}
-
-export interface InTickCache {
-  threatsByRoom: {
-    [roomName: string]: {
-      threats: string[]
-      lastChecked: number
-    }
-  }
-}
-
+// ------ Share Creep State Machine & Execution Types ------
 export type SharedCreepContext = {
   idleStarted?: number
 }
@@ -159,6 +242,7 @@ export enum SharedCreepState {
 
 export enum CreepRole {
   HARVESTER = 'harvester',
+  HAULER = 'hauler',
   GUARD = 'guard',
   UPGRADER = 'upgrader',
   BUILDER = 'builder',
@@ -170,9 +254,6 @@ export interface CreepMemory {
   state?: SharedCreepState
   task?: CreepHarvestTask | CreepUpgradeTask | CreepBuildTask
 }
-
-export interface FlagMemory {}
-export interface PowerCreepMemory {}
 
 export interface BuildParams {
   position: RoomPosition
@@ -222,7 +303,6 @@ export interface CustomRoomMemory {
   effectiveEnergyPerTick: number
   totalSourceEnergyPerTick: number
 }
-export interface SpawnMemory {}
 
 type FixedLengthArray<T, N extends number, A extends T[] = []> =
   A['length'] extends N

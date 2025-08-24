@@ -1,15 +1,12 @@
 import {
   CreepMemory as CustomCreepMemory,
-  PowerCreepMemory,
-  RoomId,
   CustomRoomMemory,
-  RoomHarvestTask,
-  RoomUpgradeTask,
   StructureEnergyImpact,
   CreepEnergyImpact,
   CreepUpgradeTask,
   CreepHarvestTask,
   CreepBuildTask,
+  RoomName,
 
 } from "types"
 
@@ -43,11 +40,11 @@ declare global {
     }
     mapConnections: string[]  // List of connections between rooms in the format "roomNameOne-roomNameTwo"
     mapRoomGraph: {           // Denotes connections between rooms
-      [roomId: RoomId]: RoomId[]
+      [roomId: RoomName]: RoomName[]
     }
     memoryInitialised?: boolean
     powerCreeps: { [name: string]: Partial<PowerCreepMemory> }
-    rooms: { [name: RoomId]: RoomMemory }
+    rooms: { [name: RoomName]: RoomMemory }
   }
   interface RoomMemory extends CustomRoomMemory {}
 

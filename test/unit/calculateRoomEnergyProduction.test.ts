@@ -34,9 +34,7 @@ describe("calculateRoomEnergyProduction", () => {
             a: { roomNames: ["W1N1"], perTickAmount: 10, role: "harvester", type: "creep" } as CreepEnergyImpact
         };
         expect(calculateRoomEnergyProduction("W3N3")).to.equal(0);
-    });
-
-    // roomNames must be a non-empty array for CreepEnergyImpact and StructureEnergyImpact
+    })
 
     it("should handle multiple impacts for the same room", () => {
         Memory.production.energy = {

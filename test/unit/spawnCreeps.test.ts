@@ -74,7 +74,7 @@ describe('spawnCreeps', () => {
       spawnCreeps()
       expect(spawnCreepSpy.called).to.be.true
       const args = spawnCreepSpy.getCall(0).args
-      expect(args[0]).to.deep.equal(['work', 'carry', 'move'])
+      expect(args[0]).to.deep.equal(['work', 'work', 'carry', 'move'])
       expect(args[2].memory.role).to.equal(CreepRole.HARVESTER)
       expect(args[2].memory.state).to.equal(SharedCreepState.idle)
     })

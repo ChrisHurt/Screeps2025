@@ -90,7 +90,7 @@ export const spawnCreeps = () => {
         }
 
         for (const harvestTask of harvestTasks) {
-            if (room.energyAvailable < 200) {
+            if (room.energyAvailable < 300) {
                 console.log(`SpawnCreepsDebug: Not enough energy to spawn in room ${roomName}`)
                 continue
             }
@@ -133,7 +133,7 @@ export const spawnCreeps = () => {
                 spawnsAvailable = spawnsAvailable.filter(spawn => spawn.id !== nearestSpawn.id)
 
                 const creepName = `Harvester-${harvestTask.sourceId}-${Game.time}`
-                const creepBody = [WORK, CARRY, MOVE]
+                const creepBody = [WORK,WORK,CARRY,MOVE]
 
                 const {
                     productionPerTick,
@@ -142,7 +142,7 @@ export const spawnCreeps = () => {
                     carryParts: 1,
                     spawnPositions: room.find(FIND_MY_SPAWNS).map(spawn => spawn.pos),
                     sourcePosition: harvestTask.sourcePosition,
-                    workParts: 1,
+                    workParts: 2,
                 })
 
                 const creepHarvestTask: CreepHarvestTask = {
@@ -150,7 +150,7 @@ export const spawnCreeps = () => {
                     sourcePosition: harvestTask.sourcePosition,
                     type: "harvest",
                     taskId: `${harvestTask.roomName}-${harvestTask.sourceId}`,
-                    workParts: 1,
+                    workParts: 2,
                     returnPath: returnPath
                 }
 
