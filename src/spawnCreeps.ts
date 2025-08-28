@@ -190,8 +190,6 @@ export const spawnCreeps = () => {
                     continue
                 }
 
-                console.log("TEST", JSON.stringify(buildTask, null, 2))
-
                 const buildPosition = new RoomPosition(buildTask.buildParams.position.x, buildTask.buildParams.position.y, buildTask.buildParams.position.roomName)
                 const nearestSpawn = buildPosition.findClosestByPath(spawnsAvailable)
                 if (!nearestSpawn) {

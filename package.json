@@ -83,7 +83,8 @@
       "src/utils/ErrorMapper.ts",
       "**/*.d.ts",
       "**/*test.ts",
-      "test/helpers/**/*.ts"
+      "test/helpers/**/*.ts",
+      "test/setup-mocha.js"
     ]
   }
 }

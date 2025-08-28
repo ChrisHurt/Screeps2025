@@ -14,6 +14,7 @@ import { evaluateImmediateThreats } from "evaluateImmediateThreats"
 import { runGuardCreep } from "creepProcessors/guard"
 import { generateContainerTasks } from "generateContainerTasks"
 import { runBuilderCreep } from "creepProcessors/builder"
+import { updateEnergyLogistics } from "helpers/updateEnergyLogistics"
 
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`\nCurrent game tick is ${Game.time}`)
@@ -47,6 +48,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
     roomValuation(startingRoomName)
     generateRoomTasksOnSpawn(startingRoomName)
   }
+
+  updateEnergyLogistics()
 
   // Process creeps
   for (const name in Game.creeps) {

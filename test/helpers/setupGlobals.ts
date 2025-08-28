@@ -20,6 +20,8 @@ export function setupGlobals({
     // @ts-ignore
     global.FIND_MY_SPAWNS = 112
     // @ts-ignore
+    global.FIND_MY_STRUCTURES = 108
+    // @ts-ignore
     global.FIND_SOURCES = 105
     // @ts-ignore
     global.FIND_MINERALS = 116
@@ -71,6 +73,14 @@ export function setupGlobals({
     global.STRUCTURE_CONTAINER = 'container'
     // @ts-ignore
     global.STRUCTURE_EXTENSION = 'extension'
+    // @ts-ignore
+    global.STRUCTURE_TOWER = 'tower'
+    // @ts-ignore
+    global.STRUCTURE_LAB = 'lab'
+    // @ts-ignore
+    global.STRUCTURE_ROAD = 'road'
+    // @ts-ignore
+    global.STRUCTURE_RAMPART = 'rampart'
     // @ts-ignore
     global.FIND_CONSTRUCTION_SITES = 108
 

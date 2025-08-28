@@ -131,8 +131,8 @@ describe('upgrader processor', () => {
   it('should call recycle for recycling state', () => {
     // Patch recycle to set a flag
     let recycled = false
-    const originalRecycle = require('../../src/behaviours//recycle').recycle
-    require('../../src/behaviours//recycle').recycle = () => { recycled = true; return { continue: false, state: SharedCreepState.recycling } }
+    const originalRecycle = require('../../src/behaviours/recycle').recycle
+    require('../../src/behaviours/recycle').recycle = () => { recycled = true; return { continue: false, state: SharedCreepState.recycling } }
     creep.memory.state = SharedCreepState.recycling
     creep.memory.task = { type: 'upgrade', controllerId: 'ctrl1', controllerPosition: { x: 5, y: 5, roomName: 'W1N1' } }
     runUpgraderCreep(creep)
@@ -140,7 +140,7 @@ describe('upgrader processor', () => {
     expect(creep.memory.state).to.equal(SharedCreepState.recycling)
     expect(creep.say.calledWith('💀')).to.be.true
     // Restore original
-    require('../../src/behaviours//recycle').recycle = originalRecycle
+    require('../../src/behaviours/recycle').recycle = originalRecycle
   })
 
   // TODO: Unskip when collection tasking includes energy reservations
@@ -151,7 +151,6 @@ describe('upgrader processor', () => {
     global.Game.time = 1051
     const logSpy = sandbox.spy(console, 'log')
     runUpgraderCreep(creep)
-    console.log(`LOGS: ${logSpy.args}`)
     expect(logSpy.args[0][0]).to.equal('Creep TestCreep has been idle for too long, recycling.')
   })
 

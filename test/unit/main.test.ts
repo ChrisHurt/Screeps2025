@@ -17,7 +17,7 @@ describe("main", () => {
   let runUpgraderCreepMock: sinon.SinonStubbedInstance<typeof upgrader.runUpgraderCreep>
   let runGuardCreepMock: sinon.SinonStubbedInstance<typeof guard.runGuardCreep>
   let generateContainerTasksMock: sinon.SinonStubbedInstance<typeof generateContainerTasks.generateContainerTasks>
-  
+
   beforeEach(() => {
     setupGlobals()
     loop()

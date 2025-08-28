@@ -6,6 +6,14 @@ export type StructureId = string  // Id of any structure
 export type RoomName = string     // Name of Room
 export type TerminalId = string   // Id of StructureTerminal
 
+export enum CreepRole {
+  HARVESTER = 'harvester',
+  HAULER = 'hauler',
+  GUARD = 'guard',
+  UPGRADER = 'upgrader',
+  BUILDER = 'builder',
+}
+
 // ------ Energy State Types ------
 export type DECAYABLE_STRUCTURE =
 | STRUCTURE_CONTAINER | STRUCTURE_ROAD | STRUCTURE_RAMPART
@@ -24,6 +32,26 @@ export type ConsumerStructures =
 | PERSISTENT_STRUCTURE
 | DECAYABLE_STRUCTURE
 
+export const consumerCreepRoles = [
+  CreepRole.BUILDER,
+  CreepRole.UPGRADER
+]
+export const consumerStructureTypes: ConsumerStructures[] = [
+  STRUCTURE_SPAWN,
+  STRUCTURE_EXTENSION,
+  STRUCTURE_TOWER,
+  STRUCTURE_LAB,
+  STRUCTURE_CONTAINER,
+  STRUCTURE_ROAD,
+  STRUCTURE_RAMPART
+]
+export const producerCreepRoles = [
+  CreepRole.HARVESTER
+]
+export const producerStructureTypes: ProducerStructures[] = [
+  STRUCTURE_SPAWN
+]
+
 export type ConsumerTypes = ConsumerStructures | ConsumerCreeps
 export type ProducerTypes = ProducerStructures | ProducerCreeps
 export type StoreTypes = STRUCTURE_CONTAINER | STRUCTURE_STORAGE | STRUCTURE_TERMINAL
@@ -33,6 +61,15 @@ export enum Urgency {
   HIGH = 2,
   MEDIUM = 1,
   LOW = 0,
+}
+
+// NOTE: Further refinements will be needed after testing
+export const creepUrgencyMatrix: Record<CreepRole, { peace: Urgency, war: Urgency }> = {
+  [CreepRole.HARVESTER]: { peace: Urgency.MEDIUM, war: Urgency.MEDIUM },
+  [CreepRole.BUILDER]: { peace: Urgency.MEDIUM, war: Urgency.MEDIUM },
+  [CreepRole.UPGRADER]: { peace: Urgency.MEDIUM, war: Urgency.MEDIUM },
+  [CreepRole.GUARD]: { peace: Urgency.HIGH, war: Urgency.CRITICAL },
+  [CreepRole.HAULER]: { peace: Urgency.HIGH, war: Urgency.HIGH },
 }
 
 export interface BaseLogisticsContext {
@@ -243,14 +280,6 @@ export enum SharedCreepState {
   idle = 'idle',
   recycling = 'recycling',
   upgrading = 'upgrading'
-}
-
-export enum CreepRole {
-  HARVESTER = 'harvester',
-  HAULER = 'hauler',
-  GUARD = 'guard',
-  UPGRADER = 'upgrader',
-  BUILDER = 'builder',
 }
 
 export interface CreepMemory {
