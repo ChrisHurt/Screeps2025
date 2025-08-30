@@ -1,4 +1,6 @@
 import { findFreeAdjacentPositions } from "findFreeAdjacentPositions"
+import { addConsumerStructureToEnergyLogistics } from "helpers/logistics/addConsumerStructureToEnergyLogistics"
+import { addProducerStructureToEnergyLogistics } from "helpers/logistics/addProducerStructureToEnergyLogistics"
 import { generateTerrainArray } from "helpers/generateTerrainArray"
 import { singleSourceShortestPaths } from "helpers/singleSourceShortestPath"
 import { EnergyImpactType, RoomHarvestTask, RoomUpgradeTask, Urgency } from "types"
@@ -117,42 +119,28 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     rcl: 1,
   }
 
-  // Spawns are both producers and consumers
-  Memory.energyLogistics.producers[spawn.id] = {
+  // Add Spawn to logistics as consumer & producer
+  addConsumerStructureToEnergyLogistics({
+    name: spawn.id,
     energy: {
       current: 300,
       capacity: 300
     },
     pos: spawn.pos,
-    productionPerTick: 1,
-    roomName,
-    withdrawTiming: {
-      earliestTick: Game.time,
-      latestTick: Game.time
-    },
-    urgency: {
-      peace: Urgency.HIGH,
-      war: Urgency.HIGH
-    },
-    type: STRUCTURE_SPAWN
-  }
-  Memory.energyLogistics.consumers[spawn.id] = {
-    decays: false,
+    structureType: STRUCTURE_SPAWN,
+    productionPerTick: 0, // Production will be accounted for as a producer, not consumer
+    roomName
+  })
+
+  addProducerStructureToEnergyLogistics({
+    name: spawn.id,
     energy: {
       current: 300,
-      capacity: 300,
+      capacity: 300
     },
     pos: spawn.pos,
+    structureType: STRUCTURE_SPAWN,
     productionPerTick: 1,
-    roomName,
-    depositTiming: {
-      earliestTick: Game.time,
-      latestTick: Game.time
-    },
-    urgency: {
-      peace: Urgency.HIGH,
-      war: Urgency.HIGH
-    },
-    type: STRUCTURE_SPAWN
-  }
+    roomName
+  })
 }

@@ -1,3 +1,4 @@
+import { addStoreToEnergyLogistics } from "helpers/logistics/addStoreToEnergyLogistics"
 import { RoomBuildTask } from "types"
 
 interface GenerateContainerTasks {
@@ -17,7 +18,7 @@ export const generateContainerTasks = ({
     if (roomMemory.tasks.harvest.length === 0) return
     if (!roomMemory.tasks.upgrade) return
 
-    // NOTE: This is triggered before the second spawn is built
+    // NOTE: This is triggered after the first spawn is built
     const startingSpawnPosition = room.find(FIND_MY_SPAWNS)[0]?.pos
 
     if (!startingSpawnPosition) {
@@ -80,6 +81,29 @@ export const generateContainerTasks = ({
         structureType: STRUCTURE_CONTAINER
     }
 
+    sourceContainerPositions.forEach(position => {
+        addStoreToEnergyLogistics({
+            name: `SourceContainer_${position.x},${position.y}`,
+            energy: {
+                current: 0,
+                capacity: 0
+            },
+            pos: position,
+            roomName: room.name,
+            structureType: STRUCTURE_CONTAINER
+        })
+    })
+    addStoreToEnergyLogistics({
+        name: `ControllerContainer_${controllerContainerPosition.x},${controllerContainerPosition.y}`,
+        energy: {
+            current: 0,
+            capacity: 0
+        },
+        pos: controllerContainerPosition,
+        roomName: room.name,
+        structureType: STRUCTURE_CONTAINER
+    })
+
     // Generate container build tasks
     const containerTasks: RoomBuildTask[] = [
         ...sourceContainerPositions,
@@ -103,30 +127,3 @@ export const generateContainerTasks = ({
 
     roomMemory.tasks.build.push(...containerTasks)
 }
-
-// //   const tasks: RoomBuildTask[] = []
-//     const sources = room.find(FIND_SOURCES).map(source=>source.pos)
-//     const controllerPos = room.controller?.pos
-//     const startingSpawnPos = room.find(FIND_MY_SPAWNS)[0]?.pos
-
-
-
-
-//     // Given the starting spawn position is known
-//     // Floodfill from spawn until sources and controller are covered
-
-//   for (const source of sources) {
-//     // Calculate path to nearest spawn from the source
-//     const spawn = room.find(FIND_MY_SPAWNS)[0]
-//     if (!spawn) return
-
-//     const path = PathFinder.search(source.pos, { pos: spawn.pos, range: 1 })
-//     if (!path.incomplete) {
-//       const containerPosition = path.path[0]
-//       tasks.push({
-//         type: "build",
-//         target: containerPosition,
-//         priority: 5
-//       })
-//     }
-//   }

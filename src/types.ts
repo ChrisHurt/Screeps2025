@@ -72,6 +72,31 @@ export const creepUrgencyMatrix: Record<CreepRole, { peace: Urgency, war: Urgenc
   [CreepRole.HAULER]: { peace: Urgency.HIGH, war: Urgency.HIGH },
 }
 
+export const consumerStructureUrgencyMatrix: Record<ConsumerStructures, { peace: Urgency, war: Urgency }> = {
+  // High priority structures for basic operation
+  [STRUCTURE_SPAWN]: { peace: Urgency.HIGH, war: Urgency.HIGH },
+  [STRUCTURE_EXTENSION]: { peace: Urgency.HIGH, war: Urgency.HIGH },
+
+  // Medium priority defensive and utility structures
+  [STRUCTURE_TOWER]: { peace: Urgency.MEDIUM, war: Urgency.CRITICAL },
+  [STRUCTURE_LAB]: { peace: Urgency.MEDIUM, war: Urgency.LOW },
+
+  // Low priority infrastructure and decay structures
+  [STRUCTURE_CONTAINER]: { peace: Urgency.LOW, war: Urgency.LOW },
+  [STRUCTURE_ROAD]: { peace: Urgency.LOW, war: Urgency.LOW },
+  [STRUCTURE_RAMPART]: { peace: Urgency.LOW, war: Urgency.HIGH }
+}
+
+export const producerStructureUrgencyMatrix: Record<ProducerStructures, { peace: Urgency, war: Urgency }> = {
+  [STRUCTURE_SPAWN]: { peace: Urgency.HIGH, war: Urgency.HIGH }
+}
+
+export const storeUrgencyMatrix: Record<StoreTypes, { peace: Urgency, war: Urgency }> = {
+  [STRUCTURE_CONTAINER]: { peace: Urgency.MEDIUM, war: Urgency.MEDIUM },
+  [STRUCTURE_STORAGE]: { peace: Urgency.HIGH, war: Urgency.HIGH },
+  [STRUCTURE_TERMINAL]: { peace: Urgency.HIGH, war: Urgency.CRITICAL }
+}
+
 export interface BaseLogisticsContext {
   energy: {
     current: number
@@ -89,14 +114,14 @@ export interface Consumer extends BaseLogisticsContext {
   decayTiming?: {
     earliestTick: number  // Game tick when decay is anticipated to start.
                           // If not at intended health, this will remain in the past until resolved
-    latestTick: number    // Game tick when decay is anticipated to drop hits below `hitsThreshold`
-    hitsThreshold: number
+    interval: number
+    latestTick: number    // Game tick when decay is anticipated to drop hits below `threshold`
+    threshold: number
   }
   depositTiming: {
     earliestTick: number  // Game tick when minimum of 50 free energy capacity is anticipated
     latestTick: number    // Game tick when store is anticipated to be completely empty
   }
-  decays: boolean  // For repair targets
   productionPerTick: number
   type: ConsumerTypes
 }

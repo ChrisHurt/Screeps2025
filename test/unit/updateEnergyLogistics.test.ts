@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { updateEnergyLogistics } from '../../src/helpers/updateEnergyLogistics'
+import { updateEnergyLogistics } from '../../src/helpers/logistics/updateEnergyLogistics'
 import { CreepRole } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 
@@ -99,7 +99,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: CreepRole.BUILDER
       }
@@ -152,7 +151,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N2',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       }
@@ -220,7 +218,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       }
@@ -257,7 +254,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       }
@@ -280,7 +276,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: CreepRole.BUILDER
       }
@@ -344,7 +339,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       }
@@ -383,7 +377,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W2N2', // Room not in Game.rooms
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       },
@@ -393,7 +386,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1', // Room exists in Game.rooms
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       }
@@ -452,7 +444,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1', // Index 0
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       },
@@ -462,7 +453,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W2N2', // Index 1
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       }
@@ -498,7 +488,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W2N2',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       },
@@ -508,7 +497,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       }
@@ -549,7 +537,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       }
@@ -587,7 +574,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: CreepRole.BUILDER
       }
@@ -665,7 +651,6 @@ describe('updateEnergyLogistics', () => {
         roomName: 'W1N1',
         urgency: { peace: 0, war: 1 },
         depositTiming: { earliestTick: 100, latestTick: 200 },
-        decays: false,
         productionPerTick: 5,
         type: STRUCTURE_SPAWN
       }

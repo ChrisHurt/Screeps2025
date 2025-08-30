@@ -4,6 +4,8 @@ import { CreepBuildTask, CreepHarvestTask, CreepRole, CreepUpgradeTask, EnergyIm
 import { calculateHarvesterProduction } from "helpers/calculateHarvesterProduction"
 import { calculateUpgraderProduction } from "calculateUpgraderProduction"
 import { calculateBuilderProduction } from "calculateBuilderProduction"
+import { addConsumerCreepToEnergyLogistics } from "helpers/logistics/addConsumerCreepToEnergyLogistics"
+import { addProducerCreepToEnergyLogistics } from "helpers/logistics/addProducerCreepToEnergyLogistics"
 
 export const spawnCreeps = () => {
     const rooms = Game.rooms
@@ -172,6 +174,18 @@ export const spawnCreeps = () => {
                 }
 
                 roomMemory.effectiveEnergyPerTick = calculateRoomEnergyProduction(roomName)
+
+                addProducerCreepToEnergyLogistics({
+                    energy: {
+                        current: 0,
+                        capacity: creepBody.filter(part => part === CARRY).length * 50
+                    },
+                    pos: nearestSpawn.pos,
+                    productionPerTick,
+                    name: creepName,
+                    role: CreepRole.HARVESTER,
+                    roomName
+                })
             }
         }
 
@@ -231,6 +245,23 @@ export const spawnCreeps = () => {
                 }
 
                 roomMemory.effectiveEnergyPerTick = calculateRoomEnergyProduction(roomName)
+
+                addConsumerCreepToEnergyLogistics({
+                    depositTiming: {
+                        earliestTick: Game.time,
+                        latestTick: Game.time
+                    },
+                    energy: {
+                        current: 0,
+                        capacity: creepBody.filter(part => part === CARRY).length * 50
+                    },
+                    pos: nearestSpawn.pos,
+                    productionPerTick,
+                    name: creepName,
+                    role: CreepRole.BUILDER,
+                    roomName
+                })
+
                 console.log(`SpawnCreepsDebug: Builder spawned in room ${roomName} with name ${creepName}`)
             }
         }
@@ -307,5 +338,21 @@ export const spawnCreeps = () => {
         }
 
         roomMemory.effectiveEnergyPerTick = calculateRoomEnergyProduction(roomName)
+
+        addConsumerCreepToEnergyLogistics({
+            depositTiming: {
+                earliestTick: Game.time,
+                latestTick: Game.time
+            },
+            energy: {
+                current: 0,
+                capacity: creepBody.filter(part => part === CARRY).length * 50
+            },
+            pos: nearestSpawn.pos,
+            productionPerTick,
+            name: creepName,
+            role: CreepRole.UPGRADER,
+            roomName
+        })
     }
 }

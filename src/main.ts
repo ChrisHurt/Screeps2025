@@ -14,7 +14,7 @@ import { evaluateImmediateThreats } from "evaluateImmediateThreats"
 import { runGuardCreep } from "creepProcessors/guard"
 import { generateContainerTasks } from "generateContainerTasks"
 import { runBuilderCreep } from "creepProcessors/builder"
-import { updateEnergyLogistics } from "helpers/updateEnergyLogistics"
+import { updateEnergyLogistics } from "helpers/logistics/updateEnergyLogistics"
 
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`\nCurrent game tick is ${Game.time}`)
