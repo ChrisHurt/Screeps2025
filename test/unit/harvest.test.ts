@@ -71,7 +71,7 @@ describe('harvest behaviour', () => {
     expect(mockService.send.calledWith({ type: SharedCreepEventType.full })).to.be.true
     expect(result).to.deep.equal({
       continue: true,
-      state: SharedCreepState.depositing
+      state: SharedCreepState.depositingEnergy
     })
   })
 
@@ -203,7 +203,7 @@ describe('harvest behaviour', () => {
 
     expect(result).to.deep.equal({
       continue: true,
-      state: SharedCreepState.depositing
+      state: SharedCreepState.depositingEnergy
     })
   })
 

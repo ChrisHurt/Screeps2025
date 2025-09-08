@@ -59,7 +59,7 @@ describe('depositEnergy', () => {
     creep.moveTo = sinon.spy()
     const result = depositEnergy({ creep, context, service })
     expect(creep.moveTo.calledWith(spawn.pos.x, spawn.pos.y)).to.be.true
-    expect(result).to.deep.equal({ continue: false, state: 'depositing' })
+    expect(result).to.deep.equal({ continue: false, state: 'depositingEnergy' })
   })
 
   it('should transfer energy and renew creep if in range', () => {

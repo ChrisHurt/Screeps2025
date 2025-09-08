@@ -1,5 +1,5 @@
 import { addStoreToEnergyLogistics } from "helpers/logistics/addStoreToEnergyLogistics"
-import { RoomBuildTask } from "types"
+import { ContainerTypes, ControllerContainer, RoomBuildTask, SourceContainer } from "types"
 
 interface GenerateContainerTasks {
     room: Room,
@@ -90,7 +90,7 @@ export const generateContainerTasks = ({
             },
             pos: position,
             roomName: room.name,
-            structureType: STRUCTURE_CONTAINER
+            structureType: SourceContainer as ContainerTypes
         })
     })
     addStoreToEnergyLogistics({
@@ -101,7 +101,7 @@ export const generateContainerTasks = ({
         },
         pos: controllerContainerPosition,
         roomName: room.name,
-        structureType: STRUCTURE_CONTAINER
+        structureType: ControllerContainer as ContainerTypes
     })
 
     // Generate container build tasks

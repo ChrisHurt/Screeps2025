@@ -29,7 +29,7 @@ describe('harvesterMachine', () => {
     it('should transition to depositing when full', () => {
         service.send({ type: SharedCreepEventType.empty })
         service.send({ type: SharedCreepEventType.full })
-        expect(service.machine.current).to.equal('depositing')
+        expect(service.machine.current).to.equal('depositingEnergy')
     })
 
     it('should not set idleStarted when transitioning to depositing', () => {
@@ -37,7 +37,7 @@ describe('harvesterMachine', () => {
         global.Game = { time: 4321 }
         service.send({ type: SharedCreepEventType.empty })
         service.send({ type: SharedCreepEventType.full })
-        expect(service.machine.current).to.equal('depositing')
+        expect(service.machine.current).to.equal('depositingEnergy')
         expect(context.idleStarted).to.be.undefined
     })
 
@@ -71,7 +71,7 @@ describe('harvesterMachine', () => {
         service.send({ type: SharedCreepEventType.empty })
         service.send({ type: SharedCreepEventType.full })
         service.send({ type: SharedCreepEventType.full })
-        expect(service.machine.current).to.equal('depositing')
+        expect(service.machine.current).to.equal('depositingEnergy')
     })
 
     it('should return to idle after deposited and idleStarted should be set', () => {
@@ -91,7 +91,7 @@ describe('harvesterMachine', () => {
         global.Game = { time: 9999 }
         service.send({ type: SharedCreepEventType.empty })
         service.send({ type: SharedCreepEventType.full })
-        expect(service.machine.current).to.equal('depositing')
+        expect(service.machine.current).to.equal('depositingEnergy')
         expect(service.context.idleStarted).to.equal(undefined)
     })
 
@@ -141,13 +141,13 @@ describe('harvesterMachine', () => {
         service = interpret(createHarvesterMachine(() => context, SharedCreepState.harvesting),()=>{})
         expect(service.machine.current).to.equal('harvesting')
         service.send({ type: SharedCreepEventType.full })
-        expect(service.machine.current).to.equal('depositing')
+        expect(service.machine.current).to.equal('depositingEnergy')
     })
 
     it('should allow starting in depositing state', () => {
         context = { energy: 0, capacity: 50 }
-        service = interpret(createHarvesterMachine(() => context, SharedCreepState.depositing),()=>{})
-        expect(service.machine.current).to.equal('depositing')
+        service = interpret(createHarvesterMachine(() => context, SharedCreepState.depositingEnergy),()=>{})
+        expect(service.machine.current).to.equal('depositingEnergy')
         service.send({ type: SharedCreepEventType.empty })
         expect(service.machine.current).to.equal('idle')
     })

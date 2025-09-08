@@ -82,6 +82,8 @@ export function setupGlobals({
     // @ts-ignore
     global.STRUCTURE_RAMPART = 'rampart'
     // @ts-ignore
+    global.STRUCTURE_CONTROLLER = 'controller'
+    // @ts-ignore
     global.FIND_CONSTRUCTION_SITES = 108
 
     // @ts-ignore

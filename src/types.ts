@@ -25,6 +25,8 @@ export type PERSISTENT_STRUCTURE =
 export type ProducerCreeps = CreepRole.HARVESTER
 export type ProducerStructures = STRUCTURE_SPAWN
 
+export type CarrierCreeps = CreepRole.HAULER
+
 export type ConsumerCreeps =
 | CreepRole.BUILDER
 | CreepRole.UPGRADER
@@ -54,13 +56,19 @@ export const producerStructureTypes: ProducerStructures[] = [
 
 export type ConsumerTypes = ConsumerStructures | ConsumerCreeps
 export type ProducerTypes = ProducerStructures | ProducerCreeps
-export type StoreTypes = STRUCTURE_CONTAINER | STRUCTURE_STORAGE | STRUCTURE_TERMINAL
+export const SourceContainer = `${STRUCTURE_CONTAINER}-source`
+export const ControllerContainer = `${STRUCTURE_CONTAINER}-${STRUCTURE_CONTROLLER}`
+export type ContainerTypes = `${STRUCTURE_CONTAINER}-source` | `${STRUCTURE_CONTAINER}-${STRUCTURE_CONTROLLER}`
+
+export type StoreTypes =
+| ContainerTypes | STRUCTURE_STORAGE | STRUCTURE_TERMINAL
 
 export enum Urgency {
   CRITICAL = 3,
   HIGH = 2,
   MEDIUM = 1,
   LOW = 0,
+  NONE = -1
 }
 
 // NOTE: Further refinements will be needed after testing
@@ -91,10 +99,12 @@ export const producerStructureUrgencyMatrix: Record<ProducerStructures, { peace:
   [STRUCTURE_SPAWN]: { peace: Urgency.HIGH, war: Urgency.HIGH }
 }
 
+// Lower values should be prioritized for pickup. Higher values should be prioritised for deposit.
 export const storeUrgencyMatrix: Record<StoreTypes, { peace: Urgency, war: Urgency }> = {
-  [STRUCTURE_CONTAINER]: { peace: Urgency.MEDIUM, war: Urgency.MEDIUM },
-  [STRUCTURE_STORAGE]: { peace: Urgency.HIGH, war: Urgency.HIGH },
-  [STRUCTURE_TERMINAL]: { peace: Urgency.HIGH, war: Urgency.CRITICAL }
+  ['container-source']: { peace: Urgency.LOW, war: Urgency.LOW },
+  ['container-controller']: { peace: Urgency.HIGH, war: Urgency.CRITICAL },
+  [STRUCTURE_STORAGE]: { peace: Urgency.MEDIUM, war: Urgency.LOW },
+  [STRUCTURE_TERMINAL]: { peace: Urgency.MEDIUM, war: Urgency.LOW }
 }
 
 export interface BaseLogisticsContext {
@@ -110,14 +120,16 @@ export interface BaseLogisticsContext {
   }
 }
 
+export interface DecayTiming {
+  earliestTick: number  // Game tick when decay is anticipated to start.
+                        // If not at intended health, this will remain in the past until resolved
+  interval: number
+  latestTick: number    // Game tick when decay is anticipated to drop hits below `threshold`
+  threshold: number
+}
+
 export interface Consumer extends BaseLogisticsContext {
-  decayTiming?: {
-    earliestTick: number  // Game tick when decay is anticipated to start.
-                          // If not at intended health, this will remain in the past until resolved
-    interval: number
-    latestTick: number    // Game tick when decay is anticipated to drop hits below `threshold`
-    threshold: number
-  }
+  decayTiming?: DecayTiming
   depositTiming: {
     earliestTick: number  // Game tick when minimum of 50 free energy capacity is anticipated
     latestTick: number    // Game tick when store is anticipated to be completely empty
@@ -152,10 +164,10 @@ export interface Terminal extends BaseLogisticsContext {
 }
 
 export interface Carrier extends BaseLogisticsContext {
-  arrivalTiming: number
-  anticipatedArrivalTick: number,
+  arrivalTick: number
+  decayTiming: DecayTiming
   currentTask: CollectEnergyTask | DeliverEnergyTask | IdleTask,
-  isIdle: boolean
+  type: CarrierCreeps
 }
 
 export interface RoomState {
@@ -205,7 +217,7 @@ export type TaskType =
   | 'harvest' | 'upgrade' | 'build'
   | 'repair' | 'attack' | 'defend'
   | 'claim' | 'withdraw' | 'transfer'
-  | 'drop' | 'pickup'
+  | 'drop' | 'pickup' | 'idle'
   | 'collectEnergy' | 'deliverEnergy'
 
 export interface CreepTask {
@@ -300,7 +312,7 @@ export enum SharedCreepState {
   collectingEnergy = 'collectingEnergy',
   collectingMineral = 'collectingMineral',
   harvesting = 'harvesting',
-  depositing = 'depositing',
+  depositingEnergy = 'depositingEnergy',
   error = 'error',
   idle = 'idle',
   recycling = 'recycling',

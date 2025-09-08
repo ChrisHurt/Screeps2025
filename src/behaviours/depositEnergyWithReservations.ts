@@ -11,7 +11,7 @@ interface DepositEnergyWithReservationsParams {
 
 interface DepositEnergyWithReservationsOutput {
     continue: boolean
-    state: SharedCreepState.idle | SharedCreepState.depositing | SharedCreepState.error | SharedCreepState.recycling
+    state: SharedCreepState.idle | SharedCreepState.depositingEnergy | SharedCreepState.error | SharedCreepState.recycling
 }
 
 export const depositEnergyWithReservations = ({
@@ -52,7 +52,7 @@ export const depositEnergyWithReservations = ({
             reusePath: 5, 
             visualizePathStyle: { stroke: '#fff' } 
         })
-        return { continue: false, state: SharedCreepState.depositing }
+        return { continue: false, state: SharedCreepState.depositingEnergy }
     }
 
     // We're adjacent to the target, perform the transfer
@@ -89,7 +89,7 @@ export const depositEnergyWithReservations = ({
         }
     }
 
-    return { continue: false, state: SharedCreepState.depositing }
+    return { continue: false, state: SharedCreepState.depositingEnergy }
 }
 
 interface DepositTarget {
@@ -234,5 +234,5 @@ function depositToSpawn(
         return { continue: true, state: SharedCreepState.idle }
     }
     
-    return { continue: false, state: SharedCreepState.depositing }
+    return { continue: false, state: SharedCreepState.depositingEnergy }
 }

@@ -107,7 +107,7 @@ describe('harvester processor', () => {
   })
 
   it('should move to spawn if not adjacent during depositing', () => {
-    creep.memory.state = SharedCreepState.depositing
+    creep.memory.state = SharedCreepState.depositingEnergy
     creep.memory.task = {
       type: 'harvest',
       sourceId: 'src1',
@@ -122,7 +122,7 @@ describe('harvester processor', () => {
   })
 
   it('should move to spawn, transfer and be renewed during depositing', () => {
-    creep.memory.state = SharedCreepState.depositing
+    creep.memory.state = SharedCreepState.depositingEnergy
     creep.memory.task = {
       type: 'harvest',
       sourceId: 'src1',
@@ -191,7 +191,7 @@ describe('harvester processor', () => {
   })
 
   it('should send deposited event and continue if energy is empty during depositing', () => {
-    creep.memory.state = SharedCreepState.depositing
+    creep.memory.state = SharedCreepState.depositingEnergy
     creep.memory.task = { type: 'deposit' }
     creep.store.getUsedCapacity.returns(0)
     runHarvesterCreep(creep)

@@ -11,7 +11,7 @@ interface HarvestParams {
 
 interface HarvestOutput {
     continue: boolean
-    state: SharedCreepState.harvesting | SharedCreepState.depositing | SharedCreepState.idle
+    state: SharedCreepState.harvesting | SharedCreepState.depositingEnergy | SharedCreepState.idle
 }
 
 // NOTE: Returns true if should continue
@@ -20,7 +20,7 @@ export const harvest = ({ creep, creepTask, context, service}: HarvestParams): H
 
     if (isFull) {
         service.send({ type: SharedCreepEventType.full })
-        return { continue: true, state: SharedCreepState.depositing }
+        return { continue: true, state: SharedCreepState.depositingEnergy }
     }
 
     const {

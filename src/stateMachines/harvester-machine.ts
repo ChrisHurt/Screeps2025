@@ -27,7 +27,7 @@ const clearIdleTick: ReduceFunction<HarvesterContext, HarvesterEvent> = (ctx, ev
 export type HarvesterMachineStateTypes =
     | SharedCreepState.idle
     | SharedCreepState.harvesting
-    | SharedCreepState.depositing
+    | SharedCreepState.depositingEnergy
     | SharedCreepState.error
     | SharedCreepState.recycling
 
@@ -43,10 +43,10 @@ export const createHarvesterMachine: CreateHarvesterMachine = (contextFn: () => 
               transition(SharedCreepEventType.recycleSelf, SharedCreepState.recycling)
           ),
           [SharedCreepState.harvesting]: state(
-              transition(SharedCreepEventType.full, SharedCreepState.depositing),
+              transition(SharedCreepEventType.full, SharedCreepState.depositingEnergy),
               transition(SharedCreepEventType.idle, SharedCreepState.idle, reduce(setIdleTick))
           ),
-          [SharedCreepState.depositing]: state(
+          [SharedCreepState.depositingEnergy]: state(
             transition(SharedCreepEventType.empty, SharedCreepState.idle, reduce(setIdleTick))
           ),
           [SharedCreepState.error]: final(),

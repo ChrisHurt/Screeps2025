@@ -10,7 +10,7 @@ describe('generateContainerTasks', () => {
 
   beforeEach(() => {
     setupGlobals()
-    
+
     pathFinderStub = sinon.stub()
     // @ts-ignore
     global.PathFinder = { search: pathFinderStub }
@@ -47,7 +47,7 @@ describe('generateContainerTasks', () => {
 
   it('should return early if roomMemory.tasks is undefined', () => {
     const roomMemoryWithoutTasks = { ...mockRoomMemory, tasks: undefined }
-    
+
     generateContainerTasks({
       room: mockRoom,
       roomMemory: roomMemoryWithoutTasks
@@ -61,7 +61,7 @@ describe('generateContainerTasks', () => {
       ...mockRoomMemory,
       tasks: { ...mockRoomMemory.tasks, harvest: [] }
     }
-    
+
     generateContainerTasks({
       room: mockRoom,
       roomMemory: roomMemoryWithoutHarvest
@@ -75,7 +75,7 @@ describe('generateContainerTasks', () => {
       ...mockRoomMemory,
       tasks: { ...mockRoomMemory.tasks, upgrade: undefined }
     }
-    
+
     generateContainerTasks({
       room: mockRoom,
       roomMemory: roomMemoryWithoutUpgrade
@@ -87,7 +87,7 @@ describe('generateContainerTasks', () => {
   it('should return early and log error if no spawn found', () => {
     const consoleStub = sinon.stub(console, 'log')
     mockRoom.find.returns([])
-    
+
     generateContainerTasks({
       room: mockRoom,
       roomMemory: mockRoomMemory
@@ -100,16 +100,16 @@ describe('generateContainerTasks', () => {
   it('should generate container tasks for sources and controller', () => {
     const mockSpawn = { pos: { x: 25, y: 25, roomName: 'W1N1' } }
     mockRoom.find.returns([mockSpawn])
-    
+
     const mockPath = [
       { x: 25, y: 25, roomName: 'W1N1' },
       { x: 20, y: 20, roomName: 'W1N1' },
       { x: 10, y: 10, roomName: 'W1N1' }
     ]
-    
-    pathFinderStub.returns({ 
+
+    pathFinderStub.returns({
       path: mockPath,
-      incomplete: false 
+      incomplete: false
     })
 
     generateContainerTasks({
@@ -121,22 +121,22 @@ describe('generateContainerTasks', () => {
 
     // Should call PathFinder twice - once for harvest task, once for upgrade task
     expect(pathFinderStub.calledTwice).to.be.true
-    
+
     // Check that PathFinder was called with correct parameters
     const firstCall = pathFinderStub.getCall(0)
     expect(firstCall.args[0]).to.deep.equal(mockSpawn.pos)
     expect(firstCall.args[2]).to.deep.equal({ plainCost: 1, swampCost: 1 })
-    
+
     // Should create construction sites
     expect(mockRoom.createConstructionSite.calledTwice).to.be.true
-    
+
     // Should populate roomMemory.structures
     expect(mockRoomMemory.structures).to.exist
     expect(mockRoomMemory.structures.containers).to.exist
     expect(mockRoomMemory.structures.containers.sources).to.exist
     expect(mockRoomMemory.structures.containers.sources.src1).to.exist
     expect(mockRoomMemory.structures.containers.controller).to.exist
-    
+
     // Should add build tasks
     expect(mockRoomMemory.tasks.build.length).to.equal(2)
   })
@@ -144,10 +144,10 @@ describe('generateContainerTasks', () => {
   it('should use default costs when road options are not provided', () => {
     const mockSpawn = { pos: { x: 25, y: 25, roomName: 'W1N1' } }
     mockRoom.find.returns([mockSpawn])
-    
-    pathFinderStub.returns({ 
+
+    pathFinderStub.returns({
       path: [{ x: 10, y: 10, roomName: 'W1N1' }],
-      incomplete: false 
+      incomplete: false
     })
 
     generateContainerTasks({
@@ -163,14 +163,14 @@ describe('generateContainerTasks', () => {
     const consoleStub = sinon.stub(console, 'log')
     const mockSpawn = { pos: { x: 25, y: 25, roomName: 'W1N1' } }
     mockRoom.find.returns([mockSpawn])
-    
-    pathFinderStub.onFirstCall().returns({ 
+
+    pathFinderStub.onFirstCall().returns({
       path: [{ x: 10, y: 10, roomName: 'W1N1' }],
-      incomplete: true 
+      incomplete: true
     })
-    pathFinderStub.onSecondCall().returns({ 
+    pathFinderStub.onSecondCall().returns({
       path: [{ x: 20, y: 20, roomName: 'W1N1' }],
-      incomplete: false 
+      incomplete: false
     })
 
     generateContainerTasks({
@@ -187,14 +187,14 @@ describe('generateContainerTasks', () => {
     const consoleStub = sinon.stub(console, 'log')
     const mockSpawn = { pos: { x: 25, y: 25, roomName: 'W1N1' } }
     mockRoom.find.returns([mockSpawn])
-    
-    pathFinderStub.onFirstCall().returns({ 
+
+    pathFinderStub.onFirstCall().returns({
       path: [{ x: 10, y: 10, roomName: 'W1N1' }],
-      incomplete: false 
+      incomplete: false
     })
-    pathFinderStub.onSecondCall().returns({ 
+    pathFinderStub.onSecondCall().returns({
       path: [],
-      incomplete: true 
+      incomplete: true
     })
 
     generateContainerTasks({
@@ -209,7 +209,7 @@ describe('generateContainerTasks', () => {
   it('should handle multiple harvest tasks', () => {
     const mockSpawn = { pos: { x: 25, y: 25, roomName: 'W1N1' } }
     mockRoom.find.returns([mockSpawn])
-    
+
     const roomMemoryWithMultipleHarvest = {
       ...mockRoomMemory,
       tasks: {
@@ -228,10 +228,10 @@ describe('generateContainerTasks', () => {
         ]
       }
     }
-    
-    pathFinderStub.returns({ 
+
+    pathFinderStub.returns({
       path: [{ x: 10, y: 10, roomName: 'W1N1' }],
-      incomplete: false 
+      incomplete: false
     })
 
     generateContainerTasks({
@@ -241,10 +241,10 @@ describe('generateContainerTasks', () => {
 
     // Should call PathFinder 3 times - 2 for harvest tasks, 1 for upgrade task
     expect(pathFinderStub.calledThrice).to.be.true
-    
+
     // Should have 3 build tasks (2 source containers + 1 controller container)
     expect(roomMemoryWithMultipleHarvest.tasks.build.length).to.equal(3)
-    
+
     // Should have both source containers in structures
     expect(roomMemoryWithMultipleHarvest.structures.containers.sources.src1).to.exist
     expect(roomMemoryWithMultipleHarvest.structures.containers.sources.src2).to.exist
@@ -253,10 +253,10 @@ describe('generateContainerTasks', () => {
   it('should initialize structures if undefined', () => {
     const mockSpawn = { pos: { x: 25, y: 25, roomName: 'W1N1' } }
     mockRoom.find.returns([mockSpawn])
-    
-    pathFinderStub.returns({ 
+
+    pathFinderStub.returns({
       path: [{ x: 10, y: 10, roomName: 'W1N1' }],
-      incomplete: false 
+      incomplete: false
     })
 
     // Start with undefined structures

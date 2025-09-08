@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { addStoreToEnergyLogistics } from '../../src/helpers/logistics/addStoreToEnergyLogistics'
-import { Urgency } from '../../src/types'
+import { ContainerTypes, ControllerContainer, SourceContainer, Urgency } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('addStoreToEnergyLogistics', () => {
@@ -25,14 +25,14 @@ describe('addStoreToEnergyLogistics', () => {
     delete (Memory as any).energyLogistics
   })
 
-  it('should add container store to energy logistics', () => {
+  it('should add controller container store to energy logistics', () => {
     const storeName = 'test-container-1'
     addStoreToEnergyLogistics({
       name: storeName,
       energy: { current: 1500, capacity: 2000 },
       pos: { x: 25, y: 25 },
       roomName: 'W1N1',
-      structureType: STRUCTURE_CONTAINER
+      structureType: ControllerContainer as ContainerTypes
     })
 
     const store = Memory.energyLogistics.stores[storeName]
@@ -42,9 +42,9 @@ describe('addStoreToEnergyLogistics', () => {
     expect(store.pos.x).to.equal(25)
     expect(store.pos.y).to.equal(25)
     expect(store.roomName).to.equal('W1N1')
-    expect(store.urgency.peace).to.equal(Urgency.MEDIUM)
-    expect(store.urgency.war).to.equal(Urgency.MEDIUM)
-    expect(store.type).to.equal(STRUCTURE_CONTAINER)
+    expect(store.urgency.peace).to.equal(Urgency.HIGH)
+    expect(store.urgency.war).to.equal(Urgency.CRITICAL)
+    expect(store.type).to.equal(ControllerContainer)
   })
 
   it('should add storage store to energy logistics', () => {
@@ -64,8 +64,8 @@ describe('addStoreToEnergyLogistics', () => {
     expect(store.pos.x).to.equal(30)
     expect(store.pos.y).to.equal(20)
     expect(store.roomName).to.equal('W2N2')
-    expect(store.urgency.peace).to.equal(Urgency.HIGH)
-    expect(store.urgency.war).to.equal(Urgency.HIGH)
+    expect(store.urgency.peace).to.equal(Urgency.MEDIUM)
+    expect(store.urgency.war).to.equal(Urgency.LOW)
     expect(store.type).to.equal(STRUCTURE_STORAGE)
   })
 
@@ -86,8 +86,8 @@ describe('addStoreToEnergyLogistics', () => {
     expect(store.pos.x).to.equal(15)
     expect(store.pos.y).to.equal(35)
     expect(store.roomName).to.equal('W3N3')
-    expect(store.urgency.peace).to.equal(Urgency.HIGH)
-    expect(store.urgency.war).to.equal(Urgency.CRITICAL)
+    expect(store.urgency.peace).to.equal(Urgency.MEDIUM)
+    expect(store.urgency.war).to.equal(Urgency.LOW)
     expect(store.type).to.equal(STRUCTURE_TERMINAL)
   })
 
@@ -98,13 +98,13 @@ describe('addStoreToEnergyLogistics', () => {
       energy: { current: 0, capacity: 0 },
       pos: { x: 5, y: 5 },
       roomName: 'W1N1',
-      structureType: STRUCTURE_CONTAINER
+      structureType: ControllerContainer as ContainerTypes
     })
 
     const store = Memory.energyLogistics.stores[storeName]
     expect(store.energy.current).to.equal(0)
     expect(store.energy.capacity).to.equal(0)
-    expect(store.type).to.equal(STRUCTURE_CONTAINER)
+    expect(store.type).to.equal(ControllerContainer)
   })
 
   it('should handle full store capacity', () => {
@@ -123,16 +123,15 @@ describe('addStoreToEnergyLogistics', () => {
     expect(store.type).to.equal(STRUCTURE_STORAGE)
   })
 
-  it('should overwrite existing store entry', () => {
+  it('should overwrite existing source container store entry', () => {
     const storeName = 'test-overwrite'
-    
-    // First add
+
     addStoreToEnergyLogistics({
       name: storeName,
       energy: { current: 1000, capacity: 2000 },
       pos: { x: 20, y: 20 },
       roomName: 'W1N1',
-      structureType: STRUCTURE_CONTAINER
+      structureType: SourceContainer as ContainerTypes
     })
 
     // Second add with different values
@@ -151,8 +150,8 @@ describe('addStoreToEnergyLogistics', () => {
     expect(store.pos.y).to.equal(25)
     expect(store.roomName).to.equal('W2N2')
     expect(store.type).to.equal(STRUCTURE_STORAGE)
-    expect(store.urgency.peace).to.equal(Urgency.HIGH)
-    expect(store.urgency.war).to.equal(Urgency.HIGH)
+    expect(store.urgency.peace).to.equal(Urgency.MEDIUM)
+    expect(store.urgency.war).to.equal(Urgency.LOW)
   })
 
   it('should handle different room names', () => {
@@ -168,7 +167,7 @@ describe('addStoreToEnergyLogistics', () => {
         energy: { current: 1000, capacity: 2000 },
         pos: { x: 10, y: 10 },
         roomName: room,
-        structureType: STRUCTURE_CONTAINER
+        structureType: ControllerContainer as ContainerTypes
       })
     })
 
@@ -192,7 +191,7 @@ describe('addStoreToEnergyLogistics', () => {
         energy: { current: 500, capacity: 1000 },
         pos,
         roomName: 'W1N1',
-        structureType: STRUCTURE_CONTAINER
+        structureType: ControllerContainer as ContainerTypes
       })
     })
 
@@ -206,19 +205,24 @@ describe('addStoreToEnergyLogistics', () => {
   it('should verify urgency levels for each store type', () => {
     const storeTypes = [
       {
-        type: STRUCTURE_CONTAINER,
-        expectedPeace: Urgency.MEDIUM,
-        expectedWar: Urgency.MEDIUM
+        type: SourceContainer,
+        expectedPeace: Urgency.LOW,
+        expectedWar: Urgency.LOW
+      },
+      {
+        type: ControllerContainer,
+        expectedPeace: Urgency.HIGH,
+        expectedWar: Urgency.CRITICAL
       },
       {
         type: STRUCTURE_STORAGE,
-        expectedPeace: Urgency.HIGH,
-        expectedWar: Urgency.HIGH
+        expectedPeace: Urgency.MEDIUM,
+        expectedWar: Urgency.LOW
       },
       {
         type: STRUCTURE_TERMINAL,
-        expectedPeace: Urgency.HIGH,
-        expectedWar: Urgency.CRITICAL
+        expectedPeace: Urgency.MEDIUM,
+        expectedWar: Urgency.LOW
       }
     ]
 
@@ -229,7 +233,7 @@ describe('addStoreToEnergyLogistics', () => {
         energy: { current: 1000, capacity: 2000 },
         pos: { x: 20, y: 20 },
         roomName: 'W1N1',
-        structureType: type
+        structureType: type as ContainerTypes
       })
 
       const store = Memory.energyLogistics.stores[storeName]
@@ -251,7 +255,7 @@ describe('addStoreToEnergyLogistics', () => {
         energy: { current: 1000, capacity: 2000 },
         pos: { x: 10, y: 10 },
         roomName: 'W1N1',
-        structureType: type
+        structureType: type as ContainerTypes
       })
     })
 
@@ -277,7 +281,7 @@ describe('addStoreToEnergyLogistics', () => {
         energy: { current, capacity },
         pos: { x: 15, y: 15 },
         roomName: 'W1N1',
-        structureType: STRUCTURE_CONTAINER
+        structureType: SourceContainer as ContainerTypes
       })
 
       const store = Memory.energyLogistics.stores[storeName]
@@ -314,7 +318,7 @@ describe('addStoreToEnergyLogistics', () => {
       energy: { current: 1500, capacity: 2000 },
       pos: { x: 20, y: 20 },
       roomName: 'W1N1',
-      structureType: STRUCTURE_CONTAINER
+      structureType: SourceContainer as ContainerTypes
     })
 
     // Verify other sections are preserved

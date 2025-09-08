@@ -38,7 +38,7 @@ const creepStateSpeechEmojis = {
   [SharedCreepState.error]: '�',
   [SharedCreepState.recycling]: '💀',
   [SharedCreepState.harvesting]: '⛏️',
-  [SharedCreepState.depositing]: '🏦'
+  [SharedCreepState.depositingEnergy]: '🏦'
 }
 
 const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<HarvesterMachine>): ProcessCurrentHarvesterStateOutput => {
@@ -79,7 +79,7 @@ const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<Ha
         context,
         service: harvesterService
       })
-    case SharedCreepState.depositing:
+    case SharedCreepState.depositingEnergy:
       return depositEnergy({
         creep,
         context,

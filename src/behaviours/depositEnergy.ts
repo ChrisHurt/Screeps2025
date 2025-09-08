@@ -10,7 +10,7 @@ interface DepositEnergyParams {
 
 interface DepositEnergyOutput {
     continue: boolean
-    state: SharedCreepState.idle | SharedCreepState.depositing | SharedCreepState.error | SharedCreepState.recycling
+    state: SharedCreepState.idle | SharedCreepState.depositingEnergy | SharedCreepState.error | SharedCreepState.recycling
 }
 
 // NOTE: Returns true if should continue
@@ -42,5 +42,5 @@ export const depositEnergy = ({ creep, context, service}: DepositEnergyParams): 
         }
         return  { continue: true, state: SharedCreepState.idle }
     }
-    return  { continue: false, state: SharedCreepState.depositing }
+    return  { continue: false, state: SharedCreepState.depositingEnergy }
 }
