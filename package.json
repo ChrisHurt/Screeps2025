@@ -10,9 +10,9 @@
     "push-local": "rollup -c && cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/192_168_50_92___21025/default",
     "push-server": "rollup -c  && cp -r dist/* ~/Library/Application\\ Support/Screeps/scripts/0_tcp_au_ngrok_io___17387/default",
     "push-pserver": "rollup -c --environment DEST:pserver",
-    "test": "mocha --require ts-node/register test/**/*.ts",
-    "test:ci": "nyc --reporter=text mocha --require ts-node/register test/**/*.ts",
-    "test-unit": "mocha --require ts-node/register test/unit/**/*.ts",
+    "test": "mocha --require test/setup-mocha.js --require ts-node/register test/**/*.ts",
+    "test:ci": "nyc --reporter=text mocha --require test/setup-mocha.js --require ts-node/register test/**/*.ts",
+    "test-unit": "mocha --require test/setup-mocha.js --require ts-node/register test/unit/**/*.ts",
     "test-integration": "mocha --require ts-node/register test/integration/**/*.ts",
     "watch-main": "rollup -cw --environment DEST:main",
     "watch-pserver": "rollup -cw --environment DEST:pserver",
@@ -70,6 +70,7 @@
   },
   "mocha": {
     "require": [
+      "test/setup-mocha.js",
       "ts-node/register",
       "tsconfig-paths/register"
     ],
@@ -80,6 +81,7 @@
   },
   "nyc": {
     "exclude": [
+      "src/types.ts",
       "src/utils/ErrorMapper.ts",
       "**/*.d.ts",
       "**/*test.ts",
