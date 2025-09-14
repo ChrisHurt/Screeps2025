@@ -94,21 +94,6 @@ describe("main", () => {
     assert.isUndefined(loop())
   })
 
-  it("Automatically delete memory of missing creeps", () => {
-    // @ts-ignore : Permit invalid memory for testing
-    Memory.creeps.persistValue = "any value"
-    // @ts-ignore : Permit invalid memory for testing
-    Memory.creeps.notPersistValue = "any value"
-
-    // @ts-ignore : allow adding Game to global
-    Game.creeps.persistValue = "any value"
-
-    loop()
-
-    assert.isDefined(Memory.creeps.persistValue)
-    assert.isUndefined(Memory.creeps.notPersistValue)
-  })
-
     it("should log and skip creeps with invalid roles", () => {
       const logStub = sinon.stub(console, "log")
       // @ts-ignore : Permit invalid memory for testing

@@ -3,13 +3,34 @@ export const deleteUnusedMemory = () => {
     for (const creepName in Memory.creeps) {
     if (!(creepName in Game.creeps)) {
       delete Memory.creeps[creepName]
-      delete Memory.production.energy[creepName]
-      delete Memory.reservations.energy[creepName]
-      delete Memory.reservations.tasks[creepName]
-      delete Memory.energyLogistics.carriers[creepName]
 
-      for (const storeName in Memory.energyLogistics.stores) {
-        delete Memory.energyLogistics.stores[storeName].reservations[creepName]
+      // Safely delete production energy data
+      if (Memory.production?.energy) {
+        delete Memory.production.energy[creepName]
+      }
+
+      // Safely delete reservations
+      if (Memory.reservations?.energy) {
+        delete Memory.reservations.energy[creepName]
+      }
+
+      if (Memory.reservations?.tasks) {
+        delete Memory.reservations.tasks[creepName]
+      }
+
+      // Safely delete energy logistics carriers
+      if (Memory.energyLogistics?.carriers) {
+        delete Memory.energyLogistics.carriers[creepName]
+      }
+
+      // Safely delete store reservations
+      if (Memory.energyLogistics?.stores) {
+        for (const storeName in Memory.energyLogistics.stores) {
+          const store = Memory.energyLogistics.stores[storeName]
+          if (store.reservations) {
+            delete store.reservations[creepName]
+          }
+        }
       }
     }
   }
