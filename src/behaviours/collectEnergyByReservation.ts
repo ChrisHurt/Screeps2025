@@ -1,29 +1,25 @@
-import { moveInRangeOfPos } from "behaviours/moveInRangeOfPos"
 import { Service } from "robot3"
 import { BuilderMachine } from "stateMachines/builder-machine"
-import { UpgraderContext, UpgraderMachine } from "stateMachines/upgrader-machine"
-import { SharedCreepEventType, SharedCreepState, CreepId, StructureId } from "types"
+import { UpgraderMachine } from "stateMachines/upgrader-machine"
+import { SharedCreepEventType, SharedCreepState, CreepId } from "types"
+import { renewAdjacentCarrier } from "./renewAdjacentCarrier"
+import { clearReservationMemory } from "./clearReservationMemory"
+import { HaulerContext, HaulerMachine } from "stateMachines/hauler-machine"
 
-interface CollectEnergyByReservationContext extends UpgraderContext {
-    supplier: CreepId | StructureId
-    amountReserved: number
+interface CollectEnergyByReservationContext extends HaulerContext {
+    carrierId: CreepId
 }
 
 interface CollectEnergyByReservationInput {
     creep: Creep
     context: CollectEnergyByReservationContext
-    service: Service<BuilderMachine> | Service<UpgraderMachine>
+    service: Service<BuilderMachine> | Service<UpgraderMachine> | Service<HaulerMachine>
 }
 
 interface CollectEnergyByReservationOutput {
     continue: boolean
     state: SharedCreepState.idle | SharedCreepState.collectingEnergy
 }
-
-type EnergySupplier =
-    | StructureSpawn | StructureExtension | StructureTower
-    | StructureStorage | StructureContainer | StructureTerminal
-    | Creep
 
 export const collectEnergyByReservation = ({
     creep,
@@ -37,68 +33,83 @@ export const collectEnergyByReservation = ({
         return { continue: true, state: SharedCreepState.idle }
     }
 
-    // Get the energy supplier from the context
-    const supplier = Game.getObjectById(context.supplier as Id<EnergySupplier>)
-    
-    if (!supplier) {
-        console.log(`Energy supplier ${context.supplier} not found for creep ${creep.name}`)
+    // Get the carrier reservation from Memory
+    const carrierMemory = Memory.energyLogistics?.carriers?.[context.carrierId]
+    const taskReservation = carrierMemory?.reservation
+
+    if (!taskReservation) {
+        console.log(`No reservation found for carrier ${context.carrierId} for creep ${creep.name}`)
+        service.send({ type: SharedCreepEventType.idle })
+        return { continue: true, state: SharedCreepState.idle }
+    }
+
+    if (taskReservation.type !== 'collectEnergy') {
+        console.log(`Invalid reservation type ${taskReservation.type} for collect energy behavior for creep ${creep.name}`)
+        service.send({ type: SharedCreepEventType.idle })
+        return { continue: true, state: SharedCreepState.idle }
+    }
+
+    // Get the energy supplier from the reservation
+    const destinationPosition = taskReservation.path[taskReservation.path.length - 1]
+
+    const storeMemory = Memory.energyLogistics.stores[taskReservation.targetId]
+    const store = Game.rooms[destinationPosition.roomName]?.lookForAt(LOOK_STRUCTURES, destinationPosition.x, destinationPosition.y).find(s => s.id === taskReservation.targetId)
+
+    if (!store) {
+        console.log(`Store ${taskReservation.targetId} not found for creep ${creep.name}`)
+
+        clearReservationMemory({
+            carrierMemory,
+            storeMemory,
+        })
+
         service.send({ type: SharedCreepEventType.idle })
         return { continue: true, state: SharedCreepState.idle }
     }
 
     // Move towards the supplier if not in range
-    if (!creep.pos.isNearTo(supplier.pos)) {
-        moveInRangeOfPos({
-            creep,
-            moveParams: { reusePath: 5, visualizePathStyle: { stroke: '#ffaa00' } }, // Orange for reservation
-            offset: 1,
-            target: supplier.pos
-        })
+    if (!creep.pos.isNearTo(store.pos)) {
+        creep.moveByPath(taskReservation.path)
         return { continue: false, state: SharedCreepState.collectingEnergy }
     }
 
-    // We're adjacent to the supplier, attempt to withdraw energy
-    // Assume creep has capacity for the reserved amount
     let withdrawResult: ScreepsReturnCode = ERR_INVALID_TARGET
 
-    if ('store' in supplier && 'structureType' in supplier) {
-        // Structure with store
-        withdrawResult = creep.withdraw(supplier as Structure, RESOURCE_ENERGY, context.amountReserved)
-        
-        // Handle spawn renewal if withdrawing from spawn
-        if (withdrawResult === OK && supplier.structureType === STRUCTURE_SPAWN && 
-            'spawning' in supplier && !supplier.spawning && 
-            creep.ticksToLive && 
-            creep.ticksToLive < CREEP_LIFE_TIME - 200) {
-            (supplier as StructureSpawn).renewCreep(creep)
-        }
-    } else if ('transfer' in supplier) {
+    const action = taskReservation.action
+
+    if (action === 'pickup') {
+        // Find dropped resources near the supplier
+        const droppedEnergy = store.pos.findInRange(FIND_DROPPED_RESOURCES, 0, {
+            filter: (resource) => resource.resourceType === RESOURCE_ENERGY
+        })[0]
+
+        withdrawResult = droppedEnergy ? creep.pickup(droppedEnergy) : ERR_NOT_FOUND
+    } else if (action === 'withdraw') {
         // Creep supplier
-        withdrawResult = supplier.transfer(creep, RESOURCE_ENERGY, context.amountReserved)
+        withdrawResult = creep.withdraw(store, RESOURCE_ENERGY, taskReservation.amount)
     }
 
-    if (withdrawResult === OK) {
-        // Check if creep is now full
-        const creepIsFull = creep.store.energy >= creep.store.getCapacity(RESOURCE_ENERGY)
-        if (creepIsFull) {
+    if ('spawning' in store) {
+        renewAdjacentCarrier({
+            carrierMemory, creep, spawn: store as StructureSpawn
+        })
+    }
+
+    clearReservationMemory({
+        carrierMemory,
+        storeMemory,
+    })
+
+    if (withdrawResult === OK || withdrawResult === ERR_FULL || withdrawResult === ERR_NOT_ENOUGH_RESOURCES) {
+        if (withdrawResult === ERR_FULL || creep.store.getUsedCapacity(RESOURCE_ENERGY) >= carrierMemory.energy.capacity) {
             service.send({ type: SharedCreepEventType.full })
-            return { continue: true, state: SharedCreepState.idle }
+            return { continue: false, state: SharedCreepState.idle }
         }
-        
-        // Still have capacity, continue collecting
-        return { continue: false, state: SharedCreepState.collectingEnergy }
-        
-    } else if (withdrawResult === ERR_NOT_ENOUGH_RESOURCES) {
-        console.log(`Energy supplier ${context.supplier} doesn't have enough energy for creep ${creep.name}`)
+
         service.send({ type: SharedCreepEventType.idle })
-        return { continue: true, state: SharedCreepState.idle }
-        
-    } else if (withdrawResult === ERR_FULL) {
-        service.send({ type: SharedCreepEventType.full })
-        return { continue: true, state: SharedCreepState.idle }
-        
+        return { continue: false, state: SharedCreepState.idle }
     } else {
-        console.log(`Error collecting energy from ${context.supplier}: ${withdrawResult}`)
+        console.log(`Error collecting energy from ${taskReservation.targetId}: ${withdrawResult}`)
         return { continue: false, state: SharedCreepState.collectingEnergy }
     }
 }

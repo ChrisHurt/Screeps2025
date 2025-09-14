@@ -1,13 +1,14 @@
 import { Service } from "robot3"
 import { GuardMachine } from "stateMachines/guard-machine"
 import { HarvesterContext, HarvesterMachine } from "stateMachines/harvester-machine"
+import { HaulerContext, HaulerMachine } from "stateMachines/hauler-machine"
 import { UpgraderContext, UpgraderMachine } from "stateMachines/upgrader-machine"
 import { SharedCreepContext, SharedCreepEventType } from "types"
 
 interface CheckIfUnusedParams {
   creep: Creep
-  context: HarvesterContext| UpgraderContext| SharedCreepContext
-  service: Service<HarvesterMachine> | Service<UpgraderMachine> | Service<GuardMachine>
+  context: HarvesterContext| UpgraderContext| HaulerContext| SharedCreepContext
+  service: Service<HarvesterMachine> | Service<UpgraderMachine> | Service<GuardMachine> | Service<HaulerMachine>
   threshold?: number
 }
 

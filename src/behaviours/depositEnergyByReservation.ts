@@ -1,29 +1,26 @@
-import { moveInRangeOfPos } from "behaviours/moveInRangeOfPos"
 import { Service } from "robot3"
-import { HarvesterContext, HarvesterMachine } from "stateMachines/harvester-machine"
-import { SharedCreepEventType, SharedCreepState, CreepId, StructureId } from "types"
+import { SharedCreepEventType, SharedCreepState, CreepId } from "types"
+import { clearReservationMemory } from "./clearReservationMemory"
+import { renewAdjacentCarrier } from "./renewAdjacentCarrier"
+import { HaulerContext, HaulerMachine } from "stateMachines/hauler-machine"
 
-interface DepositEnergyByReservationContext extends HarvesterContext {
-    recipient: CreepId | StructureId
-    deliveryMethod: 'transfer' | 'drop'
-    amountReserved: number
+interface DepositEnergyByReservationContext extends HaulerContext {
+    carrierId: CreepId
 }
 
 interface DepositEnergyByReservationInput {
     creep: Creep
     context: DepositEnergyByReservationContext
-    service: Service<HarvesterMachine>
+    service: Service<HaulerMachine>
 }
 
 interface DepositEnergyByReservationOutput {
     continue: boolean
-    state: SharedCreepState.idle | SharedCreepState.depositingEnergy | SharedCreepState.error | SharedCreepState.recycling
+    state:
+    | SharedCreepState.idle | SharedCreepState.depositingEnergy
+    | SharedCreepState.error | SharedCreepState.recycling
+    | SharedCreepState.collectingEnergy
 }
-
-type EnergyRecipient =
-    | StructureSpawn | StructureExtension | StructureTower
-    | StructureStorage | StructureContainer | StructureTerminal
-    | Creep
 
 export const depositEnergyByReservation = ({
     creep,
@@ -37,71 +34,79 @@ export const depositEnergyByReservation = ({
         return { continue: true, state: SharedCreepState.idle }
     }
 
-    // Get the energy recipient from the context
-    const recipient = Game.getObjectById(context.recipient as Id<EnergyRecipient>)
-    
-    if (!recipient) {
-        console.log(`Energy recipient ${context.recipient} not found for creep ${creep.name}`)
+    // Get the carrier reservation from Memory
+    const carrierMemory = Memory.energyLogistics?.carriers?.[context.carrierId]
+    const taskReservation = carrierMemory?.reservation
+
+    if (!taskReservation) {
+        console.log(`No reservation found for carrier ${context.carrierId} for creep ${creep.name}`)
         service.send({ type: SharedCreepEventType.idle })
         return { continue: true, state: SharedCreepState.idle }
     }
 
-    // Move towards the recipient if not in range
-    if (!creep.pos.isNearTo(recipient.pos)) {
-        moveInRangeOfPos({
-            creep,
-            moveParams: { reusePath: 5, visualizePathStyle: { stroke: '#ff00aa' } }, // Pink for reservation
-            offset: 1,
-            target: recipient.pos
+    if (taskReservation.type !== 'deliverEnergy') {
+        console.log(`Invalid reservation type ${taskReservation.type} for deposit energy behavior for creep ${creep.name}`)
+        service.send({ type: SharedCreepEventType.idle })
+        return { continue: true, state: SharedCreepState.idle }
+    }
+
+    // Get the energy recipient from the reservation
+    const destinationPosition = taskReservation.path[taskReservation.path.length - 1]
+    const storeMemory = Memory.energyLogistics.stores[taskReservation.targetId]
+    const store = Game.rooms[destinationPosition.roomName]?.lookForAt(LOOK_STRUCTURES, destinationPosition.x, destinationPosition.y).find(s => s.id === taskReservation.targetId)
+
+    if (!store) {
+        console.log(`Energy recipient ${taskReservation.targetId} not found for creep ${creep.name}`)
+
+        clearReservationMemory({
+            carrierMemory,
+            storeMemory,
         })
+
+        service.send({ type: SharedCreepEventType.idle })
+        return { continue: true, state: SharedCreepState.idle }
+    }
+
+    const action = taskReservation.action
+
+    if (!creep.pos.inRangeTo(store.pos, action === 'drop' ? 0 : 1)) {
+        creep.moveByPath(taskReservation.path)
         return { continue: false, state: SharedCreepState.depositingEnergy }
     }
 
     // We're adjacent to the recipient, attempt to transfer energy
-    // Assume creep has the energy for the reserved amount
+    // Use the amount and action from the reservation
     let transferResult: ScreepsReturnCode = ERR_INVALID_TARGET
 
-    if (context.deliveryMethod === 'drop') {
+
+    if (action === 'drop') {
         // Drop energy at the recipient's position
-        transferResult = creep.drop(RESOURCE_ENERGY, context.amountReserved)
-    } else if ('store' in recipient && 'structureType' in recipient) {
-        // Structure with store
-        transferResult = creep.transfer(recipient as Structure, RESOURCE_ENERGY, context.amountReserved)
-        
-        // Handle spawn renewal if transferring to spawn
-        if (transferResult === OK && recipient.structureType === STRUCTURE_SPAWN && 
-            'spawning' in recipient && !recipient.spawning && 
-            creep.ticksToLive && 
-            creep.ticksToLive < CREEP_LIFE_TIME - 200) {
-            (recipient as StructureSpawn).renewCreep(creep)
-        }
-    } else if ('transfer' in recipient) {
-        // Creep recipient
-        transferResult = creep.transfer(recipient as Creep, RESOURCE_ENERGY, context.amountReserved)
+        transferResult = creep.drop(RESOURCE_ENERGY, taskReservation.amount)
+    } else if (action === 'transfer') {
+        transferResult = creep.transfer(store, RESOURCE_ENERGY, taskReservation.amount)
     }
 
-    if (transferResult === OK) {
-        // Check if creep is now empty
-        const remainingEnergy = creep.store.getUsedCapacity(RESOURCE_ENERGY)
-        if (remainingEnergy === 0) {
+    if ('spawning' in store) {
+        renewAdjacentCarrier({
+            carrierMemory, creep, spawn: store as StructureSpawn
+        })
+    }
+
+    clearReservationMemory({
+        carrierMemory,
+        storeMemory,
+    })
+
+    if (transferResult === OK || transferResult === ERR_FULL || transferResult === ERR_NOT_ENOUGH_RESOURCES) {
+        if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
             service.send({ type: SharedCreepEventType.empty })
             return { continue: true, state: SharedCreepState.idle }
         }
-        
-        // Still have energy, continue depositing
-        return { continue: false, state: SharedCreepState.depositingEnergy }
-        
-    } else if (transferResult === ERR_FULL) {
-        console.log(`Energy recipient ${context.recipient} is full for creep ${creep.name}`)
+
         service.send({ type: SharedCreepEventType.idle })
-        return { continue: true, state: SharedCreepState.idle }
-        
-    } else if (transferResult === ERR_NOT_ENOUGH_RESOURCES) {
-        service.send({ type: SharedCreepEventType.empty })
-        return { continue: true, state: SharedCreepState.idle }
-        
+        return { continue: false, state: SharedCreepState.idle }
     } else {
-        console.log(`Error depositing energy to ${context.recipient}: ${transferResult}`)
+        console.log(`Error depositing energy to ${taskReservation.targetId}: ${transferResult}`)
         return { continue: false, state: SharedCreepState.depositingEnergy }
     }
 }
