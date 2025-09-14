@@ -33,6 +33,12 @@ declare global {
   interface Memory {
     creeps: { [name: string]: CreepMemory }
     energyLogistics: EnergyLogistics
+    mapConnections: string[]  // List of connections between rooms in the format "roomNameOne-roomNameTwo"
+    mapRoomGraph: {           // Denotes connections between rooms
+      [roomId: RoomName]: RoomName[]
+    }
+    memoryInitialised?: boolean
+    powerCreeps: { [name: string]: Partial<PowerCreepMemory> }
     production: {
       energy: Record<string,StructureEnergyImpact | CreepEnergyImpact>
     }
@@ -40,12 +46,6 @@ declare global {
       energy: Record<string, StructureEnergyImpact | CreepEnergyImpact>
       tasks: Record<string, CreepBuildTask | CreepUpgradeTask | CreepHarvestTask>
     }
-    mapConnections: string[]  // List of connections between rooms in the format "roomNameOne-roomNameTwo"
-    mapRoomGraph: {           // Denotes connections between rooms
-      [roomId: RoomName]: RoomName[]
-    }
-    memoryInitialised?: boolean
-    powerCreeps: { [name: string]: Partial<PowerCreepMemory> }
     rooms: { [name: RoomName]: RoomMemory }
   }
   interface RoomMemory extends CustomRoomMemory {}

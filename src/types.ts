@@ -61,7 +61,8 @@ export const ControllerContainer = `${STRUCTURE_CONTAINER}-${STRUCTURE_CONTROLLE
 export type ContainerTypes = `${STRUCTURE_CONTAINER}-source` | `${STRUCTURE_CONTAINER}-${STRUCTURE_CONTROLLER}`
 
 export type StoreTypes =
-| ContainerTypes | STRUCTURE_STORAGE | STRUCTURE_TERMINAL
+| ContainerTypes | STRUCTURE_SPAWN
+| STRUCTURE_STORAGE | STRUCTURE_TERMINAL
 
 export enum Urgency {
   CRITICAL = 3,
@@ -104,7 +105,8 @@ export const storeUrgencyMatrix: Record<StoreTypes, { peace: Urgency, war: Urgen
   ['container-source']: { peace: Urgency.LOW, war: Urgency.LOW },
   ['container-controller']: { peace: Urgency.HIGH, war: Urgency.CRITICAL },
   [STRUCTURE_STORAGE]: { peace: Urgency.MEDIUM, war: Urgency.LOW },
-  [STRUCTURE_TERMINAL]: { peace: Urgency.MEDIUM, war: Urgency.LOW }
+  [STRUCTURE_TERMINAL]: { peace: Urgency.MEDIUM, war: Urgency.LOW },
+  [STRUCTURE_SPAWN]: { peace: Urgency.CRITICAL, war: Urgency.CRITICAL }
 }
 
 export interface BaseLogisticsContext {
@@ -148,6 +150,12 @@ export interface Producer extends BaseLogisticsContext {
 }
 
 export interface Store extends BaseLogisticsContext {
+  actions: {
+    collect: 'withdraw' | 'pickup'
+    deliver: 'transfer' | 'drop'
+  }
+  reservations: Record<CreepId, number>
+  name: string
   type: StoreTypes
 }
 
@@ -164,9 +172,16 @@ export interface Terminal extends BaseLogisticsContext {
 }
 
 export interface Carrier extends BaseLogisticsContext {
-  arrivalTick: number
   decayTiming: DecayTiming
-  currentTask: CollectEnergyTask | DeliverEnergyTask | IdleTask,
+  name: string
+  reservation?: {
+    action: 'withdraw' | 'pickup' | 'transfer' | 'drop'
+    amount: number
+    arrivalTick: number
+    path: RoomPosition[]
+    targetId: CreepId | StructureId
+    type: 'collectEnergy' | 'deliverEnergy'
+  }
   type: CarrierCreeps
 }
 
@@ -177,14 +192,21 @@ export interface RoomState {
   rcl: number
 }
 
+export interface HaulingSupplyAndDemand {
+  demand: number
+  supply: number
+  net: number
+}
+
 export interface EnergyLogistics {
+  carriers: Record<CreepId, Carrier>
   consumers: Record<CreepId | StructureId, Consumer>
+  hauling: Record<RoomName, HaulingSupplyAndDemand>
+  linkGroups: Record<RoomName, Link[]>
   producers: Record<CreepId | SpawnId, Producer>
+  roomStates: Record<RoomName, RoomState>
   stores: Record<CreepId | StructureId, Store>
   terminals: Record<TerminalId, Terminal>
-  linkGroups: Record<RoomName, Link[]>
-  carriers: Record<CreepId, Carrier>
-  roomStates: Record<RoomName, RoomState>
 }
 
 export enum EnergyImpactType {
