@@ -58,7 +58,7 @@ export const processCurrentGuardState = (creep: Creep, guardService: Service<Gua
             creep,
             context,
             service: guardService,
-            threshold: 5
+            threshold: 50
         })) {
             guardService.send({ type: SharedCreepEventType.hostilesNeutralised })
             return { continue: true, state: SharedCreepState.recycling }
