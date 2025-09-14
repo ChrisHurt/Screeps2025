@@ -4,6 +4,7 @@ import { addProducerStructureToEnergyLogistics } from "helpers/logistics/addProd
 import { generateTerrainArray } from "helpers/generateTerrainArray"
 import { singleSourceShortestPaths } from "helpers/singleSourceShortestPath"
 import { EnergyImpactType, RoomHarvestTask, RoomUpgradeTask, Urgency } from "types"
+import { addStoreToEnergyLogistics } from "helpers/logistics/addStoreToEnergyLogistics"
 
 export const generateRoomTasksOnSpawn = (roomName: string) => {
   const room = Game.rooms[roomName]
@@ -26,6 +27,21 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     console.log(`GenerateRoomTasksError: No spawn found in room ${roomName}`)
     return
   }
+
+  addStoreToEnergyLogistics({
+    actions: {
+      collect: 'withdraw',
+      deliver: 'transfer',
+    },
+    name: spawn.id,
+    energy: {
+      current: 300,
+      capacity: 300
+    },
+    pos: spawn.pos,
+    structureType: STRUCTURE_SPAWN,
+    roomName,
+  })
 
   // NOTE: Update rooms energy production
   Memory.production.energy[spawn.id] = {
