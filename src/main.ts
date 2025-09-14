@@ -17,7 +17,6 @@ import { runCreepBehaviours } from "runCreepBehaviours"
 import { deleteUnusedMemory } from "deleteUnusedMemory"
 
 
-// TODO: Add spawn to stores with `addStoreToEnergyLogistics`
 // TODO: Get hauler pickups operational
 // TODO: Get hauler dropoffs operational
 
