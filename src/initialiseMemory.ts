@@ -1,10 +1,23 @@
 export const initialiseMemory = () => {
+    const memoryIsInitialised = Memory.memoryInitialised
+
+    if (memoryIsInitialised) return
+
     Memory.creeps = {}
+    Memory.energyLogistics = {
+        carriers: {},
+        consumers: {},
+        hauling: {},
+        linkGroups: {},
+        producers: {},
+        roomStates: {},
+        stores: {},
+        terminals: {},
+    }
     Memory.mapConnections = []
     Memory.mapRoomGraph = {}
     Memory.memoryInitialised = true
     Memory.powerCreeps = {}
-    Memory.rooms = {}
     Memory.production = {
         energy: {}
     }
@@ -12,13 +25,5 @@ export const initialiseMemory = () => {
         energy: {},
         tasks: {}
     }
-    Memory.energyLogistics = {
-        carriers: {},
-        consumers: {},
-        producers: {},
-        stores: {},
-        linkGroups: {},
-        roomStates: {},
-        terminals: {},
-    }
+    Memory.rooms = {}
 }
