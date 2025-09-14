@@ -2,8 +2,8 @@ import { SharedCreepEventType, SharedCreepState } from "types"
 import { createUpgraderMachine, UpgraderContext, UpgraderMachine, UpgraderMachineStateTypes, } from "../stateMachines/upgrader-machine"
 import { interpret, Service } from 'robot3'
 import { recycle } from "behaviours/recycle"
-import { upgrade } from "behaviours/upgrade"
 import { collectEnergy } from "behaviours/collectEnergy"
+import { upgradeWithMaintenance } from "behaviours/upgradeWithMaintenance"
 
 export function runUpgraderCreep(creep: Creep) {
   const state = (creep.memory.state || SharedCreepState.idle) as UpgraderMachineStateTypes
@@ -83,7 +83,7 @@ const processCurrentUpgraderState = (creep: Creep, upgraderService: Service<Upgr
         service: upgraderService
       })
     case SharedCreepState.upgrading:
-      return upgrade({ creep, context, service: upgraderService })
+      return upgradeWithMaintenance({ creep, context, service: upgraderService })
     case SharedCreepState.recycling:
       return recycle(creep)
   }

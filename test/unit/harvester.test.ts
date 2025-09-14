@@ -31,13 +31,17 @@ describe('harvester processor', () => {
     isNearToStub = sandbox.stub().returns(true)
     inRangeToStub = sandbox.stub().returns(true)
     creep = {
+      getActiveBodyparts: sandbox.stub().returns(2),
       name: 'TestCreep',
       memory: {},
       store: {
         getUsedCapacity: sandbox.stub().returns(0),
-        getCapacity: sandbox.stub().returns(50)
+        getCapacity: sandbox.stub().returns(50),
+        getFreeCapacity: sandbox.stub().returns(50)
       },
       pos: {
+        findClosestByRange : sandbox.stub().returns(null),
+        findClosestByPath : sandbox.stub().returns(mockSpawn),
         isNearTo: isNearToStub,
         inRangeTo: inRangeToStub,
         findInRange: sandbox.stub().returns([mockSource]),

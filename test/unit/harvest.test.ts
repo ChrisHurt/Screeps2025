@@ -14,7 +14,7 @@ describe('harvest behaviour', () => {
 
   beforeEach(() => {
     setupGlobals()
-    
+
     mockSource = {
       id: 'source1',
       pos: { x: 25, y: 25, roomName: 'W1N1' }

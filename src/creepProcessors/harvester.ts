@@ -3,8 +3,8 @@ import { createHarvesterMachine, HarvesterContext, HarvesterMachine, HarvesterMa
 import { interpret, Service } from 'robot3'
 import { checkIfUnused } from "behaviours/checkIfUnused"
 import { recycle } from "behaviours/recycle"
-import { depositEnergy } from "behaviours/depositEnergy"
-import { harvest } from "behaviours/harvest"
+import { harvestWithMaintenance } from "behaviours/harvestWithMaintenance"
+import { depositEnergyInClosestStore } from "behaviours/depositEnergyInClosestStore"
 
 export function runHarvesterCreep(creep: Creep) {
   const state = (creep.memory.state || SharedCreepState.idle) as HarvesterMachineStateTypes
@@ -73,14 +73,14 @@ const processCurrentHarvesterState = (creep: Creep, harvesterService: Service<Ha
 
       return { continue: false, state: SharedCreepState.idle }
     case SharedCreepState.harvesting:
-      return harvest({
+      return harvestWithMaintenance({
         creep,
         creepTask,
         context,
         service: harvesterService
       })
     case SharedCreepState.depositingEnergy:
-      return depositEnergy({
+      return depositEnergyInClosestStore({
         creep,
         context,
         service: harvesterService

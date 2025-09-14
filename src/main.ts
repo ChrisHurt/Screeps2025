@@ -3,37 +3,30 @@ import { evaluateRoom as roomValuation } from "evaluateRoom"
 import { generateRoomTasksOnSpawn } from "generateRoomTasksOnSpawn"
 import { renderMapConnections } from "renderMapConnections"
 import { initialiseMemory } from "initialiseMemory"
-import { spawnCreeps } from "spawnCreeps"
+import { spawnCreeps } from "spawning/spawnCreeps"
 import { ErrorMapper } from "utils/ErrorMapper"
-import { runHarvesterCreep } from "creepProcessors/harvester"
-import { CreepRole } from "types"
+import { Store } from "types"
 import { isEmpty } from "lodash"
-import { runUpgraderCreep } from "creepProcessors/upgrader"
 import { calculateEnergyProductionByRoom } from "helpers/calculateEnergyProductionByRoom"
 import { evaluateImmediateThreats } from "evaluateImmediateThreats"
-import { runGuardCreep } from "creepProcessors/guard"
 import { generateContainerTasks } from "generateContainerTasks"
-import { runBuilderCreep } from "creepProcessors/builder"
 import { updateEnergyLogistics } from "helpers/logistics/updateEnergyLogistics"
+import { discoverLogisticTasks } from "helpers/logistics/discoverLogisticTasks"
+import { matchLogisticsTasks } from "helpers/logistics/matchLogisticsTasks"
+import { runCreepBehaviours } from "runCreepBehaviours"
+import { deleteUnusedMemory } from "deleteUnusedMemory"
+
+
+// TODO: Add spawn to stores with `addStoreToEnergyLogistics`
+// TODO: Get hauler pickups operational
+// TODO: Get hauler dropoffs operational
 
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`\nCurrent game tick is ${Game.time}`)
 
-  // Automatically delete memory of missing creeps
-  for (const creepName in Memory.creeps) {
-    if (!(creepName in Game.creeps)) {
-      delete Memory.creeps[creepName]
-      delete Memory.production.energy[creepName]
-      delete Memory.reservations.energy[creepName]
-      delete Memory.reservations.tasks[creepName]
-    }
-  }
+  initialiseMemory()
 
-  const memoryIsInitialised = Memory.memoryInitialised
-
-  if (!memoryIsInitialised) {
-    initialiseMemory()
-  }
+  deleteUnusedMemory()
 
   calculateEnergyProductionByRoom()
 
@@ -49,33 +42,87 @@ export const loop = ErrorMapper.wrapLoop(() => {
     generateRoomTasksOnSpawn(startingRoomName)
   }
 
+
+  // TODO: Incidental deposit for harvesters
+  // TODO: Move this allocation block into it's own function
+  // TODO: Consider Active carriers count as reservations against stores
+  const {
+    averageHaulingDistancePerRoom,
+    carriersByRoom,
+    dynamicEnergyDemandByRoom,
+    dynamicEnergySupplyByRoom,
+    consumersByRoom,
+    storesByRoom
+  } = discoverLogisticTasks()
+
   updateEnergyLogistics()
 
-  // Process creeps
-  for (const name in Game.creeps) {
-    const creep = Game.creeps[name]
+  for(const roomName in Game.rooms){
+    if(!carriersByRoom[roomName]) continue
+    const {
+      idle: {
+        fullCarriers: idleFullCarriers,
+        emptyCarriers: idleEmptyCarriers
+      },
+    } = carriersByRoom[roomName]
 
-    if (!creep.memory.role) {
-      console.log(`Creep ${name} has invalid role, skipping`)
-      continue
+    const {
+      dueConsumers,
+      overdueConsumers,
+      totalEnergyDemand
+    } = consumersByRoom[roomName] || []
+    const stores = storesByRoom[roomName] || [] // 0 .. n (Highest energy first)
+
+    let remainingStores = [...stores].reverse() // 0 .. n (Lowest energy first)
+
+    console.log('Stores', JSON.stringify({ storesByRoom, stores }))
+
+    // Energy delivery allocation
+    // console.log('Idle Full Carriers & Overdue Consumers:', JSON.stringify({
+    //   carriers: idleFullCarriers,
+    //   destinations: overdueConsumers,
+    // }, null, 2))
+    let { remainingCarriers: idleFullCarriersAfterOverdue } = matchLogisticsTasks({
+      carriers: idleFullCarriers,
+      destinations: overdueConsumers,
+    })
+
+    if(idleFullCarriersAfterOverdue.length > 0) {
+      // console.log('Idle Full Carriers & Due Consumers:', JSON.stringify({
+      //   carriers: idleFullCarriersAfterOverdue,
+      //   destinations: dueConsumers,
+      // }, null, 2))
+      const { remainingCarriers: idleFullCarriersAfterDue } = matchLogisticsTasks({
+        carriers: idleFullCarriersAfterOverdue,
+        destinations: dueConsumers,
+      })
+
+      if(idleFullCarriersAfterDue.length > 0) {
+        // console.log('Idle Full Carriers & Remaining Stores:', JSON.stringify({
+        //   carriers: idleFullCarriersAfterDue,
+        //   destinations: remainingStores,
+        // }, null, 2))
+        const { remainingDestinations: destinationsAfterStorePickup } = matchLogisticsTasks({
+          carriers: idleFullCarriersAfterDue,
+          destinations: remainingStores.reverse(), // Reverse to prioritise fullest stores
+        })
+
+        remainingStores = [...destinationsAfterStorePickup].reverse() as Store[] // 0 .. n (Highest energy first)
+      }
     }
 
-    if (creep.memory.role === CreepRole.HARVESTER) {
-      console.log(`Processing harvester creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
-      runHarvesterCreep(creep)
-    } else if (creep.memory.role === CreepRole.UPGRADER) {
-      console.log(`Processing upgrader creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
-      runUpgraderCreep(creep)
-    } else if (creep.memory.role === CreepRole.GUARD) {
-      console.log(`Processing guard creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
-      runGuardCreep(creep)
-    } else if (creep.memory.role === CreepRole.BUILDER) {
-      console.log(`Processing builder creep: ${creep.name}: role: ${creep.memory.role}, state: ${creep.memory.state}`)
-      runBuilderCreep(creep)
-    } else {
-      console.log(`Creep ${name} has invalid role, skipping`)
-    }
+    // console.log('Idle Empty Carriers & Remaining Stores:', JSON.stringify({
+    //     carriers: idleEmptyCarriers,
+    //     destinations: remainingStores,
+    //   }, null, 2))
+    // TODO: Experiment with debouncing store pickups and leveraging urgency to prevent pickup/dropoff ping-pong
+    matchLogisticsTasks({
+      carriers: idleEmptyCarriers,
+      destinations: remainingStores,
+    })
   }
+
+  runCreepBehaviours()
 
   evaluateImmediateThreats()
   spawnCreeps()
@@ -88,18 +135,4 @@ export const loop = ErrorMapper.wrapLoop(() => {
       generateContainerTasks({ room: Game.rooms[roomName], roomMemory })
     }
   }
-
-  // Initial map calculations
-  // - Add rooms for evaluation to the evaluation queue as low priority tasks
-
-  // Evaluate Threats
-  // Identify threats in perimeter rooms and in newly scouted rooms with a period of 10 ticks since last check
-  // Evaluate current structure needs
-  // Evaluate current creep needs
-  // Add items to Task Queue
-  // Process structure behaviours
-  // Process existing creeps behaviour
-
-  // Analyse new rooms and evaluate their potential for direction-dependent remote gathering or expansion
-  // Analyse existing rooms when all connections have complete internal evaluations
 })

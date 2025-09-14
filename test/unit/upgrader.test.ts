@@ -27,6 +27,9 @@ describe('upgrader processor', () => {
     isNearToStub = sandbox.stub().returns(true)
     creepInRangeToStub = sandbox.stub().returns(true)
     creep = {
+      build: () => OK,
+      repair: () => OK,
+      getActiveBodyparts: sandbox.stub().returns(1),
       name: 'TestUpgrader',
       memory: { task: { type: 'upgrade', controllerId: 'ctrl1', controllerPosition: { x: 20, y: 20, roomName: 'W1N1' } } },
       store: {
