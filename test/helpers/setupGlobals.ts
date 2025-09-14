@@ -10,6 +10,12 @@ export function setupGlobals({
     // @ts-ignore
     global.Memory = { ...mockMemory }
     // @ts-ignore
+    global.FIND_MY_CONSTRUCTION_SITES = 114
+    // @ts-ignore
+    global.HARVEST_POWER = 2
+    // @ts-ignore
+    global.REPAIR_POWER = 100
+    // @ts-ignore
     global.FIND_HOSTILE_CREEPS = 103
     // @ts-ignore
     global.FIND_HOSTILE_POWER_CREEPS = 121
@@ -85,6 +91,14 @@ export function setupGlobals({
     global.STRUCTURE_CONTROLLER = 'controller'
     // @ts-ignore
     global.FIND_CONSTRUCTION_SITES = 108
+    // @ts-ignore
+    global.OK = 0
+    // @ts-ignore
+    global.ERR_NOT_ENOUGH_ENERGY = -6
+    // @ts-ignore
+    global.ERR_INVALID_TARGET = -7
+    // @ts-ignore
+    global.ERR_BUSY = -4
 
     // @ts-ignore
     global.RoomPosition = class MockRoomPosition {

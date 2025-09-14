@@ -44,6 +44,7 @@ export const mockMemory: Memory = {
   energyLogistics: {
     carriers: {},
     consumers: {},
+    hauling: {},
     linkGroups: {},
     producers: {},
     roomStates: {},
