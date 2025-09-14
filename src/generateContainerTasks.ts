@@ -42,16 +42,21 @@ export const generateContainerTasks = ({
 
         if (pathCalculation.incomplete) {
             console.log(`GenerateContainerTasks: Incomplete path for source ${harvestTask.sourceId} in room ${harvestTask.roomName}`)
-        } else {
-            acc.push(pathCalculation.path[pathCalculation.path.length - 1])
         }
 
-            roomMemory.structures!.containers.sources![harvestTask.sourceId] = {
-                position: pathCalculation.path[pathCalculation.path.length - 1],
-                repairDuringSiege: false,
-                path: pathCalculation.path,
-                structureType: STRUCTURE_CONTAINER
-            }
+        const containerPosition =
+            pathCalculation.path.length > 1
+            ? pathCalculation.path[pathCalculation.path.length - 2]
+            : pathCalculation.path[pathCalculation.path.length - 1]
+        acc.push(containerPosition)
+
+
+        roomMemory.structures!.containers.sources![harvestTask.sourceId] = {
+            position: containerPosition,
+            repairDuringSiege: false,
+            path: pathCalculation.path,
+            structureType: STRUCTURE_CONTAINER
+        }
 
         return acc
     },[])
@@ -72,7 +77,9 @@ export const generateContainerTasks = ({
         return
     }
 
-    const controllerContainerPosition = pathCalculation.path[pathCalculation.path.length - 1]
+    const controllerContainerPosition = pathCalculation.path.length > 1
+        ? pathCalculation.path[pathCalculation.path.length - 2]
+        : pathCalculation.path[pathCalculation.path.length - 1]
 
     roomMemory.structures.containers.controller = {
         position: controllerContainerPosition,
@@ -83,22 +90,24 @@ export const generateContainerTasks = ({
 
     sourceContainerPositions.forEach(position => {
         addStoreToEnergyLogistics({
-            name: `SourceContainer_${position.x},${position.y}`,
+            actions: { collect: 'withdraw', deliver: 'transfer' },
             energy: {
                 current: 0,
                 capacity: 0
             },
+            name: `SourceContainer_${position.x},${position.y}`,
             pos: position,
             roomName: room.name,
             structureType: SourceContainer as ContainerTypes
         })
     })
     addStoreToEnergyLogistics({
-        name: `ControllerContainer_${controllerContainerPosition.x},${controllerContainerPosition.y}`,
+        actions: { collect: 'withdraw', deliver: 'transfer' },
         energy: {
             current: 0,
             capacity: 0
         },
+        name: `ControllerContainer_${controllerContainerPosition.x},${controllerContainerPosition.y}`,
         pos: controllerContainerPosition,
         roomName: room.name,
         structureType: ControllerContainer as ContainerTypes
