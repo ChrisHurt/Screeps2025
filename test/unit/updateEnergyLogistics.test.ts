@@ -73,6 +73,7 @@ describe('updateEnergyLogistics', () => {
     Memory.energyLogistics = {
       carriers: {},
       consumers: {},
+      hauling: {},
       producers: {},
       stores: {},
       linkGroups: {},

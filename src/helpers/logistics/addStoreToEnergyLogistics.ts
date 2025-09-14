@@ -1,6 +1,7 @@
 import { Store, StoreTypes, Position, storeUrgencyMatrix } from "types"
 
 interface AddStoreToEnergyLogisticsParams {
+  actions: Store['actions']
   energy: {
     current: number
     capacity: number
@@ -12,6 +13,7 @@ interface AddStoreToEnergyLogisticsParams {
 }
 
 export const addStoreToEnergyLogistics = ({
+  actions,
   energy,
   name,
   pos,
@@ -19,8 +21,11 @@ export const addStoreToEnergyLogistics = ({
   structureType
 }: AddStoreToEnergyLogisticsParams): void => {
   const store: Store = {
+    actions,
     energy,
     pos,
+    reservations: {},
+    name,
     roomName,
     urgency: storeUrgencyMatrix[structureType],
     type: structureType

@@ -12,6 +12,7 @@ describe('addConsumerStructureToEnergyLogistics', () => {
     Memory.energyLogistics = {
       carriers: {},
       consumers: {},
+      hauling: {},
       producers: {},
       stores: {},
       linkGroups: {},

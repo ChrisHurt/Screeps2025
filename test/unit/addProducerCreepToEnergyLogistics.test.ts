@@ -12,6 +12,7 @@ describe('addProducerCreepToEnergyLogistics', () => {
     Memory.energyLogistics = {
       carriers: {},
       consumers: {},
+      hauling: {},
       producers: {},
       stores: {},
       linkGroups: {},
