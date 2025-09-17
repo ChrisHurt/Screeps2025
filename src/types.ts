@@ -3,6 +3,7 @@ export type SourceId = string     // Id of StructureSource
 export type SpawnId = string      // Id of StructureSpawn
 export type CreepId = string      // Id of Creep
 export type StructureId = string  // Id of any structure
+export type StructureName = `${StructureConstant}_${string}:${number},${number}`
 export type RoomName = string     // Name of Room
 export type TerminalId = string   // Id of StructureTerminal
 
@@ -205,7 +206,7 @@ export interface EnergyLogistics {
   linkGroups: Record<RoomName, Link[]>
   producers: Record<CreepId | SpawnId, Producer>
   roomStates: Record<RoomName, RoomState>
-  stores: Record<CreepId | StructureId, Store>
+  stores: Record<CreepId | StructureName, Store>
   terminals: Record<TerminalId, Terminal>
 }
 
@@ -339,6 +340,13 @@ export enum SharedCreepState {
   idle = 'idle',
   recycling = 'recycling',
   upgrading = 'upgrading'
+}
+
+export interface StructureMemory {
+  name: StructureName
+  pos: Position
+  roomName: RoomName
+  type: StructureConstant
 }
 
 export interface CreepMemory {

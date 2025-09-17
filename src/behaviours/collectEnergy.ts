@@ -64,8 +64,6 @@ export const collectEnergy = ({
     }
 
     const tombstones = room.find(FIND_TOMBSTONES, { filter: tombstone => tombstone.store.getCapacity(RESOURCE_ENERGY)})
-    // TODO:    Pull these room searches out into a main.ts check and cache results in Memory.
-    //          Only check every 5 ticks or so to reduce CPU overhead
     const ruins = room.find(FIND_RUINS, { filter: ruin => !!ruin.store.getCapacity(RESOURCE_ENERGY) })
     const roomStructures = room.find(FIND_STRUCTURES) || []
     const structureStores = roomStructures.filter(structure =>

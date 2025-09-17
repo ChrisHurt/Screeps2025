@@ -32,6 +32,7 @@ export const mockMemory: Memory = {
   mapRoomGraph: {},
   mapConnections: [],
   memoryInitialised: false,
+  powerCreeps: {},
   production: {
     energy: {}
   },
@@ -39,8 +40,8 @@ export const mockMemory: Memory = {
     energy: {},
     tasks: {}
   },
-  powerCreeps: {},
   spawns: {},
+  structures: {},
   energyLogistics: {
     carriers: {},
     consumers: {},

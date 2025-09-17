@@ -2,7 +2,7 @@ import { createMapConnections } from "createMapConnections"
 import { evaluateRoom as roomValuation } from "evaluateRoom"
 import { generateRoomTasksOnSpawn } from "generateRoomTasksOnSpawn"
 import { renderMapConnections } from "renderMapConnections"
-import { initialiseMemory } from "initialiseMemory"
+import { initialiseMemory } from "memory/initialiseMemory"
 import { spawnCreeps } from "spawning/spawnCreeps"
 import { ErrorMapper } from "utils/ErrorMapper"
 import { Store } from "types"
@@ -14,7 +14,7 @@ import { updateEnergyLogistics } from "helpers/logistics/updateEnergyLogistics"
 import { discoverLogisticTasks } from "helpers/logistics/discoverLogisticTasks"
 import { matchLogisticsTasks } from "helpers/logistics/matchLogisticsTasks"
 import { runCreepBehaviours } from "runCreepBehaviours"
-import { deleteUnusedMemory } from "deleteUnusedMemory"
+import { deleteUnusedMemory } from "memory/deleteUnusedMemory"
 
 
 // TODO: Get hauler pickups operational
@@ -73,8 +73,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
     const stores = storesByRoom[roomName] || [] // 0 .. n (Highest energy first)
 
     let remainingStores = [...stores].reverse() // 0 .. n (Lowest energy first)
-
-    console.log('Stores', JSON.stringify({ storesByRoom, stores }))
 
     // Energy delivery allocation
     // console.log('Idle Full Carriers & Overdue Consumers:', JSON.stringify({

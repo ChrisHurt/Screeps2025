@@ -1,5 +1,5 @@
-import { addStoreToEnergyLogistics } from "helpers/logistics/addStoreToEnergyLogistics"
-import { ContainerTypes, ControllerContainer, RoomBuildTask, SourceContainer } from "types"
+import { addStoreToMemory } from "helpers/logistics/addStoreToEnergyLogistics"
+import { ContainerTypes, ControllerContainer, RoomBuildTask, SourceContainer, StructureName } from "types"
 
 interface GenerateContainerTasks {
     room: Room,
@@ -18,15 +18,15 @@ export const generateContainerTasks = ({
     if (roomMemory.tasks.harvest.length === 0) return
     if (!roomMemory.tasks.upgrade) return
 
+    const roomName = room.name
+
     // NOTE: This is triggered after the first spawn is built
     const startingSpawnPosition = room.find(FIND_MY_SPAWNS)[0]?.pos
 
     if (!startingSpawnPosition) {
-        console.log(`GenerateContainerTasks: No spawn found in room ${room.name}`)
+        console.log(`GenerateContainerTasks: No spawn found in room ${roomName}`)
         return
     }
-
-    // TODO: Add recycle container
 
     roomMemory.structures = roomMemory.structures || { containers: { sources: {} } }
 
@@ -53,7 +53,7 @@ export const generateContainerTasks = ({
 
         roomMemory.structures!.containers.sources![harvestTask.sourceId] = {
             position: containerPosition,
-            repairDuringSiege: false,
+            repairDuringSiege: true,
             path: pathCalculation.path,
             structureType: STRUCTURE_CONTAINER
         }
@@ -83,34 +83,40 @@ export const generateContainerTasks = ({
 
     roomMemory.structures.containers.controller = {
         position: controllerContainerPosition,
-        repairDuringSiege: false,
+        repairDuringSiege: true,
         path: pathCalculation.path,
         structureType: STRUCTURE_CONTAINER
     }
 
+    // Add containers to energy logistics immediately using template naming pattern
     sourceContainerPositions.forEach(position => {
-        addStoreToEnergyLogistics({
+        const containerName: StructureName = `${STRUCTURE_CONTAINER}_${roomName}:${position.x},${position.y}`
+        addStoreToMemory({
             actions: { collect: 'withdraw', deliver: 'transfer' },
             energy: {
                 current: 0,
-                capacity: 0
+                capacity: 2000 // Standard container capacity
             },
-            name: `SourceContainer_${position.x},${position.y}`,
+            name: `${STRUCTURE_CONTAINER}_${roomName}:${position.x},${position.y}`,
             pos: position,
-            roomName: room.name,
-            structureType: SourceContainer as ContainerTypes
+            roomName,
+            storeType: SourceContainer as ContainerTypes,
+            structureType: STRUCTURE_CONTAINER
         })
     })
-    addStoreToEnergyLogistics({
+
+    const containerName: StructureName = `${STRUCTURE_CONTAINER}_${roomName}:${controllerContainerPosition.x},${controllerContainerPosition.y}`
+    addStoreToMemory({
         actions: { collect: 'withdraw', deliver: 'transfer' },
         energy: {
             current: 0,
-            capacity: 0
+            capacity: 2000 // Standard container capacity
         },
-        name: `ControllerContainer_${controllerContainerPosition.x},${controllerContainerPosition.y}`,
+        name: containerName,
         pos: controllerContainerPosition,
-        roomName: room.name,
-        structureType: ControllerContainer as ContainerTypes
+        roomName,
+        storeType: ControllerContainer as ContainerTypes,
+        structureType: STRUCTURE_CONTAINER
     })
 
     // Generate container build tasks
@@ -129,7 +135,7 @@ export const generateContainerTasks = ({
                 path: pathCalculation.path,
                 structureType: STRUCTURE_CONTAINER
             },
-            roomName: room.name,
+            roomName,
             reservingCreeps: {}
         }
     })

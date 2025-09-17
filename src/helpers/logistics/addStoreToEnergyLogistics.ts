@@ -1,4 +1,4 @@
-import { Store, StoreTypes, Position, storeUrgencyMatrix } from "types"
+import { Store, StoreTypes, Position, storeUrgencyMatrix, StructureName } from "types"
 
 interface AddStoreToEnergyLogisticsParams {
   actions: Store['actions']
@@ -6,18 +6,20 @@ interface AddStoreToEnergyLogisticsParams {
     current: number
     capacity: number
   }
-  name: string
+  name: StructureName
   pos: Position
   roomName: string
-  structureType: StoreTypes
+  storeType: StoreTypes
+  structureType: StructureConstant
 }
 
-export const addStoreToEnergyLogistics = ({
+export const addStoreToMemory = ({
   actions,
   energy,
   name,
   pos,
   roomName,
+  storeType,
   structureType
 }: AddStoreToEnergyLogisticsParams): void => {
   const store: Store = {
@@ -27,9 +29,15 @@ export const addStoreToEnergyLogistics = ({
     reservations: {},
     name,
     roomName,
-    urgency: storeUrgencyMatrix[structureType],
-    type: structureType
+    urgency: storeUrgencyMatrix[storeType],
+    type: storeType
   }
 
   Memory.energyLogistics.stores[name] = store
+  Memory.structures[name] = {
+    name,
+    pos,
+    roomName,
+    type: structureType
+}
 }

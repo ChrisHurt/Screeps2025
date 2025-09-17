@@ -8,7 +8,8 @@ import {
   CreepBuildTask,
   RoomName,
   EnergyLogistics,
-
+  StructureMemory,
+  StructureName,
 } from "types"
 
 declare global {
@@ -20,7 +21,6 @@ declare global {
     gpl: GlobalPowerLevel
     map: GameMap
     market: Market
-    powerCreeps: { [name: string]: PowerCreep }
     resources: { [key: string]: any }
     rooms: { [name: string]: Room }
     spawns: { [name: string]: StructureSpawn }
@@ -38,7 +38,6 @@ declare global {
       [roomId: RoomName]: RoomName[]
     }
     memoryInitialised?: boolean
-    powerCreeps: { [name: string]: Partial<PowerCreepMemory> }
     production: {
       energy: Record<string,StructureEnergyImpact | CreepEnergyImpact>
     }
@@ -46,7 +45,9 @@ declare global {
       energy: Record<string, StructureEnergyImpact | CreepEnergyImpact>
       tasks: Record<string, CreepBuildTask | CreepUpgradeTask | CreepHarvestTask>
     }
-    rooms: { [name: RoomName]: RoomMemory }
+    rooms: Record<RoomName,RoomMemory>
+    structures: Record<StructureName,StructureMemory>
+
   }
   interface RoomMemory extends CustomRoomMemory {}
 

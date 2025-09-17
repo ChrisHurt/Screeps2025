@@ -73,7 +73,6 @@ global.Memory = {
   mapConnections: [],
   mapRoomGraph: {},
   memoryInitialised: true,
-  powerCreeps: {},
   rooms: {},
   energyLogistics: {
     consumers: {},

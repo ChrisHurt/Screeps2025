@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { addStoreToEnergyLogistics } from '../../src/helpers/logistics/addStoreToEnergyLogistics'
-import { ContainerTypes, ControllerContainer, SourceContainer, Urgency } from '../../src/types'
+import { addStoreToMemory } from '../../src/helpers/logistics/addStoreToEnergyLogistics'
+import { ContainerTypes, ControllerContainer, SourceContainer, StoreTypes, StructureName, Urgency } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 
 describe('addStoreToEnergyLogistics', () => {
@@ -27,14 +27,15 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should add controller container store to energy logistics', () => {
-    const storeName = 'test-container-1'
-    addStoreToEnergyLogistics({
+    const storeName: StructureName = 'container_W1N1:25,25'
+    addStoreToMemory({
       actions: { collect: 'withdraw', deliver: 'transfer' },
       energy: { current: 1500, capacity: 2000 },
       name: storeName,
       pos: { x: 25, y: 25 },
       roomName: 'W1N1',
-      structureType: ControllerContainer as ContainerTypes
+      storeType: ControllerContainer as ContainerTypes,
+      structureType: STRUCTURE_CONTAINER
     })
 
     const store = Memory.energyLogistics.stores[storeName]
@@ -50,13 +51,14 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should add storage store to energy logistics', () => {
-    const storeName = 'test-storage-1'
-    addStoreToEnergyLogistics({
+    const storeName: StructureName = 'storage_test1:30,20'
+    addStoreToMemory({
       actions: { collect: 'withdraw', deliver: 'transfer' },
       energy: { current: 50000, capacity: 1000000 },
       name: storeName,
       pos: { x: 30, y: 20 },
       roomName: 'W2N2',
+      storeType: STRUCTURE_STORAGE,
       structureType: STRUCTURE_STORAGE
     })
 
@@ -73,13 +75,14 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should add terminal store to energy logistics', () => {
-    const storeName = 'test-terminal-1'
-    addStoreToEnergyLogistics({
+    const storeName: StructureName = 'terminal_test1:15,35'
+    addStoreToMemory({
       actions: { collect: 'withdraw', deliver: 'transfer' },
       energy: { current: 75000, capacity: 300000 },
       name: storeName,
       pos: { x: 15, y: 35 },
       roomName: 'W3N3',
+      storeType: STRUCTURE_TERMINAL,
       structureType: STRUCTURE_TERMINAL
     })
 
@@ -96,14 +99,15 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should handle empty store capacity', () => {
-    const storeName = 'test-empty-container'
-    addStoreToEnergyLogistics({
+    const storeName = 'container_W1N1-empty:5,5'
+    addStoreToMemory({
       actions: { collect: 'withdraw', deliver: 'transfer' },
       energy: { current: 0, capacity: 0 },
       name: storeName,
       pos: { x: 5, y: 5 },
       roomName: 'W1N1',
-      structureType: ControllerContainer as ContainerTypes
+      storeType: ControllerContainer as ContainerTypes,
+      structureType: STRUCTURE_CONTAINER
     })
 
     const store = Memory.energyLogistics.stores[storeName]
@@ -113,13 +117,14 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should handle full store capacity', () => {
-    const storeName = 'test-full-storage'
-    addStoreToEnergyLogistics({
+    const storeName: StructureName = 'storage_W1N1-full:40,10'
+    addStoreToMemory({
       actions: { collect: 'withdraw', deliver: 'transfer' },
       energy: { current: 1000000, capacity: 1000000 },
       name: storeName,
       pos: { x: 40, y: 10 },
       roomName: 'W1N1',
+      storeType: STRUCTURE_STORAGE,
       structureType: STRUCTURE_STORAGE
     })
 
@@ -130,24 +135,26 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should overwrite existing source container store entry', () => {
-    const storeName = 'test-overwrite'
+    const storeName = 'container_W1N1-empty:5,5'
 
-    addStoreToEnergyLogistics({
+    addStoreToMemory({
       actions: { collect: 'withdraw', deliver: 'transfer' },
       energy: { current: 1000, capacity: 2000 },
       name: storeName,
       pos: { x: 20, y: 20 },
       roomName: 'W1N1',
-      structureType: SourceContainer as ContainerTypes
+      storeType: SourceContainer as ContainerTypes,
+      structureType: STRUCTURE_CONTAINER
     })
 
     // Second add with different values
-    addStoreToEnergyLogistics({
+    addStoreToMemory({
       actions: { collect: 'withdraw', deliver: 'transfer' },
       energy: { current: 50000, capacity: 1000000 },
       name: storeName,
       pos: { x: 25, y: 25 },
       roomName: 'W2N2',
+      storeType: STRUCTURE_STORAGE,
       structureType: STRUCTURE_STORAGE
     })
 
@@ -163,20 +170,24 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should handle different room names', () => {
-    const stores = [
-      { name: 'store-w1n1', room: 'W1N1' },
-      { name: 'store-w2n2', room: 'W2N2' },
-      { name: 'store-e5s10', room: 'E5S10' }
+    const stores: {
+      name: StructureName
+      room: string
+    }[] = [
+      { name: 'storage_W1N1:5,5', room: 'W1N1' },
+      { name: 'storage_W2N2:10,10', room: 'W2N2' },
+      { name: 'storage_E5S10:15,15', room: 'E5S10' }
     ]
 
     stores.forEach(({ name, room }) => {
-      addStoreToEnergyLogistics({
+      addStoreToMemory({
         actions: { collect: 'withdraw', deliver: 'transfer' },
         energy: { current: 1000, capacity: 2000 },
         name,
         pos: { x: 10, y: 10 },
         roomName: room,
-        structureType: ControllerContainer as ContainerTypes
+        storeType: STRUCTURE_STORAGE,
+        structureType: STRUCTURE_STORAGE
       })
     })
 
@@ -187,21 +198,25 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should handle edge case positions', () => {
-    const testCases = [
-      { name: 'corner-0-0', pos: { x: 0, y: 0 } },
-      { name: 'corner-49-49', pos: { x: 49, y: 49 } },
-      { name: 'edge-25-0', pos: { x: 25, y: 0 } },
-      { name: 'edge-0-25', pos: { x: 0, y: 25 } }
+    const testCases: {
+      name: StructureName
+      pos: { x: number; y: number }
+    }[] = [
+      { name: 'container_corner1:0,0', pos: { x: 0, y: 0 } },
+      { name: 'container_corner2:49,49', pos: { x: 49, y: 49 } },
+      { name: 'container_edge1:25,0', pos: { x: 25, y: 0 } },
+      { name: 'container_edge2:0,25', pos: { x: 0, y: 25 } }
     ]
 
     testCases.forEach(({ name, pos }) => {
-      addStoreToEnergyLogistics({
+      addStoreToMemory({
         actions: { collect: 'withdraw', deliver: 'transfer' },
         energy: { current: 500, capacity: 1000 },
         name,
         pos,
         roomName: 'W1N1',
-        structureType: ControllerContainer as ContainerTypes
+        storeType: ControllerContainer as ContainerTypes,
+        structureType: STRUCTURE_CONTAINER
       })
     })
 
@@ -213,38 +228,48 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should verify urgency levels for each store type', () => {
-    const storeTypes = [
+    const storeTypes: {
+      structureType: StructureConstant
+      storeType: StoreTypes
+      expectedPeace: Urgency
+      expectedWar: Urgency
+    }[] = [
       {
-        type: SourceContainer,
+        structureType: STRUCTURE_CONTAINER,
+        storeType: SourceContainer as ContainerTypes,
         expectedPeace: Urgency.LOW,
         expectedWar: Urgency.LOW
       },
       {
-        type: ControllerContainer,
+        structureType: STRUCTURE_CONTAINER,
+        storeType: ControllerContainer as ContainerTypes,
         expectedPeace: Urgency.HIGH,
         expectedWar: Urgency.CRITICAL
       },
       {
-        type: STRUCTURE_STORAGE,
+        structureType: STRUCTURE_STORAGE,
+        storeType: STRUCTURE_STORAGE,
         expectedPeace: Urgency.MEDIUM,
         expectedWar: Urgency.LOW
       },
       {
-        type: STRUCTURE_TERMINAL,
+        structureType: STRUCTURE_TERMINAL,
+        storeType: STRUCTURE_TERMINAL,
         expectedPeace: Urgency.MEDIUM,
         expectedWar: Urgency.LOW
       }
     ]
 
-    storeTypes.forEach(({ type, expectedPeace, expectedWar }, index) => {
-      const storeName = `test-urgency-${index}`
-      addStoreToEnergyLogistics({
+    storeTypes.forEach(({ storeType, structureType, expectedPeace, expectedWar }, index) => {
+      const storeName = `storage_W1N1:20,20`
+      addStoreToMemory({
         actions: { collect: 'withdraw', deliver: 'transfer' },
         energy: { current: 1000, capacity: 2000 },
         name: storeName,
         pos: { x: 20, y: 20 },
         roomName: 'W1N1',
-        structureType: type as ContainerTypes
+        storeType: storeType,
+        structureType: structureType
       })
 
       const store = Memory.energyLogistics.stores[storeName]
@@ -254,20 +279,24 @@ describe('addStoreToEnergyLogistics', () => {
   })
 
   it('should maintain store state across multiple additions', () => {
-    const stores = [
-      { name: 'container-1', type: STRUCTURE_CONTAINER },
-      { name: 'storage-1', type: STRUCTURE_STORAGE },
-      { name: 'terminal-1', type: STRUCTURE_TERMINAL }
+    const stores: {
+      name: StructureName
+      type: StructureConstant
+    }[] = [
+      { name: 'container_W1N1:10,10', type: STRUCTURE_CONTAINER },
+      { name: 'storage_W1N1:10,10', type: STRUCTURE_STORAGE },
+      { name: 'terminal_W1N1:10,10', type: STRUCTURE_TERMINAL }
     ]
 
     stores.forEach(({ name, type }) => {
-      addStoreToEnergyLogistics({
+      addStoreToMemory({
         actions: { collect: 'withdraw', deliver: 'transfer' },
         energy: { current: 1000, capacity: 2000 },
         name,
         pos: { x: 10, y: 10 },
         roomName: 'W1N1',
-        structureType: type as ContainerTypes
+        storeType: type as ContainerTypes,
+        structureType: type
       })
     })
 
@@ -287,14 +316,15 @@ describe('addStoreToEnergyLogistics', () => {
     ]
 
     energyLevels.forEach(({ current, capacity }, index) => {
-      const storeName = `energy-test-${index}`
-      addStoreToEnergyLogistics({
+      const storeName = `container_W1N1:15,15`
+      addStoreToMemory({
         actions: { collect: 'withdraw', deliver: 'transfer' },
         energy: { current, capacity },
         name: storeName,
         pos: { x: 15, y: 15 },
         roomName: 'W1N1',
-        structureType: SourceContainer as ContainerTypes
+        storeType: SourceContainer as ContainerTypes,
+        structureType: STRUCTURE_CONTAINER
       })
 
       const store = Memory.energyLogistics.stores[storeName]
@@ -326,19 +356,20 @@ describe('addStoreToEnergyLogistics', () => {
     }
 
     // Add a store
-    addStoreToEnergyLogistics({
+    addStoreToMemory({
       actions: { collect: 'withdraw', deliver: 'transfer' },
       energy: { current: 1500, capacity: 2000 },
-      name: 'test-store',
+      name: 'container_W1N1:20,20',
       pos: { x: 20, y: 20 },
       roomName: 'W1N1',
-      structureType: SourceContainer as ContainerTypes
+      storeType: SourceContainer as ContainerTypes,
+      structureType: STRUCTURE_CONTAINER,
     })
 
     // Verify other sections are preserved
     expect(Memory.energyLogistics.consumers['test-consumer']).to.exist
     expect(Memory.energyLogistics.producers['test-producer']).to.exist
-    expect(Memory.energyLogistics.stores['test-store']).to.exist
+    expect(Memory.energyLogistics.stores['container_W1N1:20,20']).to.exist
 
     // Verify integrity of other sections
     expect(Memory.energyLogistics.consumers['test-consumer'].type).to.equal(STRUCTURE_SPAWN)

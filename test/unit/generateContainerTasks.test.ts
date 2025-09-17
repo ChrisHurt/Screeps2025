@@ -98,8 +98,18 @@ describe('generateContainerTasks', () => {
   })
 
   it('should generate container tasks for sources and controller', () => {
-    const mockSpawn = { pos: { x: 25, y: 25, roomName: 'W1N1' } }
+    const mockSpawn = { id: 'Spawn1', pos: { x: 25, y: 25}, roomName: 'W1N1' }
     mockRoom.find.returns([mockSpawn])
+
+    const spawnStructureName = `spawn_W1N1:25,25`
+    Game.rooms = { W1N1: mockRoom }
+    Game.structures['spawn1'] = mockSpawn as unknown as StructureSpawn
+    Memory.structures[spawnStructureName] = {
+      name: spawnStructureName,
+      pos: { x: 25, y: 25},
+      roomName: 'W1N1',
+      type: STRUCTURE_SPAWN
+    }
 
     const mockPath = [
       { x: 25, y: 25, roomName: 'W1N1' },
@@ -270,5 +280,42 @@ describe('generateContainerTasks', () => {
     expect(mockRoomMemory.structures).to.exist
     expect(mockRoomMemory.structures.containers).to.exist
     expect(mockRoomMemory.structures.containers.sources).to.exist
+  })
+
+  it('should add containers to Memory.energyLogistics.stores using template pattern', () => {
+    const mockSpawn = { pos: { x: 25, y: 25, roomName: 'W1N1' } }
+    mockRoom.find.returns([mockSpawn])
+
+    // Return different paths for source and controller containers
+    pathFinderStub.onFirstCall().returns({
+      path: [{ x: 10, y: 10, roomName: 'W1N1' }],
+      incomplete: false
+    })
+    pathFinderStub.onSecondCall().returns({
+      path: [{ x: 20, y: 20, roomName: 'W1N1' }],
+      incomplete: false
+    })
+
+    // Clear any existing stores for cleaner test
+    Memory.energyLogistics.stores = {}
+
+    generateContainerTasks({
+      room: mockRoom,
+      roomMemory: mockRoomMemory
+    })
+
+    // Check that source container was added to energy logistics with template naming
+    const sourceContainerStore = Memory.energyLogistics.stores['container_W1N1:10,10']
+    expect(sourceContainerStore).to.exist
+    expect(sourceContainerStore.type).to.equal('container-source')
+    expect(sourceContainerStore.name).to.equal('container_W1N1:10,10')
+    expect(sourceContainerStore.energy.capacity).to.equal(2000)
+
+    // Check that controller container was added to energy logistics with template naming
+    const controllerContainerStore = Memory.energyLogistics.stores['container_W1N1:20,20']
+    expect(controllerContainerStore).to.exist
+    expect(controllerContainerStore.type).to.equal('container-controller')
+    expect(controllerContainerStore.name).to.equal('container_W1N1:20,20')
+    expect(controllerContainerStore.energy.capacity).to.equal(2000)
   })
 })

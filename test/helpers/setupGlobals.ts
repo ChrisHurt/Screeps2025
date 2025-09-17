@@ -123,6 +123,9 @@ export function setupGlobals({
 
     global.Game.rooms = {}
     global.Game.creeps = {}
+    global.Game.structures = {}
+    global.Game.spawns = {}
+    global.Game.constructionSites = {}
     // @ts-ignore
     global.Game.map.visual = { line: function() { (Game.map.visual.calls = Game.map.visual.calls || []).push([...arguments]) } }
 

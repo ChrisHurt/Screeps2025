@@ -4,7 +4,7 @@ import { addProducerStructureToEnergyLogistics } from "helpers/logistics/addProd
 import { generateTerrainArray } from "helpers/generateTerrainArray"
 import { singleSourceShortestPaths } from "helpers/singleSourceShortestPath"
 import { EnergyImpactType, RoomHarvestTask, RoomUpgradeTask, Urgency } from "types"
-import { addStoreToEnergyLogistics } from "helpers/logistics/addStoreToEnergyLogistics"
+import { addStoreToMemory } from "helpers/logistics/addStoreToEnergyLogistics"
 
 export const generateRoomTasksOnSpawn = (roomName: string) => {
   const room = Game.rooms[roomName]
@@ -28,17 +28,18 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     return
   }
 
-  addStoreToEnergyLogistics({
+  addStoreToMemory({
     actions: {
       collect: 'withdraw',
       deliver: 'transfer',
     },
-    name: spawn.id,
+    name: `${STRUCTURE_SPAWN}_${room.name}:${spawn.pos.x},${spawn.pos.y}`,
     energy: {
       current: 300,
       capacity: 300
     },
     pos: spawn.pos,
+    storeType: STRUCTURE_SPAWN,
     structureType: STRUCTURE_SPAWN,
     roomName,
   })
