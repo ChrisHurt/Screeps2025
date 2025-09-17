@@ -44,7 +44,6 @@ declare global {
     }
     rooms: Record<RoomName,RoomMemory>
     structures: Record<StructureName,StructureMemory>
-
   }
   interface RoomMemory extends CustomRoomMemory {}
 

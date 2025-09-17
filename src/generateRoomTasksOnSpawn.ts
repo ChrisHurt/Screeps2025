@@ -3,7 +3,7 @@ import { addConsumerStructureToEnergyLogistics } from "logistics/addConsumerStru
 import { addProducerStructureToEnergyLogistics } from "logistics/addProducerStructureToEnergyLogistics"
 import { generateTerrainArray } from "helpers/generateTerrainArray"
 import { singleSourceShortestPaths } from "helpers/singleSourceShortestPath"
-import { EnergyImpactType, RoomHarvestTask, RoomUpgradeTask, Urgency } from "types"
+import { RoomHarvestTask, RoomUpgradeTask, StructureName } from "types"
 import { addStoreToMemory } from "logistics/addStoreToEnergyLogistics"
 
 export const generateRoomTasksOnSpawn = (roomName: string) => {
@@ -28,20 +28,22 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     return
   }
 
+  const spawnStructureName: StructureName = `${STRUCTURE_SPAWN}_${room.name}:${spawn.pos.x},${spawn.pos.y}`
+
   addStoreToMemory({
     actions: {
       collect: 'withdraw',
       deliver: 'transfer',
     },
-    name: `${STRUCTURE_SPAWN}_${room.name}:${spawn.pos.x},${spawn.pos.y}`,
     energy: {
       current: 300,
       capacity: 300
     },
+    name: spawnStructureName,
     pos: spawn.pos,
+    roomName,
     storeType: STRUCTURE_SPAWN,
     structureType: STRUCTURE_SPAWN,
-    roomName,
   })
 
   Memory.rooms[roomName] = Memory.rooms[roomName] || {}
@@ -131,7 +133,7 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
 
   // Add Spawn to logistics as consumer & producer
   addConsumerStructureToEnergyLogistics({
-    name: spawn.id,
+    name: spawnStructureName,
     energy: {
       current: 300,
       capacity: 300
@@ -143,7 +145,7 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
   })
 
   addProducerStructureToEnergyLogistics({
-    name: spawn.id,
+    name: spawnStructureName,
     energy: {
       current: 300,
       capacity: 300

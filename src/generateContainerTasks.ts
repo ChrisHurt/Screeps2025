@@ -28,7 +28,7 @@ export const generateContainerTasks = ({
         return
     }
 
-    roomMemory.structures = roomMemory.structures || { containers: { sources: {} } }
+    roomMemory.structures = { containers: { sources: {}, } }
 
     const sourceContainerPositions = roomMemory.tasks.harvest.reduce<RoomPosition[]>((acc, harvestTask) => {
         const pathCalculation = PathFinder.search(
@@ -92,12 +92,15 @@ export const generateContainerTasks = ({
     sourceContainerPositions.forEach(position => {
         const containerName: StructureName = `${STRUCTURE_CONTAINER}_${roomName}:${position.x},${position.y}`
         addStoreToMemory({
-            actions: { collect: 'withdraw', deliver: 'transfer' },
+            actions: {
+                collect: 'withdraw',
+                deliver: 'transfer'
+            },
             energy: {
                 current: 0,
-                capacity: 2000 // Standard container capacity
+                capacity: CONTAINER_CAPACITY
             },
-            name: `${STRUCTURE_CONTAINER}_${roomName}:${position.x},${position.y}`,
+            name: containerName,
             pos: position,
             roomName,
             storeType: SourceContainer as ContainerTypes,

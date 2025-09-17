@@ -47,6 +47,7 @@ global.STRUCTURE_TOWER = 'tower'
 global.STRUCTURE_LAB = 'lab'
 global.STRUCTURE_ROAD = 'road'
 global.STRUCTURE_RAMPART = 'rampart'
+global.CONTAINER_CAPACITY = 2000
 
 // Mock Game object
 global.Game = {

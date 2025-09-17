@@ -39,5 +39,5 @@ export const addStoreToMemory = ({
     pos,
     roomName,
     type: structureType
-}
+  }
 }

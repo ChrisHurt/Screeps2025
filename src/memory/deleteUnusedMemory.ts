@@ -1,7 +1,3 @@
-// TODO: Decreasing Fragmentation: Consider moving entity memory into Memory.creeps and Memory.structures
-// TODO: Look at removing most memory paths in favour of Memory.creeps and Memory.structures
-// NOTE: This is an implementation complexity tradeoff
-
 import { deleteCreepFromMemory } from "memory/deleteCreepFromMemory"
 import { deleteStructureFromMemory } from "memory/deleteStructureFromMemory"
 import { StructureName } from "types"
@@ -30,13 +26,18 @@ export const deleteUnusedMemory = () => {
     return accum
   },{ unbuiltContainersObserved: [], unbuiltRoadNamesObserved: [], unbuiltStructureNamesObserved: [] })
 
-  const structureNamesInMemory: StructureName[] = Object.keys(Memory.structures) as StructureName[]
+  const structureNamesInMemory: StructureName[] = (Object.keys(Memory.structures) as StructureName[]).filter(structureName => {
+    const structure = Memory.structures[structureName]
+    return structure && structure.type !== STRUCTURE_CONTAINER && structure.type !== STRUCTURE_ROAD
+  })
   const builtStructureNamesObserved =
     Object.values(Game.structures)
     .filter(s => s.structureType !== STRUCTURE_CONTAINER && s.structureType !== STRUCTURE_ROAD)
     .map(s => `${s.structureType}_${s.room.name}:${s.pos.x},${s.pos.y}`)
   const structureNamesObserved: StructureName[] = [...builtStructureNamesObserved, ...unbuiltStructureNamesObserved] as StructureName[]
 
+  // TODO: Extract the following from Game.structures since
+  // containers & roads are visible in Game.structures for owned rooms
   const { containersObserved, roadsObserved } = Object.values(Game.rooms).reduce<{
     containersObserved: Set<StructureName>
     roadsObserved: Set<StructureName>
@@ -70,9 +71,10 @@ export const deleteUnusedMemory = () => {
     }
   }
 
-  // Clean up memory for structures that no longer exist
+  // Clean up memory for structures that no longer exist (excluding containers and roads which have separate logic)
   for (const structureName of structureNamesInMemory) {
     if (!structureNamesObserved.includes(structureName)) {
+      console.log(`DeleteMemory: Removing structure ${structureName} - not observed`)
       deleteStructureFromMemory(structureName)
     }
   }
@@ -81,8 +83,9 @@ export const deleteUnusedMemory = () => {
 
   // Clean up memory for containers that are in observable rooms, and do not exist
   for (const containerName of containerNamesInMemory) {
-    const roomName = Game.structures[containerName]?.room?.name || ''
+    const roomName = Memory.structures[containerName]?.roomName || ''
     if (!containersObserved.has(containerName) && roomName in Game.rooms) {
+      console.log(`DeleteMemory: Removing container ${containerName} from room ${roomName} - not observed but room is visible`)
       deleteStructureFromMemory(containerName as StructureName)
     }
   }
@@ -91,8 +94,9 @@ export const deleteUnusedMemory = () => {
 
   // Clean up memory for roads that are in observable rooms, and do not exist
   for (const roadName of roadNamesInMemory) {
-    const roomName = Game.structures[roadName]?.room?.name || ''
+    const roomName = Memory.structures[roadName]?.roomName || ''
     if (!roadsObserved.has(roadName) && roomName in Game.rooms) {
+      console.log(`DeleteMemory: Removing road ${roadName} from room ${roomName} - not observed but room is visible`)
       deleteStructureFromMemory(roadName as StructureName)
     }
   }
