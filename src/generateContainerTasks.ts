@@ -1,4 +1,4 @@
-import { addStoreToMemory } from "helpers/logistics/addStoreToEnergyLogistics"
+import { addStoreToMemory } from "logistics/addStoreToEnergyLogistics"
 import { ContainerTypes, ControllerContainer, RoomBuildTask, SourceContainer, StructureName } from "types"
 
 interface GenerateContainerTasks {

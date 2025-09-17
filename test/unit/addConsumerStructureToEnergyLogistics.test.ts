@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { addConsumerStructureToEnergyLogistics } from '../../src/helpers/logistics/addConsumerStructureToEnergyLogistics'
+import { addConsumerStructureToEnergyLogistics } from '../../src/logistics/addConsumerStructureToEnergyLogistics'
 import { Urgency } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 

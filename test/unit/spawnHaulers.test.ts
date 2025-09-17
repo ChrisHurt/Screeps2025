@@ -33,13 +33,11 @@ describe('spawnHaulers', () => {
       pos: new RoomPosition(10, 10, 'W1N1')
     }
     calculateCreepUpkeepStub = sinon.stub(require('../../src/helpers/calculateCreepUpkeep'), 'calculateCreepUpkeep').returns(0.1)
-    calculateRoomEnergyProductionStub = sinon.stub(require('../../src/helpers/calculateRoomEnergyProduction'), 'calculateRoomEnergyProduction').returns(5)
-    addCarrierCreepToEnergyLogisticsStub = sinon.stub(require('../../src/helpers/logistics/addCarrierToEnergyLogistics'), 'addCarrierCreepToEnergyLogistics')
+    addCarrierCreepToEnergyLogisticsStub = sinon.stub(require('../../src/logistics/addCarrierToEnergyLogistics'), 'addCarrierCreepToEnergyLogistics')
   })
 
   afterEach(() => {
     calculateCreepUpkeepStub.restore()
-    calculateRoomEnergyProductionStub.restore()
     addCarrierCreepToEnergyLogisticsStub.restore()
   })
 
@@ -58,7 +56,7 @@ describe('spawnHaulers', () => {
       ...baseEnergyLogistics(),
       hauling: { W1N1: { demand: 50, supply: 50, net: 0 } }
     }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHaulers({
       haulerCount: 0,
@@ -92,7 +90,7 @@ describe('spawnHaulers', () => {
       ...baseEnergyLogistics(),
       hauling: { W1N1: { demand: 200, supply: 50, net: 150 } }
     } // net > 100
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHaulers({
       haulerCount: 0,
@@ -123,7 +121,7 @@ describe('spawnHaulers', () => {
       ...baseEnergyLogistics(),
       hauling: { W1N1: { demand: 150, supply: 50, net: 100 } }
     } // net > 50
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHaulers({
       haulerCount: 1, // Already has haulers
@@ -152,7 +150,7 @@ describe('spawnHaulers', () => {
       ...baseEnergyLogistics(),
       hauling: { W1N1: { demand: 50, supply: 50, net: 0 } }
     } // net <= 50
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHaulers({
       haulerCount: 1, // Already has haulers
@@ -181,7 +179,7 @@ describe('spawnHaulers', () => {
       ...baseEnergyLogistics(),
       hauling: { W1N1: { demand: 50, supply: 50, net: 0 } }
     }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHaulers({
       haulerCount: 0,
@@ -210,7 +208,7 @@ describe('spawnHaulers', () => {
       ...baseEnergyLogistics(),
       hauling: { W1N1: { demand: 200, supply: 50, net: 150 } }
     } // net > 100 (would want large)
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHaulers({
       haulerCount: 0,
@@ -236,7 +234,7 @@ describe('spawnHaulers', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.energyLogistics = baseEnergyLogistics() // No hauling data for W1N1
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHaulers({
       haulerCount: 0,
@@ -264,7 +262,7 @@ describe('spawnHaulers', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.energyLogistics = baseEnergyLogistics() // No hauling data for W1N1
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHaulers({
       haulerCount: 1, // Already has haulers
@@ -293,7 +291,7 @@ describe('spawnHaulers', () => {
       ...baseEnergyLogistics(),
       hauling: { W1N1: { demand: 50, supply: 50, net: 0 } }
     }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHaulers({
       haulerCount: 0,
@@ -322,7 +320,7 @@ describe('spawnHaulers', () => {
       ...baseEnergyLogistics(),
       hauling: { W1N1: { demand: 50, supply: 50, net: 0 } }
     }
-    Memory.production = { energy: {} }
+    
 
     spawnHaulers({
       haulerCount: 0,
@@ -334,15 +332,13 @@ describe('spawnHaulers', () => {
 
     expect(spawnCreepSpy.called).to.be.true
     const creepName = spawnCreepSpy.getCall(0).args[1]
+    const memoryObject = spawnCreepSpy.getCall(0).args[2].memory
 
-    // Check that energy production was updated
-    expect(Memory.production.energy[creepName]).to.exist
-    expect(Memory.production.energy[creepName].perTickAmount).to.be.lessThan(0) // Should be negative (upkeep)
-    expect(Memory.production.energy[creepName].roomNames).to.deep.equal(['W1N1'])
-    expect(Memory.production.energy[creepName].type).to.equal(EnergyImpactType.CREEP)
-
-    // Check that room memory was updated
-    expect(calculateRoomEnergyProductionStub.calledWith('W1N1')).to.be.true
+    // Check that spawnCreep was called with correct energy impact in memory
+    expect(memoryObject.energyImpact).to.exist
+    expect(memoryObject.energyImpact.perTickAmount).to.be.lessThan(0) // Should be negative (upkeep)
+    expect(memoryObject.energyImpact.roomNames).to.deep.equal(['W1N1'])
+    expect(memoryObject.energyImpact.type).to.equal(EnergyImpactType.CREEP)
 
     // Check that logistics was updated
     expect(addCarrierCreepToEnergyLogisticsStub.called).to.be.true
@@ -363,7 +359,7 @@ describe('spawnHaulers', () => {
       ...baseEnergyLogistics(),
       hauling: { W1N1: { demand: 50, supply: 50, net: 0 } }
     }
-    Memory.production = { energy: {} }
+    
 
     // Mock spawn to fail
     mockSpawn.spawnCreep = sinon.stub().returns(ERR_NOT_ENOUGH_ENERGY)

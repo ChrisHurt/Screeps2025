@@ -1,10 +1,10 @@
 import { findFreeAdjacentPositions } from "findFreeAdjacentPositions"
-import { addConsumerStructureToEnergyLogistics } from "helpers/logistics/addConsumerStructureToEnergyLogistics"
-import { addProducerStructureToEnergyLogistics } from "helpers/logistics/addProducerStructureToEnergyLogistics"
+import { addConsumerStructureToEnergyLogistics } from "logistics/addConsumerStructureToEnergyLogistics"
+import { addProducerStructureToEnergyLogistics } from "logistics/addProducerStructureToEnergyLogistics"
 import { generateTerrainArray } from "helpers/generateTerrainArray"
 import { singleSourceShortestPaths } from "helpers/singleSourceShortestPath"
 import { EnergyImpactType, RoomHarvestTask, RoomUpgradeTask, Urgency } from "types"
-import { addStoreToMemory } from "helpers/logistics/addStoreToEnergyLogistics"
+import { addStoreToMemory } from "logistics/addStoreToEnergyLogistics"
 
 export const generateRoomTasksOnSpawn = (roomName: string) => {
   const room = Game.rooms[roomName]
@@ -43,13 +43,6 @@ export const generateRoomTasksOnSpawn = (roomName: string) => {
     structureType: STRUCTURE_SPAWN,
     roomName,
   })
-
-  // NOTE: Update rooms energy production
-  Memory.production.energy[spawn.id] = {
-    perTickAmount: 1,
-    roomNames: [roomName],
-    type: EnergyImpactType.SPAWN,
-  }
 
   Memory.rooms[roomName] = Memory.rooms[roomName] || {}
   const roomMemory = Memory.rooms[roomName]

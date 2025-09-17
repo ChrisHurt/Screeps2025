@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import * as sinon from 'sinon'
 import { setupGlobals } from '../helpers/setupGlobals'
 
-import { matchLogisticsTasks } from '../../src/helpers/logistics/matchLogisticsTasks'
+import { matchLogisticsTasks } from '../../src/logistics/matchLogisticsTasks'
 import { Carrier, Store, Urgency, CreepRole } from '../../src/types'
 
 describe('matchLogisticsTasks', () => {

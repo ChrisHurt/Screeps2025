@@ -1,7 +1,6 @@
 import { calculateCreepUpkeep } from "helpers/calculateCreepUpkeep"
-import { calculateRoomEnergyProduction } from "helpers/calculateRoomEnergyProduction"
-import { addCarrierCreepToEnergyLogistics } from "helpers/logistics/addCarrierToEnergyLogistics"
-import { CreepRole, CustomRoomMemory, EnergyImpactType, RoomHarvestTask, RoomName, SharedCreepState } from "types"
+import { addCarrierCreepToEnergyLogistics } from "logistics/addCarrierToEnergyLogistics"
+import { CreepRole, CustomRoomMemory, EnergyImpactType, RoomHarvestTask, RoomName, SharedCreepState, CreepEnergyImpact } from "types"
 
 interface SpawnHaulersInput {
     haulerCount: number
@@ -38,27 +37,25 @@ export const spawnHaulers = ({
             const creepName = `Hauler-${roomName}-${Game.time}`
             spawnsAvailable = spawnsAvailable.filter(spawn => spawn.id !== nearestSpawn.id)
 
+            const perTickUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: true })
+
+            const energyImpact: CreepEnergyImpact = {
+                perTickAmount: -perTickUpkeep,
+                roomNames: [roomName],
+                role: CreepRole.HAULER,
+                type: EnergyImpactType.CREEP,
+            }
+
             const spawnResult = nearestSpawn.spawnCreep(
                 creepBody,
                 creepName,
-                { memory: { role: CreepRole.HAULER, state: SharedCreepState.idle, idleStarted: Game.time } }
+                { memory: { role: CreepRole.HAULER, state: SharedCreepState.idle, idleStarted: Game.time, energyImpact: energyImpact } }
             )
 
             if (spawnResult !== OK) {
                 console.log(`SpawnCreepsDebug: Failed to spawn hauler in room ${roomName} with error ${spawnResult}`)
                 return spawnsAvailable
             }
-
-            const perTickUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: true })
-
-            // NOTE: Update rooms energy production
-            Memory.production.energy[creepName] = {
-                perTickAmount: -perTickUpkeep,
-                roomNames: [roomName],
-                type: EnergyImpactType.CREEP,
-            }
-
-            roomMemory.effectiveEnergyPerTick = calculateRoomEnergyProduction(roomName)
 
             addCarrierCreepToEnergyLogistics({
                 energy: {

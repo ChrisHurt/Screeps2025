@@ -347,6 +347,7 @@ export interface StructureMemory {
   pos: Position
   roomName: RoomName
   type: StructureConstant
+  energyImpact?: StructureEnergyImpact
 }
 
 export interface CreepMemory {
@@ -354,6 +355,7 @@ export interface CreepMemory {
   role: CreepRole
   state?: SharedCreepState
   task?: CreepHarvestTask | CreepUpgradeTask | CreepBuildTask
+  energyImpact?: CreepEnergyImpact
 }
 
 export interface BuildParams {

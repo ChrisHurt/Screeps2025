@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { addConsumerCreepToEnergyLogistics } from '../../src/helpers/logistics/addConsumerCreepToEnergyLogistics'
+import { addConsumerCreepToEnergyLogistics } from '../../src/logistics/addConsumerCreepToEnergyLogistics'
 import { CreepRole, Urgency } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 

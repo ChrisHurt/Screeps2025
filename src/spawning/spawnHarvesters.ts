@@ -1,8 +1,8 @@
 import { calculateCreepUpkeep } from "helpers/calculateCreepUpkeep"
 import { calculateHarvesterProduction } from "helpers/calculateHarvesterProduction"
-import { calculateRoomEnergyProduction } from "helpers/calculateRoomEnergyProduction"
-import { addProducerCreepToEnergyLogistics } from "helpers/logistics/addProducerCreepToEnergyLogistics"
-import { CreepHarvestTask, CreepRole, CustomRoomMemory, EnergyImpactType, RoomHarvestTask, RoomName, SharedCreepState } from "types"
+import { addProducerCreepToEnergyLogistics } from "logistics/addProducerCreepToEnergyLogistics"
+import { getAllCreepTasks } from "../memory/deleteCreepFromMemory"
+import { CreepHarvestTask, CreepRole, CustomRoomMemory, EnergyImpactType, RoomHarvestTask, RoomName, SharedCreepState, CreepEnergyImpact } from "types"
 
 interface SpawnHarvestersInput {
     harvestTasks: RoomHarvestTask[]
@@ -16,7 +16,6 @@ export const spawnHarvesters = (options: SpawnHarvestersInput): { harvestTasksNe
     let {
         harvestTasks,
         room,
-        roomMemory,
         roomName,
         spawnsAvailable,
     } = options
@@ -31,7 +30,7 @@ export const spawnHarvesters = (options: SpawnHarvestersInput): { harvestTasksNe
         const {
             workParts: reservedWorkParts,
             creeps: reservedCreepsCount
-        } = Object.values(Memory.reservations.tasks).reduce((totals, task) => {
+        } = Object.values(getAllCreepTasks()).reduce((totals, task) => {
             if (task.type === "harvest" && task.sourceId === harvestTask.sourceId) {
                 return {
                     workParts: totals.workParts + task.workParts,
@@ -87,10 +86,27 @@ export const spawnHarvesters = (options: SpawnHarvestersInput): { harvestTasksNe
                 returnPath: returnPath
             }
 
+            const perTickUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: true })
+
+            const energyImpact: CreepEnergyImpact = {
+                perTickAmount: productionPerTick - perTickUpkeep,
+                roomNames: [roomName],
+                role: CreepRole.HARVESTER,
+                type: EnergyImpactType.CREEP,
+            }
+
             const spawnResult = nearestSpawn.spawnCreep(
                 creepBody,
                 creepName,
-                { memory: { role: CreepRole.HARVESTER, state: SharedCreepState.idle, task: creepHarvestTask, idleStarted: Game.time } }
+                {
+                    memory: {
+                        energyImpact: energyImpact,
+                        idleStarted: Game.time,
+                        role: CreepRole.HARVESTER,
+                        state: SharedCreepState.idle,
+                        task: creepHarvestTask,
+                    }
+                }
             )
 
             if (spawnResult !== OK) {
@@ -98,19 +114,6 @@ export const spawnHarvesters = (options: SpawnHarvestersInput): { harvestTasksNe
                 harvestTasksNeedCreeps = true
                 continue
             }
-
-            Memory.reservations.tasks[creepName] = creepHarvestTask
-
-            const perTickUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: true })
-
-            // NOTE: Update rooms energy production
-            Memory.production.energy[creepName] = {
-                perTickAmount: productionPerTick - perTickUpkeep,
-                roomNames: [roomName],
-                type: EnergyImpactType.CREEP,
-            }
-
-            roomMemory.effectiveEnergyPerTick = calculateRoomEnergyProduction(roomName)
 
             addProducerCreepToEnergyLogistics({
                 energy: {

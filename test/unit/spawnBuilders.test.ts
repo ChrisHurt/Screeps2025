@@ -34,8 +34,8 @@ describe('spawnBuilders', () => {
     }
     calculateBuilderProductionStub = sinon.stub(require('../../src/calculateBuilderProduction'), 'calculateBuilderProduction').returns(2)
     calculateCreepUpkeepStub = sinon.stub(require('../../src/helpers/calculateCreepUpkeep'), 'calculateCreepUpkeep').returns(0.1)
-    calculateRoomEnergyProductionStub = sinon.stub(require('../../src/helpers/calculateRoomEnergyProduction'), 'calculateRoomEnergyProduction').returns(5)
-    addConsumerCreepToEnergyLogisticsStub = sinon.stub(require('../../src/helpers/logistics/addConsumerCreepToEnergyLogistics'), 'addConsumerCreepToEnergyLogistics')
+    calculateRoomEnergyProductionStub = sinon.stub().returns(5)
+    addConsumerCreepToEnergyLogisticsStub = sinon.stub(require('../../src/logistics/addConsumerCreepToEnergyLogistics'), 'addConsumerCreepToEnergyLogistics')
 
     // @ts-ignore
     global.RoomPosition = class {
@@ -49,7 +49,6 @@ describe('spawnBuilders', () => {
   afterEach(() => {
     calculateBuilderProductionStub.restore()
     calculateCreepUpkeepStub.restore()
-    calculateRoomEnergyProductionStub.restore()
     addConsumerCreepToEnergyLogisticsStub.restore()
   })
 
@@ -67,7 +66,7 @@ describe('spawnBuilders', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnBuilders({
       builderCount: 0,
@@ -197,7 +196,7 @@ describe('spawnBuilders', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnBuilders({
       builderCount: 1,
@@ -314,7 +313,7 @@ describe('spawnBuilders', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     // Mock spawn to fail with a different error (not ERR_NOT_ENOUGH_ENERGY)
     mockSpawn.spawnCreep = sinon.stub().returns(ERR_BUSY)
@@ -355,7 +354,7 @@ describe('spawnBuilders', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     spawnBuilders({
       builderCount: 0,
@@ -368,19 +367,17 @@ describe('spawnBuilders', () => {
 
     expect(spawnCreepSpy.called).to.be.true
     const creepName = spawnCreepSpy.getCall(0).args[1]
+    const memoryObject = spawnCreepSpy.getCall(0).args[2].memory
     
-    // Check that task reservation was created
-    expect(Memory.reservations.tasks[creepName]).to.exist
-    expect(Memory.reservations.tasks[creepName].type).to.equal('build')
+    // Check that spawnCreep was called with correct task in memory
+    expect(memoryObject.task).to.exist
+    expect(memoryObject.task.type).to.equal('build')
     
-    // Check that energy production was updated
-    expect(Memory.production.energy[creepName]).to.exist
-    expect(Memory.production.energy[creepName].perTickAmount).to.equal(-2.1) // -0.1 - 2
-    expect(Memory.production.energy[creepName].roomNames).to.deep.equal(['W1N1'])
-    expect(Memory.production.energy[creepName].type).to.equal(EnergyImpactType.CREEP)
-    
-    // Check that room memory was updated
-    expect(calculateRoomEnergyProductionStub.calledWith('W1N1')).to.be.true
+    // Check that spawnCreep was called with correct energy impact in memory
+    expect(memoryObject.energyImpact).to.exist
+    expect(memoryObject.energyImpact.perTickAmount).to.equal(-2.1) // -0.1 - 2
+    expect(memoryObject.energyImpact.roomNames).to.deep.equal(['W1N1'])
+    expect(memoryObject.energyImpact.type).to.equal(EnergyImpactType.CREEP)
     
     // Check that logistics was updated
     expect(addConsumerCreepToEnergyLogisticsStub.called).to.be.true
@@ -439,7 +436,7 @@ describe('spawnBuilders', () => {
     const spawnsAvailable = [mockSpawn, mockSpawn2]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnBuilders({
       builderCount: 0,

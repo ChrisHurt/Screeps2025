@@ -1,5 +1,5 @@
 import { calculateCreepUpkeep } from "helpers/calculateCreepUpkeep"
-import { CreepRole, CustomRoomMemory, EnergyImpactType, RoomName, SharedCreepState } from "types"
+import { CreepRole, CustomRoomMemory, EnergyImpactType, RoomName, SharedCreepState, CreepEnergyImpact } from "types"
 
 interface SpawnGuardsInput {
     guardCount: number
@@ -33,24 +33,24 @@ export const spawnGuards = ({
 
         spawnsAvailable = spawnsAvailable.filter(spawn => spawn.id !== guardSpawn.id)
 
+        const perTickUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: false })
+
+        const energyImpact: CreepEnergyImpact = {
+            perTickAmount: - perTickUpkeep,
+            roomNames: [roomName],
+            role: CreepRole.GUARD,
+            type: EnergyImpactType.CREEP,
+        }
+
         const creepName = `Guard-${guardSpawn.id}-${Game.time}`
         const spawnResult = guardSpawn.spawnCreep(creepBody, creepName, {
             memory: {
                 idleStarted: Game.time + creepBody.length * 3,
                 role: CreepRole.GUARD,
-                state: SharedCreepState.idle
+                state: SharedCreepState.idle,
+                energyImpact: energyImpact
             }
         })
-
-
-        const perTickUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: false })
-
-        // NOTE: Update rooms energy production
-        Memory.production.energy[creepName] = {
-            perTickAmount: - perTickUpkeep,
-            roomNames: [roomName],
-            type: EnergyImpactType.CREEP,
-        }
 
         if (spawnResult !== OK) {
             console.log(`SpawnCreepsDebug: Failed to spawn guard in room ${roomName} with error ${spawnResult}`)

@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { updateEnergyLogistics } from '../../src/helpers/logistics/updateEnergyLogistics'
+import { updateEnergyLogistics } from '../../src/logistics/updateEnergyLogistics'
 import { CreepRole } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 

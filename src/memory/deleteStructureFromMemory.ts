@@ -3,11 +3,6 @@ import { StructureName } from "types"
 export const deleteStructureFromMemory = (structureName: StructureName) => {
     delete Memory.structures[structureName]
 
-    // Safely delete production energy data
-    if (Memory.production?.energy && structureName in Memory.production.energy) {
-        delete Memory.production.energy[structureName]
-    }
-
     // Safely delete reservations
     if (Memory.reservations?.energy && structureName in Memory.reservations.energy) {
         delete Memory.reservations.energy[structureName]

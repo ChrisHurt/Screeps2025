@@ -1,8 +1,7 @@
 import { calculateBuilderProduction } from "calculateBuilderProduction"
 import { calculateCreepUpkeep } from "helpers/calculateCreepUpkeep"
-import { calculateRoomEnergyProduction } from "helpers/calculateRoomEnergyProduction"
-import { addConsumerCreepToEnergyLogistics } from "helpers/logistics/addConsumerCreepToEnergyLogistics"
-import { CreepBuildTask, CreepRole, CustomRoomMemory, EnergyImpactType, RoomBuildTask, RoomName, SharedCreepState } from "types"
+import { addConsumerCreepToEnergyLogistics } from "logistics/addConsumerCreepToEnergyLogistics"
+import { CreepBuildTask, CreepRole, CustomRoomMemory, EnergyImpactType, RoomBuildTask, RoomName, SharedCreepState, CreepEnergyImpact } from "types"
 
 interface SpawnBuildersInput {
     buildTasks: RoomBuildTask[]
@@ -55,10 +54,19 @@ export const spawnBuilders = ({
                 type: "build",
             }
 
+            const perTickBodyUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: true })
+
+            const energyImpact: CreepEnergyImpact = {
+                perTickAmount: - perTickBodyUpkeep - productionPerTick,
+                roomNames: [roomName],
+                role: CreepRole.BUILDER,
+                type: EnergyImpactType.CREEP,
+            }
+
             const spawnResult = nearestSpawn.spawnCreep(
                 creepBody,
                 creepName,
-                { memory: { role: CreepRole.BUILDER, state: SharedCreepState.idle, task: creepBuildTask, idleStarted: Game.time } }
+                { memory: { role: CreepRole.BUILDER, state: SharedCreepState.idle, task: creepBuildTask, idleStarted: Game.time, energyImpact: energyImpact } }
             )
 
             if (spawnResult !== OK) {
@@ -72,19 +80,6 @@ export const spawnBuilders = ({
 
             // Remove the spawn from available list since it was successfully used
             spawnsAvailable = spawnsAvailable.filter(spawn => spawn.id !== nearestSpawn.id)
-
-            Memory.reservations.tasks[creepName] = creepBuildTask
-
-            const perTickBodyUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: true })
-
-            // NOTE: Update rooms energy production
-            Memory.production.energy[creepName] = {
-                perTickAmount: - perTickBodyUpkeep - productionPerTick,
-                roomNames: [roomName],
-                type: EnergyImpactType.CREEP,
-            }
-
-            roomMemory.effectiveEnergyPerTick = calculateRoomEnergyProduction(roomName)
 
             addConsumerCreepToEnergyLogistics({
                 depositTiming: {

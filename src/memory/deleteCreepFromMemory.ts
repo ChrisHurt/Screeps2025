@@ -1,12 +1,36 @@
+import { CreepEnergyImpact, EnergyImpactType, StructureEnergyImpact, StructureName, CreepBuildTask, CreepUpgradeTask, CreepHarvestTask } from "types"
+
+
+/**
+ * Gets all tasks from consolidated memory locations (Memory.creeps[].task)
+ * Falls back to Memory.reservations.tasks for backwards compatibility
+ */
+export const getAllCreepTasks = (): Record<string, CreepBuildTask | CreepUpgradeTask | CreepHarvestTask> => {
+    const tasks: Record<string, CreepBuildTask | CreepUpgradeTask | CreepHarvestTask> = {}
+    
+    // Get from creep memory
+    Object.entries(Memory.creeps).forEach(([creepId, creepMemory]) => {
+        if (creepMemory.task) {
+            tasks[creepId] = creepMemory.task
+        }
+    })
+    
+    // Fallback to old location for backwards compatibility
+    if (Memory.reservations?.tasks) {
+        Object.entries(Memory.reservations.tasks).forEach(([creepId, task]) => {
+            if (!tasks[creepId]) {
+                tasks[creepId] = task
+            }
+        })
+    }
+    
+    return tasks
+}
+
 export const deleteCreepFromMemory = (creepName: string) => {
     // Delete from Memory.creeps
     if (Memory.creeps && creepName in Memory.creeps) {
         delete Memory.creeps[creepName]
-    }
-
-    // Safely delete production energy data
-    if (Memory.production?.energy && creepName in Memory.production.energy) {
-        delete Memory.production.energy[creepName]
     }
 
     // Safely delete reservations

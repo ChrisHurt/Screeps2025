@@ -41,8 +41,6 @@ describe('spawnGuards', () => {
 
     const spawnsAvailable = [mockSpawn]
 
-    Memory.production = { energy: {} }
-
     const result = spawnGuards({
       guardCount: 1,
       room,
@@ -156,8 +154,6 @@ describe('spawnGuards', () => {
 
     const spawnsAvailable = [mockSpawn]
 
-    Memory.production = { energy: {} }
-
     const result = spawnGuards({
       guardCount: 0,
       room,
@@ -170,39 +166,6 @@ describe('spawnGuards', () => {
     expect(result.length).to.equal(0) // spawn should still be removed even on failure
   })
 
-  it('should update Memory.production.energy when spawning guard', () => {
-    const room = {
-      energyAvailable: 150
-    } as Room
-
-    const roomMemory = {
-      threats: {
-        enemyCreepCount: 2,
-        enemyPowerCreepCount: 0,
-        enemyStructures: [],
-        lastObserved: Game.time || 0
-      }
-    } as any
-
-    const spawnsAvailable = [mockSpawn]
-
-    Memory.production = { energy: {} }
-
-    spawnGuards({
-      guardCount: 0,
-      room,
-      roomMemory,
-      roomName: 'W1N1',
-      spawnsAvailable
-    })
-
-    expect(spawnCreepSpy.called).to.be.true
-    const creepName = spawnCreepSpy.getCall(0).args[1]
-    expect(Memory.production.energy[creepName]).to.exist
-    expect(Memory.production.energy[creepName].perTickAmount).to.be.lessThan(0) // Should be negative (upkeep)
-    expect(Memory.production.energy[creepName].roomNames).to.deep.equal(['W1N1'])
-    expect(Memory.production.energy[creepName].type).to.equal(EnergyImpactType.CREEP)
-  })
 
   it('should not spawn guard when spawnsAvailable is empty', () => {
     const room = {

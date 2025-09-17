@@ -17,9 +17,6 @@ export const initialiseMemory = () => {
     Memory.mapConnections = []
     Memory.mapRoomGraph = {}
     Memory.memoryInitialised = true
-    Memory.production = {
-        energy: {}
-    }
     Memory.reservations = {
         energy: {},
         tasks: {}

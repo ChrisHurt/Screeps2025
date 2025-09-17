@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { addStoreToMemory } from '../../src/helpers/logistics/addStoreToEnergyLogistics'
+import { addStoreToMemory } from '../../src/logistics/addStoreToEnergyLogistics'
 import { ContainerTypes, ControllerContainer, SourceContainer, StoreTypes, StructureName, Urgency } from '../../src/types'
 import { setupGlobals } from '../helpers/setupGlobals'
 

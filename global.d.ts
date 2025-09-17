@@ -38,9 +38,6 @@ declare global {
       [roomId: RoomName]: RoomName[]
     }
     memoryInitialised?: boolean
-    production: {
-      energy: Record<string,StructureEnergyImpact | CreepEnergyImpact>
-    }
     reservations: {
       energy: Record<string, StructureEnergyImpact | CreepEnergyImpact>
       tasks: Record<string, CreepBuildTask | CreepUpgradeTask | CreepHarvestTask>

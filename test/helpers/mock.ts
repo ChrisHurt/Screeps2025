@@ -33,9 +33,6 @@ export const mockMemory: Memory = {
   mapConnections: [],
   memoryInitialised: false,
   powerCreeps: {},
-  production: {
-    energy: {}
-  },
   reservations: {
     energy: {},
     tasks: {}

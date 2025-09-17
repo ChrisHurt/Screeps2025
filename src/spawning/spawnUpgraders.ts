@@ -1,8 +1,8 @@
 import { calculateUpgraderProduction } from "calculateUpgraderProduction"
 import { calculateCreepUpkeep } from "helpers/calculateCreepUpkeep"
-import { calculateRoomEnergyProduction } from "helpers/calculateRoomEnergyProduction"
-import { addConsumerCreepToEnergyLogistics } from "helpers/logistics/addConsumerCreepToEnergyLogistics"
-import { CreepRole, CreepUpgradeTask, CustomRoomMemory, EnergyImpactType, RoomName, RoomUpgradeTask, SharedCreepState } from "types"
+import { addConsumerCreepToEnergyLogistics } from "logistics/addConsumerCreepToEnergyLogistics"
+import { getAllCreepTasks } from "../memory/deleteCreepFromMemory"
+import { CreepRole, CreepUpgradeTask, CustomRoomMemory, EnergyImpactType, RoomName, RoomUpgradeTask, SharedCreepState, CreepEnergyImpact } from "types"
 
 interface SpawnUpgradersInput {
     effectiveEnergyPerTick: number
@@ -36,7 +36,7 @@ export const spawnUpgraders = ({
         console.log(`SpawnCreepsDebug: No available spawn found for upgrade task in room ${roomName}`)
         return spawnsAvailable
     }
-    const reservedUpgraderWorkParts = Object.values(Memory.reservations.tasks).reduce((total, task) => {
+    const reservedUpgraderWorkParts = Object.values(getAllCreepTasks()).reduce((total, task) => {
         if (task.type === "upgrade" && task.controllerId === upgradeTask.controllerId) {
             return total + task.workParts
         }
@@ -69,29 +69,26 @@ export const spawnUpgraders = ({
         type: "upgrade",
         workParts: 1
     }
+
+    const perTickBodyUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: true })
+
+    const energyImpact: CreepEnergyImpact = {
+        perTickAmount: - perTickBodyUpkeep - productionPerTick,
+        roomNames: [roomName],
+        role: CreepRole.UPGRADER,
+        type: EnergyImpactType.CREEP,
+    }
+
     const spawnResult = nearestSpawn.spawnCreep(
         creepBody,
         creepName,
-        { memory: { role: CreepRole.UPGRADER, state: SharedCreepState.idle, task: creepUpgradeTask, idleStarted: Game.time } }
+        { memory: { role: CreepRole.UPGRADER, state: SharedCreepState.idle, task: creepUpgradeTask, idleStarted: Game.time, energyImpact: energyImpact } }
     )
 
     if (spawnResult !== OK) {
         console.log(`SpawnCreepsDebug: Failed to spawn upgrader in room ${roomName} with error ${spawnResult}`)
         return spawnsAvailable
     }
-
-    Memory.reservations.tasks[creepName] = creepUpgradeTask
-
-    const perTickBodyUpkeep = calculateCreepUpkeep({ body: creepBody, isRenewed: true })
-
-    // NOTE: Update rooms energy production
-    Memory.production.energy[creepName] = {
-        perTickAmount: - perTickBodyUpkeep - productionPerTick,
-        roomNames: [roomName],
-        type: EnergyImpactType.CREEP,
-    }
-
-    roomMemory.effectiveEnergyPerTick = calculateRoomEnergyProduction(roomName)
 
     addConsumerCreepToEnergyLogistics({
         depositTiming: {

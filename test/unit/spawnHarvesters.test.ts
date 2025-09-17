@@ -10,7 +10,6 @@ describe('spawnHarvesters', () => {
   let mockSpawn: any
   let calculateHarvesterProductionStub: sinon.SinonStub
   let calculateCreepUpkeepStub: sinon.SinonStub
-  let calculateRoomEnergyProductionStub: sinon.SinonStub
   let addProducerCreepToEnergyLogisticsStub: sinon.SinonStub
 
   beforeEach(() => {
@@ -27,8 +26,7 @@ describe('spawnHarvesters', () => {
       returnPath: []
     })
     calculateCreepUpkeepStub = sinon.stub(require('../../src/helpers/calculateCreepUpkeep'), 'calculateCreepUpkeep').returns(0.1)
-    calculateRoomEnergyProductionStub = sinon.stub(require('../../src/helpers/calculateRoomEnergyProduction'), 'calculateRoomEnergyProduction').returns(5)
-    addProducerCreepToEnergyLogisticsStub = sinon.stub(require('../../src/helpers/logistics/addProducerCreepToEnergyLogistics'), 'addProducerCreepToEnergyLogistics')
+    addProducerCreepToEnergyLogisticsStub = sinon.stub(require('../../src/logistics/addProducerCreepToEnergyLogistics'), 'addProducerCreepToEnergyLogistics')
 
     // @ts-ignore
     global.RoomPosition = class {
@@ -42,7 +40,6 @@ describe('spawnHarvesters', () => {
   afterEach(() => {
     calculateHarvesterProductionStub.restore()
     calculateCreepUpkeepStub.restore()
-    calculateRoomEnergyProductionStub.restore()
     addProducerCreepToEnergyLogisticsStub.restore()
   })
 
@@ -68,7 +65,7 @@ describe('spawnHarvesters', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHarvesters({
       harvestTasks,
@@ -110,7 +107,7 @@ describe('spawnHarvesters', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHarvesters({
       harvestTasks,
@@ -159,7 +156,7 @@ describe('spawnHarvesters', () => {
         } as any
       }
     }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHarvesters({
       harvestTasks,
@@ -196,7 +193,7 @@ describe('spawnHarvesters', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHarvesters({
       harvestTasks,
@@ -233,7 +230,7 @@ describe('spawnHarvesters', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     // Override RoomPosition.findClosestByPath to return null
     // @ts-ignore
@@ -279,7 +276,7 @@ describe('spawnHarvesters', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     // Mock spawn to fail
     mockSpawn.spawnCreep = sinon.stub().returns(ERR_NOT_ENOUGH_ENERGY)
@@ -319,7 +316,7 @@ describe('spawnHarvesters', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     spawnHarvesters({
       harvestTasks,
@@ -331,21 +328,19 @@ describe('spawnHarvesters', () => {
 
     expect(spawnCreepStub.called).to.be.true
     const creepName = spawnCreepStub.getCall(0).args[1]
-    
-    // Check that task reservation was created
-    expect(Memory.reservations.tasks[creepName]).to.exist
-    expect(Memory.reservations.tasks[creepName].type).to.equal('harvest')
-    expect((Memory.reservations.tasks[creepName] as any).sourceId).to.equal('src1')
-    
-    // Check that energy production was updated
-    expect(Memory.production.energy[creepName]).to.exist
-    expect(Memory.production.energy[creepName].perTickAmount).to.equal(9.9) // 10 - 0.1
-    expect(Memory.production.energy[creepName].roomNames).to.deep.equal(['W1N1'])
-    expect(Memory.production.energy[creepName].type).to.equal(EnergyImpactType.CREEP)
-    
-    // Check that room memory was updated
-    expect(calculateRoomEnergyProductionStub.calledWith('W1N1')).to.be.true
-    
+    const memoryObject = spawnCreepStub.getCall(0).args[2].memory
+
+    // Check that spawnCreep was called with correct task in memory
+    expect(memoryObject.task).to.exist
+    expect(memoryObject.task.type).to.equal('harvest')
+    expect(memoryObject.task.sourceId).to.equal('src1')
+
+    // Check that spawnCreep was called with correct energy impact in memory
+    expect(memoryObject.energyImpact).to.exist
+    expect(memoryObject.energyImpact.perTickAmount).to.equal(9.9) // 10 - 0.1
+    expect(memoryObject.energyImpact.roomNames).to.deep.equal(['W1N1'])
+    expect(memoryObject.energyImpact.type).to.equal(EnergyImpactType.CREEP)
+
     // Check that logistics was updated
     expect(addProducerCreepToEnergyLogisticsStub.called).to.be.true
   })
@@ -389,7 +384,7 @@ describe('spawnHarvesters', () => {
     const spawnsAvailable = [mockSpawn, mockSpawn2]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHarvesters({
       harvestTasks,
@@ -417,7 +412,7 @@ describe('spawnHarvesters', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnHarvesters({
       harvestTasks,

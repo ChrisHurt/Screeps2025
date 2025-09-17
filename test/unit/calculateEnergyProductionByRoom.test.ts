@@ -14,13 +14,19 @@ describe('calculateEnergyProductionByRoom', () => {
     // @ts-ignore
     memoryBackup = { ...global.Memory }
     // @ts-ignore
-    global.Memory.production = {
-      energy: [
-        { perTickAmount: 100, roomNames: ['W1N1', 'W2N2'] },
-        { perTickAmount: 50, roomNames: ['W1N1'] },
-        { perTickAmount: 30, roomNames: [] },
-      ]
+    global.Memory.creeps = {
+      creep1: {
+        energyImpact: { perTickAmount: 100, roomNames: ['W1N1', 'W2N2'] }
+      },
+      creep2: {
+        energyImpact: { perTickAmount: 50, roomNames: ['W1N1'] }
+      },
+      creep3: {
+        energyImpact: { perTickAmount: 30, roomNames: [] }
+      }
     }
+    // @ts-ignore
+    global.Memory.structures = {}
     // @ts-ignore
     global.Memory.rooms = {
       W1N1: {},
@@ -53,7 +59,9 @@ describe('calculateEnergyProductionByRoom', () => {
 
   it('should handle empty energy array', () => {
     // @ts-ignore
-    global.Memory.production.energy = []
+    global.Memory.creeps = {}
+    // @ts-ignore
+    global.Memory.structures = {}
     const result = calculateEnergyProductionByRoom()
     expect(result).to.deep.equal({})
     expect(consoleSpy.calledWithMatch(/Total: 0/)).to.be.true
@@ -61,10 +69,16 @@ describe('calculateEnergyProductionByRoom', () => {
 
   it('should not fail if roomNames is undefined or empty', () => {
     // @ts-ignore
-    global.Memory.production.energy = [
-      { perTickAmount: 100, roomNames: undefined },
-      { perTickAmount: 50, roomNames: [] }
-    ]
+    global.Memory.creeps = {
+      creep1: {
+        energyImpact: { perTickAmount: 100, roomNames: undefined }
+      },
+      creep2: {
+        energyImpact: { perTickAmount: 50, roomNames: [] }
+      }
+    }
+    // @ts-ignore
+    global.Memory.structures = {}
     const result = calculateEnergyProductionByRoom()
     expect(result).to.deep.equal({})
     expect(consoleSpy.calledWithMatch(/Total: 0/)).to.be.true

@@ -35,23 +35,6 @@ describe("deleteUnusedMemory", () => {
     assert.isUndefined(Memory.creeps.notPersistValue)
   })
 
-  it("should delete production energy data for missing creeps", () => {
-    Memory.creeps.testCreep = {} as CreepMemory
-    Memory.production.energy.testCreep = {
-      perTickAmount: 100,
-      roomNames: ["W1N1"],
-      role: CreepRole.HARVESTER,
-      type: EnergyImpactType.CREEP
-    }
-
-    // Do not add testCreep to Game.creeps, so it's considered missing
-
-    deleteUnusedMemory()
-
-    assert.isUndefined(Memory.creeps.testCreep)
-    assert.isUndefined(Memory.production.energy.testCreep)
-  })
-
   it("should delete energy reservations for missing creeps", () => {
     Memory.creeps.testCreep = {} as CreepMemory
     Memory.reservations.energy.testCreep = {
@@ -69,23 +52,24 @@ describe("deleteUnusedMemory", () => {
     assert.isUndefined(Memory.reservations.energy.testCreep)
   })
 
-  it("should delete task reservations for missing creeps", () => {
-    Memory.creeps.testCreep = {} as CreepMemory
-    Memory.reservations.tasks.testCreep = {
-      taskId: "some-task-id",
-      type: "harvest",
-      sourceId: "source1",
-      sourcePosition: { x: 10, y: 10 } as RoomPosition,
-      returnPath: [],
-      workParts: 2
-    }
+  it("should delete creep memory including tasks for missing creeps", () => {
+    Memory.creeps.testCreep = {
+      role: 'harvester',
+      task: {
+        taskId: "some-task-id",
+        type: "harvest",
+        sourceId: "source1",
+        sourcePosition: { x: 10, y: 10 } as RoomPosition,
+        returnPath: [],
+        workParts: 2
+      }
+    } as CreepMemory
 
     // Do not add testCreep to Game.creeps, so it's considered missing
 
     deleteUnusedMemory()
 
     assert.isUndefined(Memory.creeps.testCreep)
-    assert.isUndefined(Memory.reservations.tasks.testCreep)
   })
 
   it("should delete energy logistics carriers for missing creeps", () => {
@@ -143,26 +127,22 @@ describe("deleteUnusedMemory", () => {
   })
 
   it("should not delete memory for creeps that still exist", () => {
-    Memory.creeps.existingCreep = {} as CreepMemory
-    Memory.production.energy.existingCreep = {
-      perTickAmount: 100,
-      roomNames: ["W1N1"],
-      role: CreepRole.HARVESTER,
-      type: EnergyImpactType.CREEP
-    }
+    Memory.creeps.existingCreep = {
+      role: CreepRole.UPGRADER,
+      task: {
+        taskId: "task-id",
+        type: "harvest",
+        sourceId: "source1",
+        sourcePosition: { x: 10, y: 10 } as RoomPosition,
+        returnPath: [],
+        workParts: 2
+      }
+    } as CreepMemory
     Memory.reservations.energy.existingCreep = {
       perTickAmount: 50,
       roomNames: ["W1N1"],
       role: CreepRole.UPGRADER,
       type: EnergyImpactType.CREEP
-    }
-    Memory.reservations.tasks.existingCreep = {
-      taskId: "task-id",
-      type: "harvest",
-      sourceId: "source1",
-      sourcePosition: { x: 10, y: 10 } as RoomPosition,
-      returnPath: [],
-      workParts: 2
     }
     Memory.energyLogistics.carriers.existingCreep = {
       energy: { current: 50, capacity: 100 },
@@ -190,9 +170,8 @@ describe("deleteUnusedMemory", () => {
     deleteUnusedMemory()
 
     assert.isDefined(Memory.creeps.existingCreep)
-    assert.isDefined(Memory.production.energy.existingCreep)
+    assert.isDefined(Memory.creeps.existingCreep.task)
     assert.isDefined(Memory.reservations.energy.existingCreep)
-    assert.isDefined(Memory.reservations.tasks.existingCreep)
     assert.isDefined(Memory.energyLogistics.carriers.existingCreep)
     assert.isDefined(Memory.energyLogistics.stores.store1.reservations.existingCreep)
   })
@@ -241,28 +220,8 @@ describe("deleteUnusedMemory", () => {
 
   it("should delete multiple missing creeps correctly", () => {
     Memory.creeps.missingCreep1 = {} as CreepMemory
-    Memory.creeps.missingCreep2 = {} as CreepMemory 
+    Memory.creeps.missingCreep2 = {} as CreepMemory
     Memory.creeps.existingCreep = {} as CreepMemory
-    
-    Memory.production.energy.missingCreep1 = {
-      perTickAmount: 100,
-      roomNames: ["W1N1"],
-      role: CreepRole.HARVESTER,
-      type: EnergyImpactType.CREEP
-    }
-    Memory.production.energy.missingCreep2 = {
-      perTickAmount: 150,
-      roomNames: ["W1N1"],
-      role: CreepRole.HARVESTER,
-      type: EnergyImpactType.CREEP
-    }
-    Memory.production.energy.existingCreep = {
-      perTickAmount: 200,
-      roomNames: ["W1N1"],
-      role: CreepRole.HARVESTER,
-      type: EnergyImpactType.CREEP
-    }
-    
     Memory.energyLogistics.stores.store1 = {
       energy: { current: 50, capacity: 100 },
       pos: { x: 10, y: 10 },
@@ -286,38 +245,12 @@ describe("deleteUnusedMemory", () => {
     // Missing creeps should be deleted
     assert.isUndefined(Memory.creeps.missingCreep1)
     assert.isUndefined(Memory.creeps.missingCreep2)
-    assert.isUndefined(Memory.production.energy.missingCreep1)
-    assert.isUndefined(Memory.production.energy.missingCreep2)
     assert.isUndefined(Memory.energyLogistics.stores.store1.reservations.missingCreep1)
     assert.isUndefined(Memory.energyLogistics.stores.store1.reservations.missingCreep2)
-    
+
     // Existing creep should remain
     assert.isDefined(Memory.creeps.existingCreep)
-    assert.isDefined(Memory.production.energy.existingCreep)
     assert.isDefined(Memory.energyLogistics.stores.store1.reservations.existingCreep)
-  })
-
-  // Structure cleanup tests
-  it("should delete production energy data for missing structures", () => {
-    const structureName: StructureName = "spawn_W1N1:23,21"
-    Memory.structures[structureName] = {
-      name: structureName,
-      pos: { x: 23, y: 21 },
-      roomName:  "W1N1",
-      type: STRUCTURE_SPAWN
-    }
-    Memory.production.energy[structureName] = {
-      perTickAmount: 50,
-      roomNames: ["W1N1"],
-      type: EnergyImpactType.SPAWN
-    }
-
-    // Do not add structure to Game.rooms, so it's considered missing
-    Game.rooms['W1N1'].find = sinon.stub().returns([])
-
-    deleteUnusedMemory()
-
-    assert.isUndefined(Memory.production.energy[structureName])
   })
 
   it("should delete energy reservations for missing structures", () => {
@@ -472,11 +405,6 @@ describe("deleteUnusedMemory", () => {
 
   it("should not delete memory for structures that still exist", () => {
     const structureName = "5a2b4b85a0b39e62"
-    Memory.production.energy[structureName] = {
-      perTickAmount: 50,
-      roomNames: ["W1N1"],
-      type: EnergyImpactType.SPAWN
-    }
     Memory.reservations.energy[structureName] = {
       perTickAmount: 75,
       roomNames: ["W1N1"],
@@ -517,7 +445,6 @@ describe("deleteUnusedMemory", () => {
 
     deleteUnusedMemory()
 
-    assert.isDefined(Memory.production.energy[structureName])
     assert.isDefined(Memory.reservations.energy[structureName])
     assert.isDefined(Memory.energyLogistics.consumers[structureName])
     assert.isDefined(Memory.energyLogistics.producers[structureName])
@@ -663,13 +590,6 @@ describe("deleteUnusedMemory", () => {
       type: STRUCTURE_SPAWN
     }
 
-    // Test case where structure exists in memory sections but not in Game.rooms
-    Memory.production.energy[orphanedStructureName] = {
-      perTickAmount: 50,
-      roomNames: ["W1N1"],
-      type: EnergyImpactType.SPAWN
-    }
-
     Memory.reservations.energy[orphanedStructureName] = {
       perTickAmount: 75,
       roomNames: ["W1N1"],
@@ -703,7 +623,6 @@ describe("deleteUnusedMemory", () => {
     deleteUnusedMemory()
 
     // All orphaned structure data should be removed
-    assert.isUndefined(Memory.production.energy[orphanedStructureName])
     assert.isUndefined(Memory.reservations.energy[orphanedStructureName])
     assert.isUndefined(Memory.energyLogistics.consumers[orphanedStructureName])
     assert.isUndefined(Memory.energyLogistics.stores.store1.reservations[orphanedStructureName])

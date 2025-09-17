@@ -1,5 +1,5 @@
 
-import { calculateAverageHaulingDistanceByRoom } from "helpers/logistics/calculateAverageHaulingDistanceByRoom"
+import { calculateAverageHaulingDistanceByRoom } from "logistics/calculateAverageHaulingDistanceByRoom"
 import { Carrier, Consumer, RoomName, Store } from "types"
 
 interface CarriersByLoad {

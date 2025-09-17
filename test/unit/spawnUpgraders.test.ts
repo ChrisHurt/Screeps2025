@@ -10,7 +10,6 @@ describe('spawnUpgraders', () => {
   let mockSpawn: any
   let calculateUpgraderProductionStub: sinon.SinonStub
   let calculateCreepUpkeepStub: sinon.SinonStub
-  let calculateRoomEnergyProductionStub: sinon.SinonStub
   let addConsumerCreepToEnergyLogisticsStub: sinon.SinonStub
 
   beforeEach(() => {
@@ -27,8 +26,7 @@ describe('spawnUpgraders', () => {
       returnPath: []
     })
     calculateCreepUpkeepStub = sinon.stub(require('../../src/helpers/calculateCreepUpkeep'), 'calculateCreepUpkeep').returns(0.1)
-    calculateRoomEnergyProductionStub = sinon.stub(require('../../src/helpers/calculateRoomEnergyProduction'), 'calculateRoomEnergyProduction').returns(5)
-    addConsumerCreepToEnergyLogisticsStub = sinon.stub(require('../../src/helpers/logistics/addConsumerCreepToEnergyLogistics'), 'addConsumerCreepToEnergyLogistics')
+    addConsumerCreepToEnergyLogisticsStub = sinon.stub(require('../../src/logistics/addConsumerCreepToEnergyLogistics'), 'addConsumerCreepToEnergyLogistics')
 
     // @ts-ignore
     global.RoomPosition = class {
@@ -42,7 +40,6 @@ describe('spawnUpgraders', () => {
   afterEach(() => {
     calculateUpgraderProductionStub.restore()
     calculateCreepUpkeepStub.restore()
-    calculateRoomEnergyProductionStub.restore()
     addConsumerCreepToEnergyLogisticsStub.restore()
   })
 
@@ -71,7 +68,7 @@ describe('spawnUpgraders', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnUpgraders({
       effectiveEnergyPerTick: 5,
@@ -270,7 +267,7 @@ describe('spawnUpgraders', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     // Mock spawn to fail
     mockSpawn.spawnCreep = sinon.stub().returns(ERR_NOT_ENOUGH_ENERGY)
@@ -314,7 +311,7 @@ describe('spawnUpgraders', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     spawnUpgraders({
       effectiveEnergyPerTick: 5,
@@ -327,22 +324,20 @@ describe('spawnUpgraders', () => {
     })
 
     expect(spawnCreepSpy.called).to.be.true
-    const creepName = spawnCreepSpy.getCall(0).args[1]
+    const spawnCall = spawnCreepSpy.getCall(0)
+    const creepMemory = spawnCall.args[2].memory
     
-    // Check that task reservation was created
-    expect(Memory.reservations.tasks[creepName]).to.exist
-    expect(Memory.reservations.tasks[creepName].type).to.equal('upgrade')
-    expect((Memory.reservations.tasks[creepName] as any).controllerId).to.equal('ctrl1')
+    // Check that task is stored in creep memory passed to spawnCreep
+    expect(creepMemory.task).to.exist
+    expect(creepMemory.task.type).to.equal('upgrade')
+    expect(creepMemory.task.controllerId).to.equal('ctrl1')
     
-    // Check that energy production was updated
-    expect(Memory.production.energy[creepName]).to.exist
-    expect(Memory.production.energy[creepName].perTickAmount).to.equal(-5.1) // -0.1 - 5
-    expect(Memory.production.energy[creepName].roomNames).to.deep.equal(['W1N1'])
-    expect(Memory.production.energy[creepName].type).to.equal(EnergyImpactType.CREEP)
-    
-    // Check that room memory was updated
-    expect(calculateRoomEnergyProductionStub.calledWith('W1N1')).to.be.true
-    
+    // Check that energy impact was stored in creep memory passed to spawnCreep
+    expect(creepMemory.energyImpact).to.exist
+    expect(creepMemory.energyImpact.perTickAmount).to.equal(-5.1) // -0.1 - 5
+    expect(creepMemory.energyImpact.roomNames).to.deep.equal(['W1N1'])
+    expect(creepMemory.energyImpact.type).to.equal(EnergyImpactType.CREEP)
+
     // Check that logistics was updated
     expect(addConsumerCreepToEnergyLogisticsStub.called).to.be.true
   })
@@ -372,7 +367,7 @@ describe('spawnUpgraders', () => {
     const spawnsAvailable = [mockSpawn]
 
     Memory.reservations = { energy: {}, tasks: {} }
-    Memory.production = { energy: {} }
+    
 
     const result = spawnUpgraders({
       effectiveEnergyPerTick: 5, // High energy

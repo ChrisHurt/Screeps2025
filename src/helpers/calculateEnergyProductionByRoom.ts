@@ -1,5 +1,9 @@
+import { getEnergyImpacts } from "./getEnergyImpacts"
+
 export const calculateEnergyProductionByRoom = () => {
-    const productionByRoom: Record<string, number> = Object.values(Memory.production.energy).reduce<Record<string, number>>((roomTotals, { perTickAmount, roomNames }) => {
+    const energyImpacts = getEnergyImpacts()
+    const productionByRoom: Record<string, number> = Object.values(energyImpacts).reduce<Record<string, number>>((roomTotals, energyImpact) => {
+        const { perTickAmount, roomNames } = energyImpact
         roomNames?.forEach(roomName => {
             roomTotals[roomName] = (roomTotals[roomName] || 0) + perTickAmount / roomNames.length
         })
