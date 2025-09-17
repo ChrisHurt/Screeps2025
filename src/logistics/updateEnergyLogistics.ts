@@ -65,22 +65,26 @@ export const updateEnergyLogistics = (): void => {
     // NOTE: New Consumers & Producers are added to energyLogistics on spawn / construction site instantiation
 
     // Update existing stores, consumers & producers for energy logistics
-    Object.entries(energyLogistics.stores).forEach(([storeId, store]) => {
+    Object.entries(energyLogistics.stores).forEach(([storeName, store]) => {
         const roomName = store.roomName
         const shouldUpdate = roomIndexToUpdate === roomSequence.indexOf(roomName)
         if(!shouldUpdate) return
 
-        const storeEntity = roomStores.find(s => s.id === storeId)
+        // Find structure by matching the structured name pattern: structureType_roomName:x,y
+        const storeEntity = roomStores.find(s => {
+            const expectedName = `${s.structureType}_${s.room.name}:${s.pos.x},${s.pos.y}`
+            return expectedName === storeName
+        })
 
         if (!storeEntity) {
-            delete energyLogistics.stores[storeId]
+            delete energyLogistics.stores[storeName]
             return
         }
 
         const storeEnergy = storeEntity.store.getUsedCapacity(RESOURCE_ENERGY) || 0
-        energyLogistics.stores[storeId].energy.current = storeEnergy
+        energyLogistics.stores[storeName].energy.current = storeEnergy
 
-        if (storeEntity?.pos) energyLogistics.stores[storeId].pos = storeEntity.pos
+        if (storeEntity?.pos) energyLogistics.stores[storeName].pos = storeEntity.pos
     })
 
     Object.entries(energyLogistics.consumers).forEach(([consumerId, consumer]) => {
